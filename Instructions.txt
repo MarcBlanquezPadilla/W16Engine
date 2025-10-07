@@ -1,10 +1,27 @@
 S'HAURA DE FER UN COP A CADA ORDINADOR
 
-1. VARIABLES DE ENTORN
-Descarregar els zips de cmake i vcpkg
-Ficar a el path de variables de entorn la ruta de vcpkg y la de cmake/bin
+   ------------SI NO TENS VCPKG FES AIXÒ------------
 
-2. CREAR CMakeUserPresets.json
+1. DESCARREGAR GIT 
+Descarregar i instalar git: https://git-scm.com/downloads
+
+2. CLONAR GIT
+A la carpeta on vols que s'instali vcpkg obrir terminal i ficar això: git clone https://github.com/microsoft/vcpkg.git
+Un cop clonat ficar això: .\bootstrap-vcpkg.bat
+
+3. VARIABLE D'ENTORN DE VCPKG
+Ficar a el path de variables d'entorn la ruta de vcpkg.
+
+   -------SI TENS VCPKG FER DIRECTAMENT AIXÒ--------
+
+1. DESCARREGAR CMAKE
+Descarregar els zips de cmake: https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-windows-x86_64.zip
+
+
+2. VARIABLE D'ENTORN DE CMAKE
+Ficar a el path de variable d'entorn la ruta de cmake/bin
+
+3. CREAR CMakeUserPresets.json
 Ficar aixó
 {
   "version": 2,
@@ -20,11 +37,11 @@ Ficar aixó
 }
 Substituir el <path to vcpkg> pel path del vcpkg amb aquestes barres "/" per separar les CMakeUserPresets
 
-3. CREAR BUILD
+4. CREAR BUILD
 Obrir la consola en la carpeta del projecte i ficar això: cmake --preset=default
 Despres ficar això: cmake --build build
 
 
-4. OBRIM A VISUAL STUDIO
+5. OBRIM A VISUAL STUDIO
 S'haura creat una carpeta Build, on dins hi haura un arxiu .sln. L'obrim amb visual studio 2022
 Un cop dins anem a l'explorador de solucions, fem click dret asobre de W16Motor i li donem a "Establecer como protyecto de inicio"
