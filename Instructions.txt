@@ -1,0 +1,30 @@
+S'HAURA DE FER UN COP A CADA ORDINADOR
+
+1. VARIABLES DE ENTORN
+Descarregar els zips de cmake i vcpkg
+Ficar a el path de variables de entorn la ruta de vcpkg y la de cmake/bin
+
+2. CREAR CMakeUserPresets.json
+Ficar aixó
+{
+  "version": 2,
+  "configurePresets": [
+    {
+      "name": "default",
+      "inherits": "vcpkg",
+      "environment": {
+        "VCPKG_ROOT": "<path to vcpkg>"
+      }
+    }
+  ]
+}
+Substituir el <path to vcpkg> pel path del vcpkg amb aquestes barres "/" per separar les CMakeUserPresets
+
+3. CREAR BUILD
+Obrir la consola en la carpeta del projecte i ficar això: cmake --preset=default
+Despres ficar això: cmake --build build
+
+
+4. OBRIM A VISUAL STUDIO
+S'haura creat una carpeta Build, on dins hi haura un arxiu .sln. L'obrim amb visual studio 2022
+Un cop dins anem a l'explorador de solucions, fem click dret asobre de W16Motor i li donem a "Establecer como protyecto de inicio"
