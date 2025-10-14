@@ -1,7 +1,8 @@
 #include <fmt/core.h>
+#include "Log.h"
 
 int main()
 {
-    fmt::print("Hello World!\n");
+    LOG("Hello World!\n");
     return 0;
 }
