@@ -16,7 +16,7 @@ Window::~Window()
 
 bool Window::Awake()
 {
-	LOG("Init SDL window & surface");
+
 	bool ret = true;
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)

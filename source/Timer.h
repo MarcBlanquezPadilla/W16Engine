@@ -5,7 +5,6 @@ class Timer
 {
 public:
 
-	// Constructor
 	Timer();
 
 	void Start();
@@ -20,7 +19,6 @@ class PerfTimer
 {
 public:
 
-	// Constructor
 	PerfTimer();
 
 	void Start();

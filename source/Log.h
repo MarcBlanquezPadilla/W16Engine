@@ -9,4 +9,4 @@
 
 void Log(const char file[], int line, const char* format, ...);
 
-#endif  // __LOG_H__
+#endif

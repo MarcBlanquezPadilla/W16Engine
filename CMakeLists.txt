@@ -13,8 +13,12 @@ add_executable(W16Engine
 	source/Timer.cpp
 	source/Timer.h
 	source/Module.h
+	source/Input.cpp
+	source/Input.h
 	source/Window.cpp
-	source/Window.h)
+	source/Window.h
+	source/Vector2D.cpp
+	source/Vector2D.h)
 
 target_link_libraries(W16Engine PRIVATE 
 	SDL3::SDL3)

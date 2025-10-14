@@ -4,8 +4,6 @@
 
 int main()
 {
-	LOG("Engine starting ...");
-
     EngineState state = CREATE;
 	int result = EXIT_FAILURE;
 
@@ -15,14 +13,14 @@ int main()
 		{
 			
 		case EngineState::CREATE:
-			LOG("CREATION PHASE ===============================");
+			
 			state = EngineState::AWAKE;
 
 			break;
 
 			
 		case EngineState::AWAKE:
-			LOG("AWAKE PHASE ===============================");
+			
 			if (Engine::GetInstance().Awake() == true)
 				state = EngineState::START;
 			else
@@ -35,11 +33,11 @@ int main()
 
 			
 		case EngineState::START:
-			LOG("START PHASE ===============================");
+			
 			if (Engine::GetInstance().Start() == true)
 			{
 				state = EngineState::LOOP;
-				LOG("UPDATE PHASE ===============================");
+				LOG("STARTED WITHOUT ERRORS");
 			}
 			else
 			{
@@ -52,11 +50,12 @@ int main()
 		case EngineState::LOOP:
 			if (Engine::GetInstance().Update() == false)
 				state = EngineState::CLEAN;
+
 			break;
 
 			
 		case EngineState::CLEAN:
-			LOG("CLEANUP PHASE ===============================");
+			
 			if (Engine::GetInstance().CleanUp() == true)
 			{
 				result = EXIT_SUCCESS;
