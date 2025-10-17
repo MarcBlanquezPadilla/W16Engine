@@ -56,16 +56,16 @@ bool OpenGL::Awake()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	//CREAR SHADER
-	const char* vertexShader = "#version 460 core\n"
+	const char* vertexShaderSource = "#version 460 core\n"
 		"layout (location = 0) in vec3 position;\n"
 		"void main()\n"
 		"{\n"
 		"gl_Position = vec4(position, 1.0f);\n"
 		"}\n";
 
-	glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(GL_VERTEX_SHADER, 1, &vertexShader, NULL);
-	glCompileShader(GL_VERTEX_SHADER);
+	unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+	glCompileShader(vertexShader);
 
 	GLint success;
 	glGetShaderiv(GL_VERTEX_SHADER, GL_COMPILE_STATUS, &success);
@@ -77,10 +77,39 @@ bool OpenGL::Awake()
 		printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n%s\n", infoLog);
 	}
 
-	//CREAR PROGRAM
-	glCreateProgram();
-//DIAPO PROGRAMA
+	const char* fragmentShaderSource = "#version 460 core\n"
+		"out vec4 FragColor;\n"
+		"void main()\n"
+		"{\n"
+		"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); // Pintamos el triángulo de color naranja\n"
+		"}\n";
 
+	unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+	glCompileShader(fragmentShader);
+
+	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+	if (!success)
+	{
+		GLchar infoLog[512];
+		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+		printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n%s\n", infoLog);
+	}
+
+	shaderProgram = glCreateProgram();
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader); // ¡No te olvides de este!
+	glLinkProgram(shaderProgram);
+
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	if (!success) {
+		GLchar infoLog[512];
+		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+		printf("ERROR::SHADER::PROGRAM::LINKING_FAILED\n%s\n", infoLog);
+	}
+
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
 	return ret;
 }
 
@@ -96,10 +125,14 @@ bool OpenGL::PreUpdate()
 bool OpenGL::PostUpdate()
 {
 	bool ret = true;
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Tu código para dibujar (esto está bien)
+	glUseProgram(shaderProgram);
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, NULL);
 	glBindVertexArray(0);
-
+	glUseProgram(0);
 
 	//ESQUEMA
 
@@ -120,8 +153,7 @@ bool OpenGL::CleanUp()
 {
 	bool ret = true;
 
-	glDeleteShader(GL_VERTEX_SHADER);
-
+	glDeleteProgram(shaderProgram);
 
 	return ret;
 }

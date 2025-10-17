@@ -17,4 +17,5 @@ public:
 
 private:
 	unsigned int VAO;
+	unsigned int shaderProgram;
 };

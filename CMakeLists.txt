@@ -4,6 +4,7 @@ project(W16Engine)
 
 find_package(SDL3 REQUIRED)
 find_package(glad CONFIG REQUIRED)
+find_package(assimp CONFIG REQUIRED)
 
 add_executable(W16Engine 
 	source/application.cpp 
@@ -27,4 +28,5 @@ add_executable(W16Engine
 
 target_link_libraries(W16Engine PRIVATE 
 	SDL3::SDL3
-	glad::glad)
+	glad::glad
+	assimp::assimp)
