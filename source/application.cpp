@@ -48,8 +48,22 @@ int main()
 
 			
 		case EngineState::LOOP:
+
+			if (Engine::GetInstance().PreUpdate() == false)
+			{
+				state = EngineState::FAIL;
+				LOG("ERROR: Preupdate failed");
+			}
+				
+
 			if (Engine::GetInstance().Update() == false)
 				state = EngineState::CLEAN;
+
+			if (Engine::GetInstance().PostUpdate() == false)
+			{
+				state = EngineState::FAIL;
+				LOG("ERROR: Postupdate failed");
+			}
 
 			break;
 

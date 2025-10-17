@@ -16,7 +16,9 @@ enum EngineState
 
 class Module;
 class Window;
+class OpenGL;
 class Input;
+
 
 class Engine
 {
@@ -31,8 +33,14 @@ public:
 	//Start all modules
 	bool Start();
 
+	//Preupdate all modules
+	bool PreUpdate();
+
 	//Update all modules
 	bool Update();
+
+	//Postupdate all modules
+	bool PostUpdate();
 
 	//CleanUp all modules
 	bool CleanUp();
@@ -49,6 +57,7 @@ public:
 	
 	Window* window;
 	Input* input;
+	OpenGL* openGL;
 
 private:
 

@@ -1,4 +1,5 @@
 #include "Module.h"
+#include "SDL3/SDL.h"
 
 struct SDL_Window;
 
@@ -13,6 +14,8 @@ public:
 
 	// Called before render is available
 	bool Awake();
+
+	bool PostUpdate();
 
 	// Called before quitting
 	bool CleanUp();
@@ -29,6 +32,7 @@ public:
 public:
 
 	SDL_Window* window;
+	SDL_GLContext context;
 
 	std::string title;
 	int width = 1280;

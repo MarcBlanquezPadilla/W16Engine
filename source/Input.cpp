@@ -4,6 +4,7 @@
 #include "Log.h"
 #include "Module.h"
 
+
 #define MAX_KEYS 300
 
 Input::Input(bool startEnabled) : Module(startEnabled)

@@ -1,7 +1,9 @@
 #include "Engine.h"
 #include "Log.h"
 #include "Window.h"
+#include "OpenGL.h"
 #include "input.h"
+
 
 Engine& Engine::GetInstance() {
     static Engine instance;
@@ -16,10 +18,13 @@ Engine::Engine() {
 
     window = new Window(true);
     input = new Input(true);
+    openGL = new OpenGL(true);
     
     AddModule(window);
     AddModule(input);
+    AddModule(openGL);
 }
+
 
 bool Engine::Awake() {
     
@@ -56,10 +61,26 @@ bool Engine::Start() {
     return ret;
 }
 
+bool Engine::PreUpdate() {
+
+    bool ret = true;
+
+    for (Module* module : moduleList) {
+
+        ret = module->PreUpdate();
+        if (!ret) {
+
+            continue;
+        }
+    }
+
+    return ret;
+}
+
 bool Engine::Update() {
     
     bool ret = true;
-  
+
     for (Module* module : moduleList) {
 
         ret = module->Update(dt);
@@ -69,8 +90,29 @@ bool Engine::Update() {
         }
     }
 
+    //QUIT CONDITION
+    if (input->GetWindowEvent(WE_QUIT) == true)
+        ret = false;
+
+    //UPDATE FRAMERATE
     dt = frameTime.ReadMs();
     frameTime.Start();
+
+    return ret;
+}
+
+bool Engine::PostUpdate() {
+
+    bool ret = true;
+
+    for (Module* module : moduleList) {
+
+        ret = module->PostUpdate();
+        if (!ret) {
+
+            continue;
+        }
+    }
 
     return ret;
 }

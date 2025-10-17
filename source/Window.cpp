@@ -1,7 +1,6 @@
 #include "Window.h"
 #include "Engine.h"
 #include "Log.h"
-#include <SDL3/sdl.h>
 
 Window::Window(bool startEnabled) : Module(startEnabled)
 {
@@ -19,7 +18,7 @@ bool Window::Awake()
 
 	bool ret = true;
 
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
 		LOG("SDL_VIDEO could not initialize! SDL_Error: %s\n", SDL_GetError());
 		ret = false;
@@ -30,7 +29,16 @@ bool Window::Awake()
 
 		flags |= SDL_WINDOW_RESIZABLE;
 
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+		SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
+
 		window = SDL_CreateWindow("Platform Game", width, height, flags);
+
+		context = SDL_GL_CreateContext(window);
 
 		if (window == NULL)
 		{
@@ -42,9 +50,20 @@ bool Window::Awake()
 	return ret;
 }
 
+bool Window::PostUpdate()
+{
+	SDL_GL_SwapWindow(window);
+	return true;
+}
+
 bool Window::CleanUp()
 {
 	LOG("Destroying SDL window and quitting all SDL systems");
+
+	if (context != NULL)
+	{
+		SDL_GL_DestroyContext(context);
+	}
 
 	if (window != NULL)
 	{
