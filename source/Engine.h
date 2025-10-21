@@ -18,6 +18,7 @@ class Module;
 class Window;
 class OpenGL;
 class Input;
+class Render;
 
 
 class Engine
@@ -58,6 +59,7 @@ public:
 	Window* window;
 	Input* input;
 	OpenGL* openGL;
+	Render* render;
 
 private:
 

@@ -21,8 +21,6 @@ add_executable(W16Engine
 	source/Window.h
 	source/Vector2D.cpp
 	source/Vector2D.h
-	source/OpenGL.cpp
-	source/OpenGL.h
 	source/Render.cpp
 	source/Render.h)
 

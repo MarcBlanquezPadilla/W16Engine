@@ -1,8 +1,8 @@
 #include "Engine.h"
 #include "Log.h"
 #include "Window.h"
-#include "OpenGL.h"
 #include "input.h"
+#include "Render.h"
 
 
 Engine& Engine::GetInstance() {
@@ -18,11 +18,11 @@ Engine::Engine() {
 
     window = new Window(true);
     input = new Input(true);
-    openGL = new OpenGL(true);
+    render = new Render(true);
     
     AddModule(window);
     AddModule(input);
-    AddModule(openGL);
+    AddModule(render);
 }
 
 
