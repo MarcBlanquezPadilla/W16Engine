@@ -63,8 +63,8 @@ bool Render::Awake()
 		"{\n"
 		"gl_Position = vec4(position, 1.0f);\n"
 		"}\n";
-
-	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, sizeof(vertexShaderSource) - 1))
+	
+	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
 		return false;
 
 	//CREAR FRAGMENT
@@ -76,7 +76,7 @@ bool Render::Awake()
 		"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); // Pintamos el triángulo de color naranja\n"
 		"}\n";
 
-	if (!CreateShaderFromSources(fShader, GL_FRAGMENT_SHADER, fragmentShaderSource, sizeof(fragmentShaderSource) - 1))
+	if (!CreateShaderFromSources(fShader, GL_FRAGMENT_SHADER, fragmentShaderSource, strlen(fragmentShaderSource) - 1))
 		return false;
 
 
