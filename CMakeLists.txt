@@ -5,6 +5,7 @@ project(W16Engine)
 find_package(SDL3 REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
+find_package(devil CONFIG REQUIRED)
 
 add_executable(W16Engine 
 	source/application.cpp 
@@ -22,9 +23,12 @@ add_executable(W16Engine
 	source/Vector2D.cpp
 	source/Vector2D.h
 	source/Render.cpp
-	source/Render.h)
+	source/Render.h
+)
 
 target_link_libraries(W16Engine PRIVATE 
 	SDL3::SDL3
 	glad::glad
-	assimp::assimp)
+	assimp::assimp
+	devil::devil
+)
