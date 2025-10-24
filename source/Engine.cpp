@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "input.h"
 #include "Render.h"
+#include "Camera.h"
 
 
 Engine& Engine::GetInstance() {
@@ -19,10 +20,12 @@ Engine::Engine() {
     window = new Window(true);
     input = new Input(true);
     render = new Render(true);
+    camera = new Camera(true);
     
     AddModule(window);
     AddModule(input);
     AddModule(render);
+    AddModule(camera);
 }
 
 

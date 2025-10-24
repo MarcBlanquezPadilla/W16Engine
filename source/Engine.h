@@ -19,6 +19,7 @@ class Window;
 class OpenGL;
 class Input;
 class Render;
+class Camera;
 
 
 class Engine
@@ -60,6 +61,7 @@ public:
 	Input* input;
 	OpenGL* openGL;
 	Render* render;
+	Camera* camera;
 
 private:
 

@@ -1,6 +1,7 @@
 #include "Window.h"
 #include "Engine.h"
 #include "Log.h"
+#include "Global.h"
 
 Window::Window(bool startEnabled) : Module(startEnabled)
 {
@@ -17,6 +18,9 @@ bool Window::Awake()
 {
 
 	bool ret = true;
+
+	width = WINDOW_WIDTH;
+	height = WINDOW_HEIGHT;
 
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{

@@ -3,6 +3,7 @@
     "glad",
     "sdl3",
     "assimp",
-    "devil"
+    "devil",
+    "glm"
   ]
 }
