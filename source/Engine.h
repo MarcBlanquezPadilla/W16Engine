@@ -50,6 +50,9 @@ public:
 	//Add modules to module list
 	void AddModule(Module* module);
 
+	float GetDtMs();
+	float GetDtS();
+
 private:
 
 	Engine();

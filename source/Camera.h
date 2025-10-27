@@ -23,4 +23,11 @@ private:
 	glm::vec3 forward;
 	glm::vec3 up;
 	glm::vec3 right;
+
+	float speed;
+	float speedMultiplier;
+
+	float mouseSensibility;
+	float yaw;
+	float pitch;
 };

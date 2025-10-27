@@ -19,7 +19,8 @@ public:
 
 	bool CleanUp();
 
-	void UpdateCameraMatix(glm::mat4 perspectiveMatrix, glm::mat4 viewMatrix);
+	void UpdateProjectionMatix(glm::mat4 projectionMatrix);
+	void UpdateViewMatix(glm::mat4 viewMatrix);
 
 	static bool CreateShaderFromSources(unsigned int& shaderID, int type, const char* source, const int soruceLength);
 

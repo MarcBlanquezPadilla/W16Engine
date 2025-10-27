@@ -37,7 +37,7 @@ public:
 
 	bool Start();
 
-	bool Update(float dt);
+	bool PreUpdate();
 
 	bool CleanUp();
 

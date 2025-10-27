@@ -39,7 +39,26 @@ bool Render::Awake()
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 	
-	float vertices[] = { -1,-1,0,0,0, 1, -1, 0,1,0, 0, 1, 0 ,0.5f,1};
+	float vertices[] = {
+		// Formato: X,   Y,  Z,    U,   V
+
+		// Cara Frontal (Triángulo 1)
+		-1.0f, -1.0f,  1.0f, 0.0f, 0.0f,
+		1.0f, -1.0f,  1.0f, 1.0f, 0.0f,
+		0.0f,  1.0f,  0.0f, 0.5f, 1.0f,
+
+		1.0f, -1.0f,  1.0f, 0.0f, 0.0f,
+		0.0f, -1.0f, -1.0f, 1.0f, 0.0f,
+		0.0f,  1.0f,  0.0f, 0.5f, 1.0f,
+
+		0.0f, -1.0f, -1.0f, 0.0f, 0.0f,
+		-1.0f, -1.0f,  1.0f, 1.0f, 0.0f,
+		0.0f,  1.0f,  0.0f, 0.5f, 1.0f,
+
+		-1.0f, -1.0f,  1.0f, 0.0f, 0.0f,
+		0.0f, -1.0f, -1.0f, 1.0f, 0.0f,
+		1.0f, -1.0f,  1.0f, 0.5f, 1.0f
+	};
 
 	unsigned int my_id = 0;
 	glGenBuffers(1, (GLuint*)&(my_id));
@@ -50,13 +69,6 @@ bool Render::Awake()
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
 
-	unsigned int my_indices = 0;
-
-	int indices[] = { 0,1,2 };
-
-	glGenBuffers(1, (GLuint*)&(my_indices));
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, my_indices);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	//CREAR SHADER
 	unsigned int vShader = 0;
@@ -163,7 +175,8 @@ bool Render::PostUpdate()
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	glUseProgram(shaderProgram);
 	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, NULL);
+	//glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, NULL);
+	glDrawArrays(GL_TRIANGLES, 0, 12); // <-- AÑADE ESTA LÍNEA
 	glBindVertexArray(0);
 	glUseProgram(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -204,12 +217,17 @@ bool Render::CreateShaderFromSources(unsigned int& shaderID, int type, const cha
 	return true;
 }
 
-void Render::UpdateCameraMatix(glm::mat4 pm, glm::mat4 vm)
+void Render::UpdateProjectionMatix(glm::mat4 pm)
 {
 	glUseProgram(shaderProgram);
 
 	GLint projLoc = glGetUniformLocation(shaderProgram, "projection");
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pm));
+}
+
+void Render::UpdateViewMatix(glm::mat4 vm)
+{
+	glUseProgram(shaderProgram);
 
 	GLint viewLoc = glGetUniformLocation(shaderProgram, "view");
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(vm));

@@ -140,3 +140,13 @@ void Engine::AddModule(Module* module) {
     
     moduleList.push_back(module);
 }
+
+float Engine::GetDtMs()
+{
+    return dt;
+}
+
+float Engine::GetDtS()
+{
+    return dt/1000;
+}

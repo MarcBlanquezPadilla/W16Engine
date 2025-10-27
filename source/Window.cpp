@@ -2,6 +2,7 @@
 #include "Engine.h"
 #include "Log.h"
 #include "Global.h"
+#include "Input.h"
 
 Window::Window(bool startEnabled) : Module(startEnabled)
 {
@@ -43,6 +44,8 @@ bool Window::Awake()
 		window = SDL_CreateWindow("Platform Game", width, height, flags);
 
 		context = SDL_GL_CreateContext(window);
+
+		SDL_SetWindowRelativeMouseMode(window, true);
 
 		if (window == NULL)
 		{

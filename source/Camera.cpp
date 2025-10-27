@@ -7,6 +7,7 @@
 #include "Input.h"
 #include "Engine.h"
 #include "Render.h"
+#include "Window.h"
 
 
 Camera::Camera(bool startEnabled) : Module(startEnabled)
@@ -30,6 +31,26 @@ bool Camera::Awake()
 		1000.0f
 	);
 
+	position = glm::vec3(0.0f, 0.0f, 10.0f);
+	forward = glm::vec3(0.0f, 0.0f, -1.0f);
+	up = glm::vec3(0.0f, 1.0f, 0.0f);
+	right = glm::cross(forward, up);
+
+	glm::mat4 viewMatrix = glm::lookAt(
+		position,
+		position + forward,
+		up
+	);
+
+	speed = 1;
+	speedMultiplier = 5;
+	yaw = -90.0f; 
+	pitch = 0.0f;
+	mouseSensibility = 0.1f;
+
+	Engine::GetInstance().render->UpdateViewMatix(viewMatrix);
+	Engine::GetInstance().render->UpdateProjectionMatix(projectionMatrix);
+
 	return ret;
 }
 
@@ -38,35 +59,104 @@ bool Camera::PreUpdate()
 {
 	bool ret = true;
 
-	//IF MOVED
+	if (Engine::GetInstance().input->GetMouseButtonDown(3) == KEY_DOWN)
+	{
+		SDL_SetWindowRelativeMouseMode(Engine::GetInstance().window->window, true);
 
-	position = glm::vec3(0.0f, 0.0f, 10.0f);
-	forward = glm::vec3(0.0f, 0.0f, -1.0f);
-	up = glm::vec3(0.0f, 1.0f, 0.0f);
-	right = glm::cross(forward, up);
+		float tempX, tempY;
+		SDL_GetRelativeMouseState(&tempX, &tempY);
+	}
+
+	if (Engine::GetInstance().input->GetMouseButtonDown(3) == KEY_UP)
+	{
+		SDL_SetWindowRelativeMouseMode(Engine::GetInstance().window->window, false);
+	}
+
+	bool moveCam = Engine::GetInstance().input->GetMouseButtonDown(3) == KEY_REPEAT;
+
+	if (moveCam)
+	{
+		//MOUSE
+		float mouseX, mouseY;
+		SDL_GetRelativeMouseState(&mouseX, &mouseY);
+
+		float xOffset = mouseX * mouseSensibility;
+		float yOffset = mouseY * mouseSensibility;
+
+		yaw += xOffset;
+		pitch -= yOffset;
+
+		if (pitch > 89.0f)
+			pitch = 89.0f;
+		if (pitch < -89.0f)
+			pitch = -89.0f;
+
+		glm::vec3 newForward;
+		newForward.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+		newForward.y = sin(glm::radians(pitch));
+		newForward.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+		forward = glm::normalize(newForward);
+
+		glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+		up = glm::normalize(glm::cross(right, forward));
 
 
-	glm::mat4 viewMatrix = glm::lookAt(
-		position,
-		position+forward,
-		up
-	);
+		//KEYS PRESSEDS
+		bool wPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_W) == KEY_REPEAT;
+		bool sPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_S) == KEY_REPEAT;
+		bool aPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_A) == KEY_REPEAT;
+		bool dPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_D) == KEY_REPEAT;
+		bool shift = (Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT || 
+			Engine::GetInstance().input->GetKey(SDL_SCANCODE_RSHIFT) == KEY_REPEAT);
+
+		//WASD MOVEMENT
+		int xMovement = 0;
+		if (aPressed && !dPressed) xMovement = -1;
+		if (dPressed && !aPressed) xMovement = 1;
+
+		int zMovement = 0;
+		if (wPressed && !sPressed) zMovement = 1;
+		if (sPressed && !wPressed) zMovement = -1;
+
+		float dt = Engine::GetInstance().GetDtS();
+		float finalSpeed = speed * dt * (shift ? speedMultiplier : 1.0f);
+
+		if (wPressed)
+			position += forward * finalSpeed;
+		if (sPressed)
+			position -= forward * finalSpeed;
+		if (aPressed)
+			position -= right * finalSpeed;
+		if (dPressed)
+			position += right * finalSpeed;
+
+
+		//UPDATE VIEW MATRIX
+		glm::mat4 viewMatrix = glm::lookAt(
+			position,
+			position + forward,
+			up
+		);
+		Engine::GetInstance().render->UpdateViewMatix(viewMatrix);
+	}
 
 	
-
-	//IF WINDOW CHANGED
-	projectionMatrix = glm::perspective(
-		glm::radians(45.0f),
-		(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT,
-		0.1f,
-		1000.0f
-	);
-
-	Engine::GetInstance().render->UpdateCameraMatix(projectionMatrix, viewMatrix);
-		//POS
-		//FORWARD
-		//UP
-		//RIGHT
+	bool windowChange = false;
+	
+	if (windowChange)
+	{
+		if (windowChange)
+		{
+			projectionMatrix = glm::perspective(
+				glm::radians(45.0f),
+				(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT,
+				0.1f,
+				1000.0f
+			);
+			Engine::GetInstance().render->UpdateProjectionMatix(projectionMatrix);
+		}
+	}
 
 	return ret;
 }

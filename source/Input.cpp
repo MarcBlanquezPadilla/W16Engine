@@ -14,8 +14,6 @@ Input::Input(bool startEnabled) : Module(startEnabled)
 	keyboard = new KeyState[MAX_KEYS];
 	memset(keyboard, KEY_IDLE, sizeof(KeyState) * MAX_KEYS);
 	memset(mouseButtons, KEY_IDLE, sizeof(KeyState) * NUM_MOUSE_BUTTONS);
-
-
 }
 
 Input::~Input()
@@ -69,7 +67,7 @@ bool Input::Start()
 	return true;
 }
 
-bool Input::Update(float dt)
+bool Input::PreUpdate()
 {
 	static SDL_Event event;
 	const bool* keys = SDL_GetKeyboardState(NULL);
