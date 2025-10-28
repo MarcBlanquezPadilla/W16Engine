@@ -36,17 +36,24 @@ bool Camera::Awake()
 	up = glm::vec3(0.0f, 1.0f, 0.0f);
 	right = glm::cross(forward, up);
 
+	speed = 1;
+	speedMultiplier = 5;
+	yaw = -90.0f;
+	pitch = 0.0f;
+	mouseSensibility = 0.1f;
+
+	forward.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	forward.y = sin(glm::radians(pitch));
+	forward.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	
+	glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+	up = glm::normalize(glm::cross(right, forward));
+
 	glm::mat4 viewMatrix = glm::lookAt(
 		position,
 		position + forward,
 		up
 	);
-
-	speed = 1;
-	speedMultiplier = 5;
-	yaw = -90.0f; 
-	pitch = 0.0f;
-	mouseSensibility = 0.1f;
 
 	Engine::GetInstance().render->UpdateViewMatix(viewMatrix);
 	Engine::GetInstance().render->UpdateProjectionMatix(projectionMatrix);

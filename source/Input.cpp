@@ -128,13 +128,47 @@ bool Input::PreUpdate()
 			break;
 
 		case SDL_EVENT_MOUSE_MOTION:
+			{
 			int scale = Engine::GetInstance().window->GetScale();
 			mouseMotionX = event.motion.xrel / scale;
 			mouseMotionY = event.motion.yrel / scale;
 			mouseX = event.motion.x / scale;
 			mouseY = event.motion.y / scale;
+			}
 			break;
+		case SDL_EVENT_DROP_FILE: 
+		{ 
+
+			const char* filePath = event.drop.data;
+
+			SDL_Log("Archivo soltado en la ventana: %s", filePath);
+
+			std::string filePathStr(filePath);
+			std::string extension = filePathStr.substr(filePathStr.find_last_of(".") + 1);
+
+			if (extension == "obj" || extension == "fbx" || extension == "gltf" || extension == "dae") {
+
+				// 3. Llamar a tu función de carga
+				// Asumiendo que tienes una clase 'myScene' o 'myEngine' que maneja la lógica
+				// y una función que toma la ruta y crea el GameObject.
+
+				// Ejemplo:
+				// myScene->LoadModelAndAddToScene(filePathStr);
+				//   o
+				// GameObject* newModel = myResourceManager->LoadModel(filePathStr);
+				// myScene->AddGameObject(newModel);
+
+				SDL_Log("Cargando modelo: %s", filePath);
+			}
+			else {
+				SDL_Log("Archivo no soportado: %s", filePath);
+			}
+
+			}
+			break;
+
 		}
+		
 	};
 
 	if (controller != nullptr)

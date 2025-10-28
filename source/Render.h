@@ -23,7 +23,11 @@ public:
 	void UpdateViewMatix(glm::mat4 viewMatrix);
 
 	static bool CreateShaderFromSources(unsigned int& shaderID, int type, const char* source, const int soruceLength);
+	void LoadModel(const std::string& filePath);
+	
 
+private:
+	bool LoadTexture(const std::string& filePath);
 private:
 	unsigned int VAO;
 	unsigned int shaderProgram;

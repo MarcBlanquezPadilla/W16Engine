@@ -176,7 +176,7 @@ bool Render::PostUpdate()
 	glUseProgram(shaderProgram);
 	glBindVertexArray(VAO);
 	//glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, NULL);
-	glDrawArrays(GL_TRIANGLES, 0, 12); // <-- AÑADE ESTA LÍNEA
+	glDrawArrays(GL_TRIANGLES, 0, 12);
 	glBindVertexArray(0);
 	glUseProgram(0);
 	glBindTexture(GL_TEXTURE_2D, 0);

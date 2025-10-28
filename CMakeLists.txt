@@ -28,6 +28,9 @@ add_executable(W16Engine
 	source/Render.h
 	source/Camera.cpp
 	source/Camera.h
+	source/Scene.cpp
+	source/Scene.h
+	source/components/Component.h
 )
 
 target_link_libraries(W16Engine PRIVATE 
