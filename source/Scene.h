@@ -20,6 +20,9 @@ public:
 
 	bool CleanUp();
 
+	bool LoadModel(const std::string& filePath);
+	const std::vector<GameObject*>& GetGameObjects() const { return gameObjects; }
+
 public:
 	std::vector<GameObject*> gameObjects;
 };

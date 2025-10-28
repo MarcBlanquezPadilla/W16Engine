@@ -1,7 +1,7 @@
 #pragma once
 #include "Module.h"
 #include "components/Component.h"
-#include <vector>
+#include <map>
 
 class GameObject
 {
@@ -18,8 +18,9 @@ public:
 	bool CleanUp();
 
 	Component* AddComponent(ComponentType type);
+	Component* GetComponent(ComponentType type);
 
 public:
 	bool enabled;
-	std::vector<Component*> components;
+	std::map<ComponentType, Component*> components;
 };

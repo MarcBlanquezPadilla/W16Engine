@@ -3,7 +3,7 @@
 #include "Window.h"
 #include "Log.h"
 #include "Module.h"
-#include "Render.h"
+#include "Scene.h"
 
 
 #define MAX_KEYS 300
@@ -149,7 +149,7 @@ bool Input::PreUpdate()
 
 			if (extension == "obj" || extension == "fbx" || extension == "gltf" || extension == "dae") {
 
-				Engine::GetInstance().render->LoadModel(filePathStr);
+				Engine::GetInstance().scene->LoadModel(filePathStr);
 
 				SDL_Log("Cargando modelo: %s", filePath);
 			}

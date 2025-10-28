@@ -5,24 +5,11 @@
 #include <glm/glm.hpp>
 #include <vector>
 
+struct MeshData;
+struct Vertex;
+
 #define CHECKERS_WIDTH 64
 #define CHECKERS_HEIGHT 64
-
-struct aiMesh;
-struct aiScene;
-
-struct Vertex
-{
-	glm::vec3 position;
-};
-
-struct Mesh
-{
-	unsigned int VAO = 0;
-	unsigned int VBO = 0;
-	unsigned int EBO = 0;
-	int numIndices = 0;
-};
 
 class Render : public Module
 {
@@ -39,15 +26,15 @@ public:
 
 	bool CleanUp();
 
-	bool LoadModel(const std::string& filePath);
-
 	void UpdateProjectionMatix(glm::mat4 projectionMatrix);
 	void UpdateViewMatix(glm::mat4 viewMatrix);
 
 	static bool CreateShaderFromSources(unsigned int& shaderID, int type, const char* source, const int soruceLength);
 	
+	bool UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
+	void DeleteMeshFromGPU(MeshData& meshData);
+
 private:
-	void ProcessAndUploadMesh(aiMesh* assimpMesh);
 	bool CreateDefaultShader();
 	bool CreateCheckerTexture();
 
@@ -59,5 +46,4 @@ private:
 	GLint viewMatrixLoc;
 	GLint projectionMatrixLoc;
 
-	std::vector<Mesh> loadedMeshes;
 };

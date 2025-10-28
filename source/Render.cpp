@@ -1,12 +1,12 @@
 #include "Render.h"
+#include "Engine.h"
+#include "GameObject.h"
+#include "Scene.h"
 #include "glad/glad.h"
 #include <SDL3/sdl.h>
 #include "Log.h"
 #include <glm/gtc/type_ptr.hpp>
-
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+#include "components/Mesh.h"
 
 
 Render::Render(bool startEnabled) : Module(startEnabled)
@@ -79,10 +79,27 @@ bool Render::PostUpdate()
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, checkerTextureID);
 
-	for (const Mesh& mesh : loadedMeshes)
+	const std::vector<GameObject*>& gameObjects = Engine::GetInstance().scene->GetGameObjects();
+
+	for (GameObject* go : gameObjects)
 	{
-		glBindVertexArray(mesh.VAO);
-		glDrawElements(GL_TRIANGLES, mesh.numIndices, GL_UNSIGNED_INT, 0);
+		// 1. Pedimos el componente Mesh
+		Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
+
+		if (mesh) // Si existe...
+		{
+			// 2. (FUTURO) Aquí pedirías el ComponentTransform
+			// Transform* transform = (Transform*)go->GetComponent(ComponentType::Transform);
+			// glm::mat4 modelMatrix = transform->GetMatrix();
+			// glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+
+			// Por ahora, usamos la matriz identidad (como antes)
+			glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
+
+			// 3. Dibujamos usando los datos del COMPONENTE
+			glBindVertexArray(mesh->meshData.VAO);
+			glDrawElements(GL_TRIANGLES, mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
+		}
 	}
 
 	glBindVertexArray(0);
@@ -243,85 +260,45 @@ bool Render::CreateCheckerTexture()
 	return true; // Todo ha ido bien
 }
 
-bool Render::LoadModel(const std::string& filePath)
+bool Render::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
 {
-	// 1. Limpiamos las mallas anteriores
-	// El destructor de la struct 'Mesh' se llamará y limpiará la VRAM
-	loadedMeshes.clear();
-	LOG("Limpiando mallas anteriores. Cargando nuevo modelo: %s", filePath.c_str());
+	// 1. Crear VAO (Vertex Array Object)
+	glGenVertexArrays(1, &meshData.VAO);
+	glBindVertexArray(meshData.VAO);
 
-	// 2. Usar Assimp para leer el archivo
-	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(filePath,
-		aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs);
-
-	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-	{
-		LOG("Error cargando modelo con Assimp: %s", importer.GetErrorString());
-		return false;
-	}
-
-	// 3. Procesar todas las mallas en la escena
-	for (unsigned int i = 0; i < scene->mNumMeshes; i++)
-	{
-		aiMesh* currentMesh = scene->mMeshes[i];
-		ProcessAndUploadMesh(currentMesh); // Llamamos a nuestra función privada
-	}
-
-	LOG("¡Modelo cargado con éxito! %d mallas subidas a GPU.", loadedMeshes.size());
-	return true;
-}
-
-void Render::ProcessAndUploadMesh(aiMesh* assimpMesh)
-{
-	std::vector<Vertex> vertices;
-	std::vector<unsigned int> indices;
-
-	// 1. Extraer Vértices (Solo Posición)
-	for (unsigned int i = 0; i < assimpMesh->mNumVertices; i++)
-	{
-		Vertex vertex;
-		vertex.position.x = assimpMesh->mVertices[i].x;
-		vertex.position.y = assimpMesh->mVertices[i].y;
-		vertex.position.z = assimpMesh->mVertices[i].z;
-		vertices.push_back(vertex);
-	}
-
-	// 2. Extraer Índices
-	for (unsigned int i = 0; i < assimpMesh->mNumFaces; i++) {
-		aiFace face = assimpMesh->mFaces[i];
-		for (unsigned int j = 0; j < face.mNumIndices; j++) {
-			indices.push_back(face.mIndices[j]);
-		}
-	}
-
-	if (vertices.empty() || indices.empty()) {
-		LOG("Error: Malla de Assimp vacía, saltando.");
-		return;
-	}
-
-	// 3. Crear la nueva malla en nuestra lista
-	loadedMeshes.emplace_back();
-	Mesh& newMesh = loadedMeshes.back(); // Obtenemos una referencia a ella
-
-	// 4. Subir datos a la GPU (VAO, VBO, EBO)
-	glGenVertexArrays(1, &newMesh.VAO);
-	glBindVertexArray(newMesh.VAO);
-
-	glGenBuffers(1, &newMesh.VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, newMesh.VBO);
+	// 2. Crear y llenar VBO (Vertex Buffer Object)
+	// Esto crea el buffer de vértices y guarda su ID en meshData.VBO
+	glGenBuffers(1, &meshData.VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, meshData.VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 
-	glGenBuffers(1, &newMesh.EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, newMesh.EBO);
+	// 3. Crear y llenar EBO (Element Buffer Object / Index Buffer)
+	// Esto crea el buffer de índices y guarda su ID en meshData.EBO
+	glGenBuffers(1, &meshData.EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 
-	// 5. Configurar Atributos (Solo Posición)
+	// 4. Configurar Atributos (Solo Posición)
+	// Le dice al VAO cómo leer el VBO
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
 
+	// 5. Desvincular VAO (buena práctica)
 	glBindVertexArray(0);
 
-	// 6. Guardar el contador de índices
-	newMesh.numIndices = indices.size();
+	// 6. Guardar el número de índices
+	meshData.numIndices = indices.size();
+
+	LOG("Malla subida a GPU. VAO: %u, VBO: %u, EBO: %u, Índices: %d",
+		meshData.VAO, meshData.VBO, meshData.EBO, meshData.numIndices);
+
+	return true;
+}
+
+void Render::DeleteMeshFromGPU(MeshData& meshData)
+{
+	if (meshData.VBO != 0) glDeleteBuffers(1, &meshData.VBO);
+	if (meshData.EBO != 0) glDeleteBuffers(1, &meshData.EBO);
+	if (meshData.VAO != 0) glDeleteVertexArrays(1, &meshData.VAO);
+	meshData = MeshData(); // Resetea la struct
 }
