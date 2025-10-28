@@ -19,7 +19,7 @@ void Mesh::Start()
 
 void Mesh::Update(float dt)
 {
-    LOG("HOLA DESDE MESH");
+    
 }
 
 void Mesh::OnDestroy()

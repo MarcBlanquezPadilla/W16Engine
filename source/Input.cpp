@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "Log.h"
 #include "Module.h"
+#include "Render.h"
 
 
 #define MAX_KEYS 300
@@ -148,15 +149,7 @@ bool Input::PreUpdate()
 
 			if (extension == "obj" || extension == "fbx" || extension == "gltf" || extension == "dae") {
 
-				// 3. Llamar a tu función de carga
-				// Asumiendo que tienes una clase 'myScene' o 'myEngine' que maneja la lógica
-				// y una función que toma la ruta y crea el GameObject.
-
-				// Ejemplo:
-				// myScene->LoadModelAndAddToScene(filePathStr);
-				//   o
-				// GameObject* newModel = myResourceManager->LoadModel(filePathStr);
-				// myScene->AddGameObject(newModel);
+				Engine::GetInstance().render->LoadModel(filePathStr);
 
 				SDL_Log("Cargando modelo: %s", filePath);
 			}
