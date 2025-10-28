@@ -1,3 +1,4 @@
+#pragma once
 class GameObject;
 
 enum class ComponentType {
@@ -11,7 +12,7 @@ class Component
 {
 public:
 
-    Component(GameObject* owner) : owner(owner), enabled(true) {}
+    Component(GameObject* owner, bool enabled) : owner(owner), enabled(enabled) {}
 
     virtual ~Component() {}
 
@@ -25,7 +26,7 @@ public:
     
     virtual void OnDisable() {}
     
-    virtual ComponentType GetType() const = 0;
+    virtual ComponentType GetType() { return ComponentType::None; };
 
 public:
     GameObject* owner;

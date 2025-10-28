@@ -1,33 +1,57 @@
-#include "Module.h"
 #include<list>
+#include "Scene.h"
+#include "GameObject.h"
+#include "components/Component.h"
 
-class Texture;
-class Mesh;
-class Transform;
 
-class GameObject
+Scene::Scene(bool startEnabled) : Module(startEnabled)
 {
-	Texture* texture;
-	Mesh* mesh;
-	Transform* transform;
-};
 
-class Render : public Module
+}
+
+Scene::~Scene()
 {
-public:
 
-	Render(bool startEnabled);
+}
 
-	virtual ~Render();
+bool Scene::Awake()
+{
+	bool ret = true;
+	GameObject* meshObj = new GameObject(true);
+	meshObj->AddComponent(ComponentType::Mesh);
+	gameObjects.push_back(meshObj);
+	return ret;
+}
 
-	bool Awake();
+bool Scene::PreUpdate()
+{
+	bool ret = true;
 
-	bool PreUpdate();
-	bool PostUpdate();
+	return ret;
+}
 
-	bool CleanUp();
+bool Scene::Update(float dt)
+{
+	bool ret = true;
 
-private:
-	
-	std::list<GameObject*> gameObjects;
-};
+	for each(GameObject* gameObject in gameObjects)
+	{
+		gameObject->Update(dt);
+	}
+
+	return ret;
+}
+
+bool Scene::PostUpdate()
+{
+	bool ret = true;
+
+	return ret;
+}
+
+bool Scene::CleanUp()
+{
+	bool ret = true;
+
+	return ret;
+}

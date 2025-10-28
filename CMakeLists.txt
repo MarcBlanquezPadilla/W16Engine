@@ -30,7 +30,11 @@ add_executable(W16Engine
 	source/Camera.h
 	source/Scene.cpp
 	source/Scene.h
+	source/GameObject.cpp
+	source/GameObject.h
 	source/components/Component.h
+	source/components/Mesh.cpp
+	source/components/Mesh.h
 )
 
 target_link_libraries(W16Engine PRIVATE 

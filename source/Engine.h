@@ -20,6 +20,7 @@ class OpenGL;
 class Input;
 class Render;
 class Camera;
+class Scene;
 
 
 class Engine
@@ -65,6 +66,7 @@ public:
 	OpenGL* openGL;
 	Render* render;
 	Camera* camera;
+	Scene* scene;
 
 private:
 

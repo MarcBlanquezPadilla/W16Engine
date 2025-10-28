@@ -45,7 +45,7 @@ bool Window::Awake()
 
 		context = SDL_GL_CreateContext(window);
 
-		SDL_SetWindowRelativeMouseMode(window, true);
+		SDL_SetWindowRelativeMouseMode(window, false);
 
 		if (window == NULL)
 		{
