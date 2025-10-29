@@ -16,11 +16,6 @@ Transform::~Transform()
     
 }
 
-ComponentType Transform::GetType()
-{
-    return ComponentType::Transform;
-}
-
 glm::mat4 Transform::GetLocalMatrix() const
 {
     glm::mat4 matTranslation = glm::translate(glm::mat4(1.0f), position);

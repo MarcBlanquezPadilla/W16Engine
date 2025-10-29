@@ -34,6 +34,9 @@ public:
 	bool UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
 	void DeleteMeshFromGPU(MeshData& meshData);
 
+	unsigned int UploadTextureToGPU(unsigned char* data, int width, int height);
+	void DeleteTextureFromGPU(unsigned int textureID);
+
 private:
 	bool CreateDefaultShader();
 	bool CreateCheckerTexture();
@@ -45,5 +48,6 @@ private:
 	GLint modelMatrixLoc;
 	GLint viewMatrixLoc;
 	GLint projectionMatrixLoc;
+	GLint hasUVsLoc;
 
 };

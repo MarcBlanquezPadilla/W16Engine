@@ -20,6 +20,8 @@ public:
 
 	bool CleanUp();
 
+	void Scene::HandleAssetDrop(const std::string& path);
+
 	bool LoadModel(const std::string& filePath);
 	const std::vector<GameObject*>& GetGameObjects() const { return gameObjects; }
 

@@ -9,6 +9,7 @@ struct aiMesh;
 struct Vertex
 {
     glm::vec3 position;
+    glm::vec2 texCoords;
 };
 
 
@@ -26,12 +27,17 @@ public:
 
     Mesh(GameObject* owner, bool enabled);
 
+    ~Mesh() override;
+
     void OnDestroy() override;
     
-    ComponentType GetType() override;
+    ComponentType GetType() override {
+        return ComponentType::Mesh;
+    }
 
     bool LoadFromAssimpMesh(aiMesh* assimpMesh);
 
 public:
     MeshData meshData;
+    bool hasUVs = false;
 };

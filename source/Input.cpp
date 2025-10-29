@@ -147,16 +147,7 @@ bool Input::PreUpdate()
 			std::string filePathStr(filePath);
 			std::string extension = filePathStr.substr(filePathStr.find_last_of(".") + 1);
 
-			if (extension == "obj" || extension == "fbx" || extension == "gltf" || extension == "dae") {
-
-				Engine::GetInstance().scene->LoadModel(filePathStr);
-
-				SDL_Log("Cargando modelo: %s", filePath);
-			}
-			else {
-				SDL_Log("Archivo no soportado: %s", filePath);
-			}
-
+			Engine::GetInstance().scene->HandleAssetDrop(filePathStr);
 			}
 			break;
 

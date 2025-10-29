@@ -3,6 +3,7 @@
 #include "components/Component.h"
 #include "components/Mesh.h"
 #include "components/Transform.h"
+#include "components/Texture.h"
 #include <list>
 #include "Log.h"
 
@@ -68,7 +69,7 @@ Component* GameObject::AddComponent(ComponentType type)
 		component = new Mesh(this, true);
 		break;
 	case ComponentType::Texture:
-		// component = new Texture(this, true);
+		component = new Texture(this, true);
 		break;
 	}
 

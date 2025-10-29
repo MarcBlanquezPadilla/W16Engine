@@ -13,7 +13,10 @@ public:
 
     virtual ~Transform() override;
     
-    ComponentType GetType() override;
+    ComponentType GetType() override {
+        return ComponentType::Transform;
+    };
+
 
     glm::mat4 GetLocalMatrix() const;
 

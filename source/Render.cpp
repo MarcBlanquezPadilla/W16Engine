@@ -1,13 +1,16 @@
 #include "Render.h"
 #include "Engine.h"
-#include "GameObject.h"
 #include "Scene.h"
-#include "glad/glad.h"
-#include <SDL3/sdl.h>
-#include "Log.h"
-#include <glm/gtc/type_ptr.hpp>
+#include "GameObject.h"
 #include "components/Mesh.h"
 #include "components/Transform.h"
+#include "components/Texture.h"
+#include "Log.h"
+
+#include <IL/il.h>
+#include <glm/gtc/type_ptr.hpp>
+#include "glad/glad.h"
+#include <SDL3/sdl.h>
 
 
 Render::Render(bool startEnabled) : Module(startEnabled)
@@ -34,7 +37,12 @@ bool Render::Awake()
 	LOG("OpenGL version supported %s", glGetString(GL_VERSION));
 	LOG("GLSL: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
+	LOG("Initializing Devil");
+	ilInit();
+	ilEnable(IL_ORIGIN_SET);
+	ilOriginFunc(IL_ORIGIN_LOWER_LEFT);
 
+	LOG("Initializing Glad");
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glClearDepth(1.0f); 
 	glClearColor(0.2f, 0.2f, 0.2f, 1.f);
@@ -75,10 +83,9 @@ bool Render::PostUpdate()
 
 	glUseProgram(shaderProgram);
 
-	glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
+	unsigned int defaultTexture = checkerTextureID;
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, checkerTextureID);
+	glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 
 	const std::vector<GameObject*>& gameObjects = Engine::GetInstance().scene->GetGameObjects();
 
@@ -86,11 +93,22 @@ bool Render::PostUpdate()
 	{
 		Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
 		Transform* transform = (Transform*)go->GetComponent(ComponentType::Transform);
+		Texture* texture = (Texture*)go->GetComponent(ComponentType::Texture);
 
 		if (mesh && transform && mesh->meshData.VAO != 0)
 		{
+			unsigned int texToBind = defaultTexture;
+			if (texture && texture->GetTextureID() != 0)
+			{
+				texToBind = texture->GetTextureID();
+			}
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, texToBind);
+
 			glm::mat4 modelMatrix = transform->GetLocalMatrix();
 			glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+			glUniform1i(hasUVsLoc, mesh->hasUVs);
 
 			glBindVertexArray(mesh->meshData.VAO);
 			glDrawElements(GL_TRIANGLES, mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
@@ -108,6 +126,7 @@ bool Render::CleanUp()
 {
 	bool ret = true;
 
+	ilShutDown();
 	glDeleteProgram(shaderProgram);
 
 	return ret;
@@ -158,31 +177,37 @@ bool Render::CreateDefaultShader()
 	unsigned int vShader = 0;
 	const char* vertexShaderSource = "#version 460 core\n"
 		"layout (location = 0) in vec3 position;\n"
+		"layout (location = 1) in vec2 aTexCoord;\n"
 		"uniform mat4 model; \n"
 		"uniform mat4 view; \n"
 		"uniform mat4 projection; \n"
-		"out vec3 localPos; \n"
+		"out vec3 localPos; \n"     
+		"out vec2 texCoord; \n"     
 		"void main()\n"
 		"{\n"
-		"   vec4 posInWorld = model * vec4(position, 1.0f);\n"
-		"   gl_Position = projection * view * posInWorld;\n"
+		"   gl_Position = projection * view * model * vec4(position, 1.0f);\n"
 		"   localPos = position;\n"
+		"   texCoord = aTexCoord;\n"
 		"}\n";
 
 	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
 		return false;
 
 	unsigned int fShader = 0;
-	// --- Este es el Fragment Shader SIN UVs ---
 	const char* fragmentShaderSource = "#version 460 core\n"
-		"in vec3 localPos;\n" // Recibe la posición del mundo
+		"in vec3 localPos;\n"
+		"in vec2 texCoord;\n"
 		"out vec4 color;\n"
 		"uniform sampler2D texture1;\n"
+		"uniform bool u_hasUVs;\n"
 		"void main()\n"
 		"{\n"
-		// "Fingimos" las UVs usando las coordenadas X y Z del mundo
-		"   vec2 fakeUVs = localPos.xz * 0.5; \n"
-		"   color = texture(texture1, fakeUVs);\n"
+		"   vec2 uv = texCoord;\n"
+		"   if (!u_hasUVs)\n"  
+		"   {\n"
+		"       uv = localPos.xz * 0.5; \n"
+		"   }\n"
+		"   color = texture(texture1, uv);\n"
 		"}\n";
 
 	if (!CreateShaderFromSources(fShader, GL_FRAGMENT_SHADER, fragmentShaderSource, strlen(fragmentShaderSource)))
@@ -216,6 +241,7 @@ bool Render::CreateDefaultShader()
 	modelMatrixLoc = glGetUniformLocation(shaderProgram, "model");
 	viewMatrixLoc = glGetUniformLocation(shaderProgram, "view");
 	projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projection");
+	hasUVsLoc = glGetUniformLocation(shaderProgram, "u_hasUVs");
 
 	return true; // Todo ha ido bien
 }
@@ -274,6 +300,9 @@ bool Render::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vert
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
 
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+
 	// 5. Desvincular VAO (buena práctica)
 	glBindVertexArray(0);
 
@@ -292,4 +321,40 @@ void Render::DeleteMeshFromGPU(MeshData& meshData)
 	if (meshData.EBO != 0) glDeleteBuffers(1, &meshData.EBO);
 	if (meshData.VAO != 0) glDeleteVertexArrays(1, &meshData.VAO);
 	meshData = MeshData(); // Resetea la struct
+}
+
+unsigned int Render::UploadTextureToGPU(unsigned char* data, int width, int height)
+{
+	unsigned int textureID = 0;
+
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+
+	// Configurar filtros
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// Configurar wrapping
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	// Subir los datos a la VRAM
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+	// Generar Mipmaps
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	// Desvincular
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	LOG("Textura subida a GPU. ID: %u", textureID);
+	return textureID;
+}
+
+void Render::DeleteTextureFromGPU(unsigned int textureID)
+{
+	if (textureID != 0)
+	{
+		glDeleteTextures(1, &textureID);
+		LOG("Textura eliminada de GPU. ID: %u", textureID);
+	}
 }
