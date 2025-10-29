@@ -21,6 +21,7 @@ class Input;
 class Render;
 class Camera;
 class Scene;
+class Editor;
 
 
 class Engine
@@ -67,6 +68,7 @@ public:
 	Render* render;
 	Camera* camera;
 	Scene* scene;
+	Editor* editor;
 
 private:
 

@@ -6,7 +6,7 @@
 #include "components/Texture.h"
 #include "Log.h"
 
-#include<list>
+#include <list>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>

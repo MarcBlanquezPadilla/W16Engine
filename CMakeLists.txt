@@ -7,6 +7,7 @@ find_package(glad CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(DevIL REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 add_executable(W16Engine
 	source/Global.h
@@ -30,6 +31,8 @@ add_executable(W16Engine
 	source/Camera.h
 	source/Scene.cpp
 	source/Scene.h
+	source/Editor.cpp
+	source/Editor.h
 	source/GameObject.cpp
 	source/GameObject.h
 	source/components/Component.h
@@ -39,6 +42,9 @@ add_executable(W16Engine
 	source/components/Transform.h
 	source/components/Texture.cpp
 	source/components/Texture.h
+	source/windows/UIWindow.h
+	source/windows/ConfigWindow.cpp
+	source/windows/ConfigWindow.h
 )
 
 target_link_libraries(W16Engine PRIVATE 
@@ -47,4 +53,5 @@ target_link_libraries(W16Engine PRIVATE
 	assimp::assimp
 	DevIL::IL
 	glm::glm
+	imgui::imgui
 )

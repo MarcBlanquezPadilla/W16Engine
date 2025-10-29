@@ -3,6 +3,8 @@
 #include "Log.h"
 #include "Global.h"
 #include "Input.h"
+#include "SDL3/SDL.h"
+#include <windows.h>
 
 Window::Window(bool startEnabled) : Module(startEnabled)
 {
@@ -23,6 +25,7 @@ bool Window::Awake()
 	width = WINDOW_WIDTH;
 	height = WINDOW_HEIGHT;
 
+	//INIT SDL
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
 		LOG("SDL_VIDEO could not initialize! SDL_Error: %s\n", SDL_GetError());
@@ -30,6 +33,7 @@ bool Window::Awake()
 	}
 	else
 	{
+
 		SDL_WindowFlags flags = SDL_WINDOW_OPENGL;
 
 		flags |= SDL_WINDOW_RESIZABLE;
@@ -52,6 +56,50 @@ bool Window::Awake()
 			LOG("Window could not be created! SDL_Error: %s\n", SDL_GetError());
 			ret = false;
 		}
+
+		const int linked_version_int = SDL_GetVersion();
+
+		int major = SDL_VERSIONNUM_MAJOR(linked_version_int);
+		int minor = SDL_VERSIONNUM_MINOR(linked_version_int);
+		int patch = SDL_VERSIONNUM_MICRO(linked_version_int);
+
+		sdlVersion = std::to_string(major) + "." +
+			std::to_string(minor) + "." +
+			std::to_string(patch);
+	}
+
+	//RAM
+	MEMORYSTATUSEX memInfo;
+	memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+	GlobalMemoryStatusEx(&memInfo);
+
+	float totalRAM_gb = (float)memInfo.ullTotalPhys / (1024 * 1024 * 1024);
+
+	char ram_buffer[32];
+	sprintf_s(ram_buffer, "%.2f GB", totalRAM_gb);
+	ram = ram_buffer;
+
+	//CPU
+	HKEY hKey;
+	DWORD bufferSize = 1024;
+	char cpuName[1024] = { 0 };
+	const char* keyPath = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
+
+	if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, keyPath, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+	{
+		if (RegQueryValueExA(hKey, "ProcessorNameString", NULL, NULL, (LPBYTE)cpuName, &bufferSize) == ERROR_SUCCESS)
+		{
+			cpu_brand = cpuName;
+		}
+		else
+		{
+			cpu_brand = "Error al leer el nombre de la CPU";
+		}
+		RegCloseKey(hKey);
+	}
+	else
+	{
+		cpu_brand = "Error al abrir el registro";
 	}
 
 	return ret;
@@ -95,4 +143,14 @@ void Window::GetWindowSize(int& width, int& height) const
 int Window::GetScale() const
 {
 	return scale;
+}
+
+std::string Window::GetRAM()
+{
+	return ram;
+}
+
+std::string Window::GetCPU()
+{
+	return cpu_brand;
 }

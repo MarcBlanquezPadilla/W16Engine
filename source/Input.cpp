@@ -4,6 +4,7 @@
 #include "Log.h"
 #include "Module.h"
 #include "Scene.h"
+#include "Editor.h"
 
 
 #define MAX_KEYS 300
@@ -101,6 +102,7 @@ bool Input::PreUpdate()
 
 	while (SDL_PollEvent(&event) != 0)
 	{
+		Engine::GetInstance().editor->HandleInput(&event);
 		switch (event.type)
 		{
 		case SDL_EVENT_QUIT:

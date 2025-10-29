@@ -1,4 +1,10 @@
+#include "glad/glad.h"
+#include <IL/il.h>
+#include <glm/gtc/type_ptr.hpp>
+#include <SDL3/sdl.h>
+
 #include "Render.h"
+#include "Window.h"
 #include "Engine.h"
 #include "Scene.h"
 #include "GameObject.h"
@@ -7,10 +13,8 @@
 #include "components/Texture.h"
 #include "Log.h"
 
-#include <IL/il.h>
-#include <glm/gtc/type_ptr.hpp>
-#include "glad/glad.h"
-#include <SDL3/sdl.h>
+
+
 
 
 Render::Render(bool startEnabled) : Module(startEnabled)
@@ -30,18 +34,16 @@ bool Render::Awake()
 	int version = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(SDL_GL_GetProcAddress));
 
 	if (version == 0)
+	{
 		LOG("Error loading the glad library");
-
-	LOG("Vendor: %s", glGetString(GL_VENDOR));
-	LOG("Renderer: %s", glGetString(GL_RENDERER));
-	LOG("OpenGL version supported %s", glGetString(GL_VERSION));
-	LOG("GLSL: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+		return false;
+	}
 
 	LOG("Initializing Devil");
 	ilInit();
 	ilEnable(IL_ORIGIN_SET);
 	ilOriginFunc(IL_ORIGIN_LOWER_LEFT);
-
+		
 	LOG("Initializing Glad");
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glClearDepth(1.0f); 
@@ -49,6 +51,11 @@ bool Render::Awake()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
+
+	gpu = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+	glVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+	glslVersion = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
+
 
 	if (!CreateDefaultShader())
 	{
@@ -79,16 +86,15 @@ bool Render::PostUpdate()
 {
 	bool ret = true;
 
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glUseProgram(shaderProgram);
 
 	unsigned int defaultTexture = checkerTextureID;
 
-	glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
-
 	const std::vector<GameObject*>& gameObjects = Engine::GetInstance().scene->GetGameObjects();
-
+	int i = 0;
 	for (GameObject* go : gameObjects)
 	{
 		Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
@@ -107,12 +113,15 @@ bool Render::PostUpdate()
 			glBindTexture(GL_TEXTURE_2D, texToBind);
 
 			glm::mat4 modelMatrix = transform->GetLocalMatrix();
+
 			glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 			glUniform1i(hasUVsLoc, mesh->hasUVs);
 
 			glBindVertexArray(mesh->meshData.VAO);
 			glDrawElements(GL_TRIANGLES, mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
+			
 		}
+		i++;
 	}
 
 	glBindVertexArray(0);

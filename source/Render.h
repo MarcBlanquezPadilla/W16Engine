@@ -4,6 +4,7 @@
 #include "glad/glad.h"
 #include <glm/glm.hpp>
 #include <vector>
+#include <string>
 
 struct MeshData;
 struct Vertex;
@@ -37,6 +38,11 @@ public:
 	unsigned int UploadTextureToGPU(unsigned char* data, int width, int height);
 	void DeleteTextureFromGPU(unsigned int textureID);
 
+	std::string GetGLVersion() { return glVersion; }
+	std::string GetGLSLVersion() { return glslVersion; }
+	std::string GetGPU() { return gpu; }
+
+
 private:
 	bool CreateDefaultShader();
 	bool CreateCheckerTexture();
@@ -50,4 +56,8 @@ private:
 	GLint projectionMatrixLoc;
 	GLint hasUVsLoc;
 
+	std::string glVersion;
+	std::string glslVersion;
+	std::string devilVersion; //NO CONSIGO CONSEGUIRLA
+	std::string gpu;
 };
