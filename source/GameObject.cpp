@@ -2,12 +2,13 @@
 #include "GameObject.h"
 #include "components/Component.h"
 #include "components/Mesh.h"
+#include "components/Transform.h"
 #include <list>
 #include "Log.h"
 
 GameObject::GameObject(bool _enabled) :enabled(_enabled)
 {
-
+	AddComponent(ComponentType::Transform);
 }
 
 GameObject::~GameObject()
@@ -61,7 +62,7 @@ Component* GameObject::AddComponent(ComponentType type)
 	case ComponentType::None:
 		break;
 	case ComponentType::Transform:
-		// component = new Transform(this, true);
+		component = new Transform(this, true);
 		break;
 	case ComponentType::Mesh:
 		component = new Mesh(this, true);

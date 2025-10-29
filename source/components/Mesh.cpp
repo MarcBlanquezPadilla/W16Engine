@@ -11,35 +11,9 @@ Mesh::Mesh(GameObject* owner, bool enabled) : Component(owner, enabled)
 
 }
 
-Mesh::~Mesh()
-{
-
-}
-
-void Mesh::Start()
-{
-
-}
-
-void Mesh::Update(float dt)
-{
-    
-}
-
-
 void Mesh::OnDestroy()
 {
 	Engine::GetInstance().render->DeleteMeshFromGPU(this->meshData);
-}
-
-void Mesh::OnEnable()
-{
-
-}
-    
-void Mesh::OnDisable()
-{
-
 }
     
 bool Mesh::LoadFromAssimpMesh(aiMesh* assimpMesh)

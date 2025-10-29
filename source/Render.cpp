@@ -7,6 +7,7 @@
 #include "Log.h"
 #include <glm/gtc/type_ptr.hpp>
 #include "components/Mesh.h"
+#include "components/Transform.h"
 
 
 Render::Render(bool startEnabled) : Module(startEnabled)
@@ -83,20 +84,14 @@ bool Render::PostUpdate()
 
 	for (GameObject* go : gameObjects)
 	{
-		// 1. Pedimos el componente Mesh
 		Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
+		Transform* transform = (Transform*)go->GetComponent(ComponentType::Transform);
 
-		if (mesh) // Si existe...
+		if (mesh && transform && mesh->meshData.VAO != 0)
 		{
-			// 2. (FUTURO) Aquí pedirías el ComponentTransform
-			// Transform* transform = (Transform*)go->GetComponent(ComponentType::Transform);
-			// glm::mat4 modelMatrix = transform->GetMatrix();
-			// glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+			glm::mat4 modelMatrix = transform->GetLocalMatrix();
+			glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
-			// Por ahora, usamos la matriz identidad (como antes)
-			glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
-
-			// 3. Dibujamos usando los datos del COMPONENTE
 			glBindVertexArray(mesh->meshData.VAO);
 			glDrawElements(GL_TRIANGLES, mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
 		}
@@ -161,18 +156,17 @@ void Render::UpdateViewMatix(glm::mat4 vm)
 bool Render::CreateDefaultShader()
 {
 	unsigned int vShader = 0;
-	// --- Este es el Vertex Shader SIN UVs ---
 	const char* vertexShaderSource = "#version 460 core\n"
-		"layout (location = 0) in vec3 position;\n" // Solo recibe posición
+		"layout (location = 0) in vec3 position;\n"
 		"uniform mat4 model; \n"
 		"uniform mat4 view; \n"
 		"uniform mat4 projection; \n"
-		"out vec3 worldPos; \n" // Pasamos la posición en el mundo
+		"out vec3 localPos; \n"
 		"void main()\n"
 		"{\n"
 		"   vec4 posInWorld = model * vec4(position, 1.0f);\n"
 		"   gl_Position = projection * view * posInWorld;\n"
-		"   worldPos = posInWorld.xyz;\n" // Pasamos la posición al Fragment
+		"   localPos = position;\n"
 		"}\n";
 
 	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
@@ -181,13 +175,13 @@ bool Render::CreateDefaultShader()
 	unsigned int fShader = 0;
 	// --- Este es el Fragment Shader SIN UVs ---
 	const char* fragmentShaderSource = "#version 460 core\n"
-		"in vec3 worldPos;\n" // Recibe la posición del mundo
+		"in vec3 localPos;\n" // Recibe la posición del mundo
 		"out vec4 color;\n"
 		"uniform sampler2D texture1;\n"
 		"void main()\n"
 		"{\n"
 		// "Fingimos" las UVs usando las coordenadas X y Z del mundo
-		"   vec2 fakeUVs = worldPos.xz * 0.5; \n"
+		"   vec2 fakeUVs = localPos.xz * 0.5; \n"
 		"   color = texture(texture1, fakeUVs);\n"
 		"}\n";
 
@@ -240,24 +234,21 @@ bool Render::CreateCheckerTexture()
 		}
 	}
 
-	// --- CARGAR TEXTURAS (copiado de tu Awake) ---
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glGenTextures(1, &checkerTextureID); // Asumo que 'textureID' es una variable miembro de Render.h
+	glGenTextures(1, &checkerTextureID);
 	glBindTexture(GL_TEXTURE_2D, checkerTextureID);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-	// ¡OJO! El orden de tu código original estaba mal
-	// glGenerateMipmap va DESPUÉS de glTexImage2D
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CHECKERS_WIDTH, CHECKERS_HEIGHT,
 		0, GL_RGBA, GL_UNSIGNED_BYTE, checkerImage);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
-	glBindTexture(GL_TEXTURE_2D, 0); // Desvincular por seguridad
+	glBindTexture(GL_TEXTURE_2D, 0);
 
-	return true; // Todo ha ido bien
+	return true;
 }
 
 bool Render::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)

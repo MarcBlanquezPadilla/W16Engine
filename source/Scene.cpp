@@ -3,6 +3,7 @@
 #include "GameObject.h"
 #include "components/Component.h"
 #include "components/Mesh.h"
+#include "components/Transform.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -60,7 +61,6 @@ bool Scene::CleanUp()
 
 bool Scene::LoadModel(const std::string& filePath)
 {
-	// 1. Borramos los modelos viejos (¡esto es temporal!)
 	for (auto go : gameObjects) delete go;
 	gameObjects.clear();
 
@@ -72,26 +72,20 @@ bool Scene::LoadModel(const std::string& filePath)
 		return false;
 	}
 
-	// 2. Recorremos las mallas de Assimp
 	for (unsigned int i = 0; i < scene->mNumMeshes; i++)
 	{
 		aiMesh* assimpMesh = scene->mMeshes[i];
 
-		// 3. Creamos un GameObject por cada malla
 		GameObject* newGO = new GameObject(true);
 
-		// 4. Le añadimos el Componente Mesh
 		Mesh* meshComp = (Mesh*)newGO->AddComponent(ComponentType::Mesh);
 
-		// 5. Le decimos al componente que se cargue
 		if (meshComp->LoadFromAssimpMesh(assimpMesh))
 		{
-			// 6. Si todo va bien, lo añadimos a la escena
 			gameObjects.push_back(newGO);
 		}
 		else
 		{
-			// Si falla, borramos el GO
 			delete newGO;
 		}
 	}

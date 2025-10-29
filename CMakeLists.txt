@@ -35,6 +35,8 @@ add_executable(W16Engine
 	source/components/Component.h
 	source/components/Mesh.cpp
 	source/components/Mesh.h
+	source/components/Transform.cpp
+	source/components/Transform.h
 )
 
 target_link_libraries(W16Engine PRIVATE 
