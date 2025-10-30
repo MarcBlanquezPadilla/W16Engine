@@ -33,7 +33,9 @@ void InspectorWindow::Draw()
 
     if (gameObject != nullptr)
     {
-        ImGui::Text("%s", gameObject->name.c_str());
+        char name_buffer[64];
+        sprintf_s(name_buffer, "%s", gameObject->name.c_str());
+        ImGui::Checkbox(name_buffer, &gameObject->enabled);
         ImGui::Separator();
         for each(auto const& pair in gameObject->components)
         {
@@ -101,7 +103,7 @@ void InspectorWindow::Draw()
                         ImGui::SameLine();
                         ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%u", texture->textureID);
                         
-ImGui::Checkbox("Use Checker Texture", &texture->use_checker);
+                        ImGui::Checkbox("Use Checker Texture", &texture->use_checker);
                     }
                 }
                 break;

@@ -90,6 +90,10 @@ void Scene::HandleAssetDrop(const std::string& path)
 	{
 		LoadModel(path);
 	}
+	else if (extension == "png" || extension == "dds" || extension == "jpg" || extension == "tga")
+	{
+		LoadTexture(path);
+	}
 	else
 	{
 		LOG("Error cargando archivo, formato incompatible: %s", extension.c_str());
@@ -133,5 +137,30 @@ bool Scene::LoadModel(const std::string& filePath)
 		gameObjects.push_back(gameObject);
 	}
 	return true;
+}
+
+bool Scene::LoadTexture(const std::string& filePath)
+{
+	if (selectedGameObject)
+	{
+		Texture* texture = (Texture*)selectedGameObject->GetComponent(ComponentType::Texture);
+
+		if (texture == nullptr)
+		{
+			texture = (Texture*)selectedGameObject->AddComponent(ComponentType::Texture);
+		}
+
+		if (texture->LoadTexture(filePath))
+		{
+			LOG("Textura %s aplicada a GameObject: %s", filePath.c_str(), selectedGameObject->name.c_str());
+			return true;
+		}
+	}
+	else
+	{
+		LOG("Ningun objeto seleccionado");
+		return false;
+	}
+
 }
 

@@ -23,6 +23,7 @@ public:
 	void Scene::HandleAssetDrop(const std::string& path);
 
 	bool LoadModel(const std::string& filePath);
+	bool LoadTexture(const std::string& filePath);
 	std::vector<GameObject*>& GetGameObjects() { return gameObjects; }
 	GameObject* GetSelectedGameObject() { return selectedGameObject; }
 	void SetSelectedGameObject(GameObject* gameObject) { selectedGameObject = gameObject; }

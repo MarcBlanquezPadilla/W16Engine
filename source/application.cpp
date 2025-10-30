@@ -37,7 +37,10 @@ int main()
 			if (Engine::GetInstance().Start() == true)
 			{
 				state = EngineState::LOOP;
-				LOG("STARTED WITHOUT ERRORS");
+				LOG("\n");
+				LOG("------------------------------");
+				LOG("--- STARTED WITHOUT ERRORS ---");
+				LOG("------------------------------\n\n");
 			}
 			else
 			{

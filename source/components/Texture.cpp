@@ -26,9 +26,8 @@ bool Texture::LoadFromAssimpMaterial(aiMaterial* material, const std::string& mo
 
         std::string texPath = modelDirectory + aiPath.C_Str();
 
-        if (this->LoadTexture(texPath)) 
+        if (LoadTexture(texPath)) 
         {
-            this->UploadToGPU();
             return true;
         }
         else
@@ -50,51 +49,55 @@ bool Texture::LoadTexture(const std::string& path)
 
     this->path = path;
 
-    ilGenImages(1, &this->ilImageID);
-    ilBindImage(this->ilImageID);
+    ilGenImages(1, &ilImageID);
+    ilBindImage(ilImageID);
 
     if (ilLoadImage(path.c_str()))
     {
         if (!ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE))
         {
             LOG("Error al convertir la imagen a RGBA: %s", path.c_str());
-            ilDeleteImages(1, &this->ilImageID);
+            ilDeleteImages(1, &ilImageID);
             return false;
         }
 
-        this->width = ilGetInteger(IL_IMAGE_WIDTH);
-        this->height = ilGetInteger(IL_IMAGE_HEIGHT);
+        width = ilGetInteger(IL_IMAGE_WIDTH);
+        height = ilGetInteger(IL_IMAGE_HEIGHT);
 
         LOG("Textura cargada en CPU desde: %s (Ancho: %d, Alto: %d)", path.c_str(), width, height);
 
         ilBindImage(0);
+
+        UploadToGPU();
         return true;
     }
     else
     {
         LOG("Error al cargar la textura desde: %s", path.c_str());
-        ilDeleteImages(1, &this->ilImageID);
+        ilDeleteImages(1, &ilImageID);
         return false;
     }
+
+    
 
     return ret;
 }
 
 void Texture::UploadToGPU()
 {
-    if (this->ilImageID == 0)
+    if (ilImageID == 0)
     {
         LOG("Error: Se intentó subir textura a GPU sin cargarla en CPU primero.");
         return;
     }
 
-    ilBindImage(this->ilImageID);
+    ilBindImage(ilImageID);
     unsigned char* data = ilGetData();
 
-    this->textureID = Engine::GetInstance().render->UploadTextureToGPU(
+    textureID = Engine::GetInstance().render->UploadTextureToGPU(
         data,
-        this->width,
-        this->height
+        width,
+        height
     );
 
     ilBindImage(0);
@@ -104,21 +107,19 @@ void Texture::UploadToGPU()
 
 void Texture::UnloadFromCPU()
 {
-    if (this->ilImageID != 0)
+    if (ilImageID != 0)
     {
-        ilDeleteImages(1, &this->ilImageID);
-        this->ilImageID = 0;
-        this->width = 0;
-        this->height = 0;
+        ilDeleteImages(1, &ilImageID);
+        ilImageID = 0;
     }
 }
 
 void Texture::OnDestroy()
 {
-    if (this->textureID != 0)
+    if (textureID != 0)
     {
-        Engine::GetInstance().render->DeleteTextureFromGPU(this->textureID);
-        this->textureID = 0;
+        Engine::GetInstance().render->DeleteTextureFromGPU(textureID);
+        textureID = 0;
     }
 
     UnloadFromCPU();

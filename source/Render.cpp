@@ -77,8 +77,6 @@ bool Render::PreUpdate()
 {
 	bool ret = true;
 
-
-
 	return ret;
 }
 
@@ -101,7 +99,7 @@ bool Render::PostUpdate()
 		Transform* transform = (Transform*)go->GetComponent(ComponentType::Transform);
 		Texture* texture = (Texture*)go->GetComponent(ComponentType::Texture);
 
-		if (mesh && transform && mesh->meshData.VAO != 0)
+		if (go->enabled && mesh && transform && mesh->meshData.VAO != 0)
 		{
 			unsigned int texToBind = defaultTexture;
 			if (texture && texture->GetTextureID() != 0 && !texture->use_checker)
