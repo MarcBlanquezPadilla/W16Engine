@@ -15,6 +15,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_opengl3.h"
+#include "imgui_internal.h"
 
 
 Editor::Editor(bool startEnabled) : Module(startEnabled)
@@ -56,7 +57,6 @@ bool Editor::Awake()
 	}
 
 	//CREAR VENTANAS
-	
 	//VIEW
 	windows[Menu::View].push_back(new ConfigWindow());
 	windows[Menu::View].push_back(new ConsoleWindow());
@@ -65,6 +65,7 @@ bool Editor::Awake()
 	
 	//HELP
 	windows[Menu::Help].push_back(new AboutWindow());
+
 	return ret;
 }
 
@@ -79,7 +80,7 @@ bool Editor::PreUpdate()
 
 bool Editor::Update(float dt)
 {
-	/*ImGui::DockSpaceOverViewport();*/
+	ImGui::DockSpaceOverViewport(0U,nullptr,ImGuiDockNodeFlags_PassthruCentralNode);
 
 	if (ImGui::BeginMainMenuBar())
 	{
@@ -87,7 +88,7 @@ bool Editor::Update(float dt)
 		{
 			if (ImGui::MenuItem("Exit"))
 			{
-				// Engine::GetInstance().RequestQuit(); 
+				Engine::GetInstance().QuitApplication();
 			}
 			ImGui::EndMenu();
 		}
@@ -124,6 +125,8 @@ bool Editor::Update(float dt)
 
 		ImGui::EndMainMenuBar();
 	}
+
+	
 
 	for (auto const& pair : windows)
 	{

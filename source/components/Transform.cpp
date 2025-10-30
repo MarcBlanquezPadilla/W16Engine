@@ -9,6 +9,7 @@ Transform::Transform(GameObject* owner, bool enabled) : Component(owner, enabled
     position = glm::vec3(0.0f, 0.0f, 0.0f);
     scale = glm::vec3(1.0f, 1.0f, 1.0f);
     rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+    eulerRotation = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
 Transform::~Transform()
@@ -23,5 +24,18 @@ glm::mat4 Transform::GetLocalMatrix() const
     glm::mat4 matScale = glm::scale(glm::mat4(1.0f), scale);
 
     return matTranslation * matRotation * matScale;
+}
+
+void Transform::SetEulerRotation(glm::vec3 _rotation)
+{
+    eulerRotation = _rotation;
+
+    glm::vec3 rotationRadians = glm::radians(_rotation);
+    rotation = glm::quat(rotationRadians);
+}
+
+glm::vec3 Transform::GetEulerRotation()
+{
+    return eulerRotation;
 }
 

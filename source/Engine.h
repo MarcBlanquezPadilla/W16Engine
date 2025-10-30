@@ -55,6 +55,8 @@ public:
 	float GetDtMs();
 	float GetDtS();
 
+	void QuitApplication();
+
 private:
 
 	Engine();
@@ -76,6 +78,7 @@ private:
 	PerfTimer frameTime;
 
 	float dt;
+	bool quit;
 
 	std::list<Module*> moduleList;
 };

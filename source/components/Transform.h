@@ -17,6 +17,8 @@ public:
         return ComponentType::Transform;
     };
 
+    void SetEulerRotation(glm::vec3 _rotation);
+    glm::vec3 GetEulerRotation();
 
     glm::mat4 GetLocalMatrix() const;
 
@@ -24,4 +26,6 @@ public:
     glm::vec3 position;
     glm::vec3 scale;
     glm::quat rotation;
+
+    glm::vec3 eulerRotation;
 };

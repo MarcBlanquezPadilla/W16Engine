@@ -50,6 +50,7 @@ bool Engine::Awake() {
 
     startTime.Start();
     frameTime.Start();
+    quit = false;
     
     return ret;
 }
@@ -101,7 +102,9 @@ bool Engine::Update() {
 
     //QUIT CONDITION
     if (input->GetWindowEvent(WE_QUIT) == true)
-        ret = false;
+        quit = true;
+
+    if (quit) ret = false;
 
     //UPDATE FRAMERATE
     dt = frameTime.ReadMs();
@@ -155,4 +158,10 @@ float Engine::GetDtMs()
 float Engine::GetDtS()
 {
     return dt/1000;
+}
+
+
+void Engine::QuitApplication()
+{
+    quit = true;
 }

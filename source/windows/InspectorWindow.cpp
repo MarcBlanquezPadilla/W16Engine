@@ -48,9 +48,12 @@ void InspectorWindow::Draw()
                         ImGui::Text("Position");
                         ImGui::InputFloat3("##Pos", &transform->position.x);
 
-                        ImGui::Text("Rotation (Quat)");
-                        ImGui::Text("X: %.2f Y: %.2f Z: %.2f W: %.2f",
-                            transform->rotation.x, transform->rotation.y, transform->rotation.z, transform->rotation.w);
+                        ImGui::Text("Rotation");
+                        glm::vec3 current_euler_degrees = transform->GetEulerRotation();
+                        if (ImGui::InputFloat3("##Rot", &current_euler_degrees.x))
+                        {
+                            transform->SetEulerRotation(current_euler_degrees);
+                        }
 
                         ImGui::Text("Scale");
                         ImGui::InputFloat3("##Scale", &transform->scale.x);
