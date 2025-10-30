@@ -1,10 +1,18 @@
 #pragma once
 #include "Module.h"
 #include <vector>
+#include <map>
 
 struct ImGuiIO;
 union SDL_Event;
 class UIWindow;
+
+enum Menu
+{
+	File,
+	View,
+	Help
+};
 
 class Editor : public Module
 {
@@ -26,5 +34,5 @@ public:
 
 private:
 	ImGuiIO* io = nullptr;
-	std::vector<UIWindow*> windows;
+	std::map<Menu, std::vector<UIWindow*>> windows;
 };

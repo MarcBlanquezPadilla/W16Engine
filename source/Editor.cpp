@@ -6,6 +6,8 @@
 
 #include "windows/UIWindow.h"
 #include "windows/ConfigWindow.h"
+#include "windows/ConsoleWindow.h"
+#include "windows/AboutWindow.h"
 
 #include <SDL3/SDL_events.h>
 #include "imgui.h"
@@ -22,7 +24,7 @@ Editor::~Editor() {}
 
 bool Editor::Awake()
 {
-	LOG("Iniciando ImGui (Editor)");
+	LOG("Initializing ImGui");
 	bool ret = true;
 
 	//SETUP DE IMGUI
@@ -52,7 +54,13 @@ bool Editor::Awake()
 	}
 
 	//CREAR VENTANAS
-	windows.push_back(new ConfigWindow());
+	
+	//VIEW
+	windows[Menu::View].push_back(new ConfigWindow());
+	windows[Menu::View].push_back(new ConsoleWindow());
+	
+	//HELP
+	windows[Menu::Help].push_back(new AboutWindow());
 	return ret;
 }
 
@@ -82,7 +90,28 @@ bool Editor::Update(float dt)
 
 		if (ImGui::BeginMenu("View"))
 		{
-			for (auto& window : windows)
+			for (auto& window : windows[Menu::View])
+			{
+				ImGui::MenuItem(window->name, NULL, &window->is_active);
+			}
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Help"))
+		{
+			if (ImGui::MenuItem("Documentation"))
+			{
+				SDL_OpenURL("https://github.com/MarcBlanquezPadilla/W16Engine");
+			}
+			if (ImGui::MenuItem("Report a bug"))
+			{
+				SDL_OpenURL("https://github.com/MarcBlanquezPadilla/W16Engine/issues");
+			}
+			if (ImGui::MenuItem("Download latest"))
+			{
+				SDL_OpenURL("https://github.com/MarcBlanquezPadilla/W16Engine/releases");
+			}
+			for (auto& window : windows[Menu::Help])
 			{
 				ImGui::MenuItem(window->name, NULL, &window->is_active);
 			}
@@ -92,11 +121,16 @@ bool Editor::Update(float dt)
 		ImGui::EndMainMenuBar();
 	}
 
-	for (auto& window : windows)
+	for (auto const& pair : windows)
 	{
-		if (window->is_active)
+		const std::vector<UIWindow*>& windows = pair.second;
+
+		for (auto& window : windows)
 		{
-			window->Draw();
+			if (window->is_active)
+			{
+				window->Draw();
+			}
 		}
 	}
 

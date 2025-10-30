@@ -45,6 +45,10 @@ add_executable(W16Engine
 	source/windows/UIWindow.h
 	source/windows/ConfigWindow.cpp
 	source/windows/ConfigWindow.h
+	source/windows/ConsoleWindow.cpp
+	source/windows/ConsoleWindow.h
+	source/windows/AboutWindow.cpp
+	source/windows/AboutWindow.h
 )
 
 target_link_libraries(W16Engine PRIVATE 

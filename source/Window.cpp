@@ -26,6 +26,7 @@ bool Window::Awake()
 	height = WINDOW_HEIGHT;
 
 	//INIT SDL
+	LOG("Initializing SDL3");
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
 		LOG("SDL_VIDEO could not initialize! SDL_Error: %s\n", SDL_GetError());
@@ -33,7 +34,6 @@ bool Window::Awake()
 	}
 	else
 	{
-
 		SDL_WindowFlags flags = SDL_WINDOW_OPENGL;
 
 		flags |= SDL_WINDOW_RESIZABLE;
