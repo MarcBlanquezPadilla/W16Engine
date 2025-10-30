@@ -7,7 +7,7 @@
 class ConfigWindow : public UIWindow
 {
 public:
-    ConfigWindow();
+    ConfigWindow(bool active);
     virtual ~ConfigWindow();
 
     void Draw() override;

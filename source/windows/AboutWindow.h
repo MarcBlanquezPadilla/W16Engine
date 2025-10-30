@@ -5,7 +5,7 @@
 class AboutWindow : public UIWindow
 {
 public:
-    AboutWindow();
+    AboutWindow(bool active);
     virtual ~AboutWindow();
 
     void Draw() override;

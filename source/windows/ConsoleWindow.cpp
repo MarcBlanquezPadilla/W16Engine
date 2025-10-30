@@ -2,7 +2,7 @@
 #include "imgui.h"
 #include "../Log.h"
 
-ConsoleWindow::ConsoleWindow() : UIWindow("Console")
+ConsoleWindow::ConsoleWindow(bool active) : UIWindow("Console", active)
 {
 
 }

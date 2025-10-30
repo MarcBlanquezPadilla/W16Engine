@@ -2,7 +2,7 @@
 #include "imgui.h"
 #include "../Global.h"
 
-AboutWindow::AboutWindow() : UIWindow("About")
+AboutWindow::AboutWindow(bool active) : UIWindow("About", active)
 {
 
 }

@@ -7,7 +7,7 @@
 class ConsoleWindow : public UIWindow
 {
 public:
-    ConsoleWindow();
+    ConsoleWindow(bool active);
     virtual ~ConsoleWindow();
 
     void Draw() override;

@@ -56,15 +56,15 @@ bool Editor::Awake()
 		ret = false;
 	}
 
-	//CREAR VENTANAS
-	//VIEW
-	windows[Menu::View].push_back(new ConfigWindow());
-	windows[Menu::View].push_back(new ConsoleWindow());
-	windows[Menu::View].push_back(new HierarchyWindow());
-	windows[Menu::View].push_back(new InspectorWindow());
+	//CREAR VENTANAS	//VIEW
+	windows[Menu::View].push_back(new ConfigWindow(true));
+	windows[Menu::View].push_back(new ConsoleWindow(true));
+	windows[Menu::View].push_back(new HierarchyWindow(true));
+	windows[Menu::View].push_back(new InspectorWindow(true));
+
 	
 	//HELP
-	windows[Menu::Help].push_back(new AboutWindow());
+	windows[Menu::Help].push_back(new AboutWindow(false));
 
 	return ret;
 }

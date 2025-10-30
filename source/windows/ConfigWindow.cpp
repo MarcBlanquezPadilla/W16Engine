@@ -4,7 +4,7 @@
 #include "../Render.h"
 #include "../Window.h"
 
-ConfigWindow::ConfigWindow() : UIWindow("Configuration")
+ConfigWindow::ConfigWindow(bool active) : UIWindow("Configuration", active)
 {
     fps_log.resize(100, 0.0f);
     memory_log.resize(100, 0.0f);

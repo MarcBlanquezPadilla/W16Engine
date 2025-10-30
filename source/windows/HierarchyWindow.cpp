@@ -5,7 +5,7 @@
 #include "imgui.h"
 #include "../Log.h"
 
-HierarchyWindow::HierarchyWindow() : UIWindow("Hierarchy")
+HierarchyWindow::HierarchyWindow(bool active) : UIWindow("Hierarchy", active)
 {
 
 }

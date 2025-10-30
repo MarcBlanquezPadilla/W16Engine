@@ -4,7 +4,7 @@
 class InspectorWindow : public UIWindow
 {
 public:
-    InspectorWindow();
+    InspectorWindow(bool active);
     virtual ~InspectorWindow();
 
     void Draw() override;

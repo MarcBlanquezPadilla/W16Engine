@@ -4,7 +4,7 @@
 class HierarchyWindow : public UIWindow
 {
 public:
-    HierarchyWindow();
+    HierarchyWindow(bool active);
     virtual ~HierarchyWindow();
 
     void Draw() override;

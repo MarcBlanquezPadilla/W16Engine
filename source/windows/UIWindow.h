@@ -3,7 +3,7 @@
 class UIWindow
 {
 public:
-    UIWindow(const char* name) : name(name), is_active(true) {}
+    UIWindow(const char* name, bool active) : name(name), is_active(active) {}
 
     virtual ~UIWindow() {}
 

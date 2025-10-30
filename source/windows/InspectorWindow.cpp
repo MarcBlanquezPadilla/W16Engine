@@ -9,7 +9,7 @@
 #include "imgui.h"
 #include "../Log.h"
 
-InspectorWindow::InspectorWindow() : UIWindow("Inspector")
+InspectorWindow::InspectorWindow(bool active) : UIWindow("Inspector", active)
 {
 
 }
