@@ -45,6 +45,7 @@ Scene::~Scene()
 bool Scene::Awake()
 {
 	bool ret = true;
+	selectedGameObject = nullptr;
 	return ret;
 }
 
@@ -110,27 +111,26 @@ bool Scene::LoadModel(const std::string& filePath)
 	for (unsigned int i = 0; i < scene->mNumMeshes; i++)
 	{
 		aiMesh* assimpMesh = scene->mMeshes[i];
-		GameObject* newGO = new GameObject(true);
-
-		Mesh* meshComp = (Mesh*)newGO->AddComponent(ComponentType::Mesh);
+		GameObject* gameObject = new GameObject(true, assimpMesh->mName.C_Str());
+		Mesh* meshComp = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
 		if (!meshComp || !meshComp->LoadFromAssimpMesh(assimpMesh))
 		{
 			LOG("Error al cargar la malla, se aborta la creación de este GameObject.");
-			delete newGO;
+			delete gameObject;
 			continue;
 		}
 
 		if (scene->HasMaterials())
 		{
 			aiMaterial* material = scene->mMaterials[assimpMesh->mMaterialIndex];
-			Texture* texComp = (Texture*)newGO->AddComponent(ComponentType::Texture);
+			Texture* texComp = (Texture*)gameObject->AddComponent(ComponentType::Texture);
 			if (texComp != nullptr)
 			{
 				texComp->LoadFromAssimpMaterial(material, modelDirectory);
 			}
 		}
 
-		gameObjects.push_back(newGO);
+		gameObjects.push_back(gameObject);
 	}
 	return true;
 }

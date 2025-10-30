@@ -2,12 +2,13 @@
 #include "Module.h"
 #include "components/Component.h"
 #include <map>
+#include <string>
 
 class GameObject
 {
 public:
 
-	GameObject(bool _enabled);
+	GameObject(bool _enabled, std::string _name);
 
 	~GameObject();
 
@@ -21,6 +22,7 @@ public:
 	Component* GetComponent(ComponentType type);
 
 public:
+	std::string name;
 	bool enabled;
 	std::map<ComponentType, Component*> components;
 };

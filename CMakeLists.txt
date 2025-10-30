@@ -49,6 +49,10 @@ add_executable(W16Engine
 	source/windows/ConsoleWindow.h
 	source/windows/AboutWindow.cpp
 	source/windows/AboutWindow.h
+	source/windows/HierarchyWindow.cpp
+	source/windows/HierarchyWindow.h
+	source/windows/InspectorWindow.cpp
+	source/windows/InspectorWindow.h
 )
 
 target_link_libraries(W16Engine PRIVATE 

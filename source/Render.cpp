@@ -104,10 +104,11 @@ bool Render::PostUpdate()
 		if (mesh && transform && mesh->meshData.VAO != 0)
 		{
 			unsigned int texToBind = defaultTexture;
-			if (texture && texture->GetTextureID() != 0)
+			if (texture && texture->GetTextureID() != 0 && !texture->use_checker)
 			{
 				texToBind = texture->GetTextureID();
 			}
+			else texToBind = checkerTextureID;
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, texToBind);

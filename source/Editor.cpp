@@ -8,6 +8,8 @@
 #include "windows/ConfigWindow.h"
 #include "windows/ConsoleWindow.h"
 #include "windows/AboutWindow.h"
+#include "windows/HierarchyWindow.h"
+#include "windows/InspectorWindow.h"
 
 #include <SDL3/SDL_events.h>
 #include "imgui.h"
@@ -58,6 +60,8 @@ bool Editor::Awake()
 	//VIEW
 	windows[Menu::View].push_back(new ConfigWindow());
 	windows[Menu::View].push_back(new ConsoleWindow());
+	windows[Menu::View].push_back(new HierarchyWindow());
+	windows[Menu::View].push_back(new InspectorWindow());
 	
 	//HELP
 	windows[Menu::Help].push_back(new AboutWindow());

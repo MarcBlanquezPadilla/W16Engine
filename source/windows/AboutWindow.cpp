@@ -46,7 +46,6 @@ void AboutWindow::Draw()
     }
     if (ImGui::CollapsingHeader("License"))
     {
-
         ImGui::Text("Copyright (c) 2025 TorratsGames\n"
             "\n"
             "Permission is hereby granted, free of charge, to any person obtaining a copy\n"

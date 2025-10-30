@@ -1,4 +1,3 @@
-#include "Module.h"
 #include "GameObject.h"
 #include "components/Component.h"
 #include "components/Mesh.h"
@@ -7,7 +6,7 @@
 #include <list>
 #include "Log.h"
 
-GameObject::GameObject(bool _enabled) :enabled(_enabled)
+GameObject::GameObject(bool _enabled, std::string _name) : enabled(_enabled), name(_name)
 {
 	AddComponent(ComponentType::Transform);
 }
@@ -49,14 +48,12 @@ bool GameObject::CleanUp()
 
 Component* GameObject::AddComponent(ComponentType type)
 {
-	// 1. ¡Comprobar si ya existe es mucho más fácil!
 	if (components.count(type) > 0)
 	{
 		LOG("Error: Este GameObject ya tiene un componente de este tipo.");
-		return components[type]; // Devolvemos el que ya existe
+		return components[type];
 	}
 
-	// 2. Creamos el nuevo componente (como antes)
 	Component* component = nullptr;
 	switch (type)
 	{
@@ -73,7 +70,6 @@ Component* GameObject::AddComponent(ComponentType type)
 		break;
 	}
 
-	// 3. Añadir al map (¡sintaxis mucho más limpia!)
 	if (component != nullptr)
 	{
 		components[type] = component;

@@ -23,8 +23,11 @@ public:
 	void Scene::HandleAssetDrop(const std::string& path);
 
 	bool LoadModel(const std::string& filePath);
-	const std::vector<GameObject*>& GetGameObjects() const { return gameObjects; }
+	std::vector<GameObject*>& GetGameObjects() { return gameObjects; }
+	GameObject* GetSelectedGameObject() { return selectedGameObject; }
+	void SetSelectedGameObject(GameObject* gameObject) { selectedGameObject = gameObject; }
 
-public:
+private:
 	std::vector<GameObject*> gameObjects;
+	GameObject* selectedGameObject;
 };

@@ -24,3 +24,4 @@ glm::mat4 Transform::GetLocalMatrix() const
 
     return matTranslation * matRotation * matScale;
 }
+
