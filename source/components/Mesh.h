@@ -1,10 +1,18 @@
 #pragma once
 #include "Component.h"
 #include <glm/glm.hpp>
+#include <vector>
 
 class GameObject;
 
 struct aiMesh;
+
+enum Basics
+{
+    Cube,
+    Triangle,
+    Sphere
+};
 
 struct Vertex
 {
@@ -36,6 +44,13 @@ public:
     }
 
     bool LoadFromAssimpMesh(aiMesh* assimpMesh);
+
+    bool LoadCube();
+    bool LoadSphere();
+    bool LoadPyramid();
+
+    bool LoadToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
+
 
 public:
     MeshData meshData;

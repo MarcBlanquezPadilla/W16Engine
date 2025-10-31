@@ -118,7 +118,11 @@ bool Input::PreUpdate()
 		case SDL_EVENT_WINDOW_SHOWN:
 		case SDL_EVENT_WINDOW_FOCUS_GAINED:
 		case SDL_EVENT_WINDOW_MAXIMIZED:
+			break;
 		case SDL_EVENT_WINDOW_RESTORED:
+			windowEvents[WE_SHOW] = true;
+			break;
+		case SDL_EVENT_WINDOW_RESIZED:
 			windowEvents[WE_SHOW] = true;
 			break;
 

@@ -1,10 +1,14 @@
 #include "Scene.h"
+#include "Engine.h"
+#include "Input.h"
 #include "GameObject.h"
+
 #include "components/Component.h"
 #include "components/Mesh.h"
 #include "components/Transform.h"
 #include "components/Texture.h"
 #include "Log.h"
+#include "Global.h"
 
 #include <list>
 #include <assimp/Importer.hpp>
@@ -164,3 +168,28 @@ bool Scene::LoadTexture(const std::string& filePath)
 
 }
 
+void Scene::CreateBasic(int basic)
+{
+	GameObject* gameObject = nullptr;
+	Mesh* mesh = nullptr;
+
+	switch (basic)
+	{
+	case CUBE:
+		gameObject = new GameObject(true, "Cube");
+		mesh = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
+		mesh->LoadCube();
+		break;
+	case SPHERE:
+		gameObject = new GameObject(true, "Sphere");
+		mesh = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
+		mesh->LoadSphere();
+		break;
+	case PYRAMID:
+		gameObject = new GameObject(true, "Pyramid");
+		mesh = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
+		mesh->LoadPyramid();
+		break;
+	}
+	if (gameObject) gameObjects.push_back(gameObject);
+}

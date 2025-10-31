@@ -27,6 +27,7 @@ public:
 	std::vector<GameObject*>& GetGameObjects() { return gameObjects; }
 	GameObject* GetSelectedGameObject() { return selectedGameObject; }
 	void SetSelectedGameObject(GameObject* gameObject) { selectedGameObject = gameObject; }
+	void CreateBasic(int basic);
 
 private:
 	std::vector<GameObject*> gameObjects;

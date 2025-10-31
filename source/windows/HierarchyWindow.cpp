@@ -1,6 +1,7 @@
 #include "HierarchyWindow.h"
 #include "../Engine.h"
 #include "../Scene.h"
+#include "../Global.h"
 #include "../GameObject.h"
 #include "imgui.h"
 #include "../Log.h"
@@ -32,6 +33,27 @@ void HierarchyWindow::Draw()
         {
             Engine::GetInstance().scene->SetSelectedGameObject(gameObject);
         }
+    }
+
+    if (ImGui::BeginPopupContextWindow("HierarchyContextMenu"))
+    {
+        if (ImGui::BeginMenu("Create"))
+        {
+            if (ImGui::MenuItem("Cube"))
+            {
+                Engine::GetInstance().scene->CreateBasic(CUBE);
+            }
+            if (ImGui::MenuItem("Sphere"))
+            {
+                Engine::GetInstance().scene->CreateBasic(SPHERE);
+            }
+            if (ImGui::MenuItem("Pyramid"))
+            {
+                Engine::GetInstance().scene->CreateBasic(PYRAMID);
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndPopup();
     }
 
     ImGui::End();

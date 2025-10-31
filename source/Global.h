@@ -14,3 +14,7 @@
 #define LIBRARY_4 "DevIL (Image Loading)"
 #define LIBRARY_5 "ImGui (Editor UI)"
 #define LIBRARY_6 "GLM (Math)"
+
+#define CUBE 0
+#define PYRAMID 1
+#define SPHERE 2
