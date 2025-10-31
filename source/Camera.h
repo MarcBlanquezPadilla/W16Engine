@@ -17,6 +17,9 @@ public:
 	bool CleanUp();
 
 private:
+	void CalcMouseVectors();
+
+private:
 	glm::mat4 projectionMatrix;
 	glm::mat4 viewMatrix;
 
@@ -38,7 +41,18 @@ private:
 	float zoomSpeed;
 
 	float focusDistance;
+	float orbitDistance;
+
+	bool orbit;
+	bool move;
+	bool zoom;
+	bool focus;
+
+	bool shouldBeRelative;
+	bool mouseCaptured;
 
 	bool windowChanged;
 	bool viewChanged;
+
+
 };
