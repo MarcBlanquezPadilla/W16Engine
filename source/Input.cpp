@@ -73,6 +73,7 @@ bool Input::PreUpdate()
 {
 	static SDL_Event event;
 	const bool* keys = SDL_GetKeyboardState(NULL);
+	mouseWheelY = 0;
 	for (int i = 0; i < MAX_KEYS; ++i)
 	{
 		if (keys[i] == 1)
@@ -102,6 +103,7 @@ bool Input::PreUpdate()
 
 	while (SDL_PollEvent(&event) != 0)
 	{
+		
 		Engine::GetInstance().editor->HandleInput(&event);
 		switch (event.type)
 		{
@@ -143,6 +145,9 @@ bool Input::PreUpdate()
 			mouseY = event.motion.y / scale;
 			}
 			break;
+		case SDL_EVENT_MOUSE_WHEEL:
+			mouseWheelY = event.wheel.y;
+			break;
 		case SDL_EVENT_DROP_FILE: 
 		{ 
 
@@ -158,6 +163,7 @@ bool Input::PreUpdate()
 			break;
 
 		}
+
 		
 	};
 
@@ -227,4 +233,9 @@ Vector2D Input::GetMouseMotion()
 KeyState Input::GetGamepadButton(SDL_GamepadButton button) const
 {
 	return gamepadButtons[button];
+}
+
+float Input::GetMouseWheelY()
+{
+	return mouseWheelY;
 }

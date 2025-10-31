@@ -31,4 +31,14 @@ private:
 	float mouseSensibility;
 	float yaw;
 	float pitch;
+
+	float fieldOfView;
+	float maxFieldOfView;
+	float minFieldOfView;
+	float zoomSpeed;
+
+	float focusDistance;
+
+	bool windowChanged;
+	bool viewChanged;
 };

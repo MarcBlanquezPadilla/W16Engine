@@ -56,6 +56,8 @@ public:
 	Vector2D GetMousePosition();
 	
 	Vector2D GetMouseMotion();
+	
+	float GetMouseWheelY();
 
 
 public:
@@ -76,4 +78,5 @@ private:
 	int mouseMotionY;
 	int mouseX;
 	int mouseY;
+	float mouseWheelY;
 };

@@ -7,7 +7,11 @@
 #include "Input.h"
 #include "Engine.h"
 #include "Render.h"
+#include "Scene.h"
 #include "Window.h"
+#include "GameObject.h"
+#include "components/Component.h"
+#include "components/Transform.h"
 
 
 Camera::Camera(bool startEnabled) : Module(startEnabled)
@@ -24,12 +28,7 @@ bool Camera::Awake()
 {
 	bool ret = true;
 	
-	projectionMatrix = glm::perspective(
-		glm::radians(45.0f), 
-		(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT,
-		0.1f,
-		1000.0f
-	);
+
 
 	position = glm::vec3(0.0f, 0.0f, 10.0f);
 	forward = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -41,18 +40,31 @@ bool Camera::Awake()
 	yaw = -90.0f;
 	pitch = 0.0f;
 	mouseSensibility = 0.1f;
+	fieldOfView = 45.0f;
+	maxFieldOfView = 45.0f;
+	minFieldOfView = 10.0f;
+	fieldOfView = 45.0f;
+	zoomSpeed = 3.0f;
+	focusDistance = 5.0f;
 
 	forward.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
 	forward.y = sin(glm::radians(pitch));
 	forward.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 	
-	glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+	right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
 	up = glm::normalize(glm::cross(right, forward));
 
-	glm::mat4 viewMatrix = glm::lookAt(
+	viewMatrix = glm::lookAt(
 		position,
 		position + forward,
 		up
+	);
+
+	projectionMatrix = glm::perspective(
+		glm::radians(fieldOfView),
+		(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT,
+		0.1f,
+		1000.0f
 	);
 
 	Engine::GetInstance().render->UpdateViewMatix(viewMatrix);
@@ -79,9 +91,32 @@ bool Camera::PreUpdate()
 		SDL_SetWindowRelativeMouseMode(Engine::GetInstance().window->window, false);
 	}
 
-	bool moveCam = Engine::GetInstance().input->GetMouseButtonDown(3) == KEY_REPEAT;
+	//FOCUS
+	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_F) == KEY_DOWN)
+	{
+		GameObject* gameObject = Engine::GetInstance().scene->GetSelectedGameObject();
+		if (gameObject)
+		{
+			Transform* transform = (Transform*)gameObject->GetComponent(ComponentType::Transform);
+			if (transform)
+			{
+				glm::vec3 targetPosition = transform->position;
 
-	if (moveCam)
+				forward = glm::normalize(targetPosition - position);
+
+				position = targetPosition - (forward * focusDistance);
+
+				yaw = glm::degrees(atan2(forward.z, forward.x));
+				pitch = glm::degrees(asin(forward.y));
+
+				right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+				up = glm::normalize(glm::cross(right, forward));
+
+				viewChanged = true;
+			}
+		}
+	}
+	if (Engine::GetInstance().input->GetMouseButtonDown(3) == KEY_REPEAT)
 	{
 		//MOUSE
 		float mouseX, mouseY;
@@ -105,7 +140,7 @@ bool Camera::PreUpdate()
 
 		forward = glm::normalize(newForward);
 
-		glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+		right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
 		up = glm::normalize(glm::cross(right, forward));
 
 
@@ -114,7 +149,7 @@ bool Camera::PreUpdate()
 		bool sPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_S) == KEY_REPEAT;
 		bool aPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_A) == KEY_REPEAT;
 		bool dPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_D) == KEY_REPEAT;
-		bool shift = (Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT || 
+		bool shift = (Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT ||
 			Engine::GetInstance().input->GetKey(SDL_SCANCODE_RSHIFT) == KEY_REPEAT);
 
 		//WASD MOVEMENT
@@ -137,32 +172,48 @@ bool Camera::PreUpdate()
 			position -= right * finalSpeed;
 		if (dPressed)
 			position += right * finalSpeed;
+		
+		viewChanged = true;
+	}
 
-
+	if (viewChanged)
+	{
 		//UPDATE VIEW MATRIX
-		glm::mat4 viewMatrix = glm::lookAt(
+		viewMatrix = glm::lookAt(
 			position,
 			position + forward,
 			up
 		);
 		Engine::GetInstance().render->UpdateViewMatix(viewMatrix);
+		viewChanged = false;
 	}
 
 	
-	bool windowChange = false;
+	float mouseWheel = Engine::GetInstance().input->GetMouseWheelY();
+
+	if (mouseWheel != 0) windowChanged = true;
 	
-	if (windowChange)
+	if (windowChanged)
 	{
-		if (windowChange)
+		//ZOOM
+		if (mouseWheel < 0)
 		{
-			projectionMatrix = glm::perspective(
-				glm::radians(45.0f),
-				(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT,
-				0.1f,
-				1000.0f
-			);
-			Engine::GetInstance().render->UpdateProjectionMatix(projectionMatrix);
+			fieldOfView += zoomSpeed;
+			if (fieldOfView > maxFieldOfView) fieldOfView = 45.0f;
 		}
+		else if (mouseWheel > 0)
+		{
+			fieldOfView -= zoomSpeed;
+			if (fieldOfView < minFieldOfView) fieldOfView = 10.0f;
+		}
+
+		projectionMatrix = glm::perspective(
+			glm::radians(fieldOfView),
+			(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT,
+			0.1f,
+			1000.0f
+		);
+		Engine::GetInstance().render->UpdateProjectionMatix(projectionMatrix);
 	}
 
 	return ret;

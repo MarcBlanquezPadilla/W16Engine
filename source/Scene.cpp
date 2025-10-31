@@ -162,7 +162,7 @@ bool Scene::LoadTexture(const std::string& filePath)
 	}
 	else
 	{
-		LOG("Ningun objeto seleccionado");
+		LOG("Ningun objeto seleccionado.");
 		return false;
 	}
 
