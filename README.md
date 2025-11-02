@@ -1,7 +1,7 @@
 # W16 ENGINE
 
 ### Short Description
-**W16 ENGINE** is a 3D game engine developed in **C++** using **SDL3**, **OpenGL**, **Assimp**, **DevIL**, **Glad**, **ImGUI** and **GLM**. It features a modular architecture inspired by Unity.  
+**W16 ENGINE** is a 3D game engine developed in **C++** using **SDL3**, **Assimp**, **DevIL**, **Glad**, **ImGUI** and **GLM**. It features a modular architecture inspired by Unity.  
 It allows loading 3D models and textures, managing hierarchies of GameObjects, and editing components through an in-engine editor.  
 The engine includes a full suite of tools for interactive scene visualization and game development.
 
@@ -51,7 +51,7 @@ The engine includes a full suite of tools for interactive scene visualization an
 | Action | Keys / Mouse |
 |--------|---------------|
 | Import model from PC | Drag and drop the FBX |
-| Basic Shapes | Right clic in the **Hierarchy** |
+| Basic Shapes | Right click in the **Hierarchy** |
 | Load textures | Drag and drop the texture file while selecting the mesh |
 | Toggle normals | Check the button in the inspector |
 | Transform | Change parameters in the inspector |
@@ -65,13 +65,13 @@ The engine includes a full suite of tools for interactive scene visualization an
 Each loaded model becomes a **GameObject** with the following components:
 - **Transform** – position, rotation, and scale.  
 - **Mesh** – geometry loaded via *Assimp*.  
-- **Texture** – image loaded with *DevIL*.
+- **Texture** – if the asset has an associated Texture, loaded with *DevIL*.
 
 ### Editor Windows
 - **Console**: Displays logs for geometry and texture loading, library initialization, app flow, and errors.  
 - **Configuration**:  
   - Real-time FPS graph.  
-  - Settings for all mod
+  - Settings
   - Memory consume information
  
 ---
