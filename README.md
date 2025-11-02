@@ -21,6 +21,7 @@ The engine includes a full suite of tools for interactive scene visualization an
 
 ### Extra funtionalities
 - **Functional transform** : Position, rotation and scale work in real time.
+- **Parent hierarchy** : Children are affected by parent's Transform.
 
 ---
 
