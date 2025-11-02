@@ -7,6 +7,7 @@
 #include "Scene.h"
 #include "Render.h"
 #include "Editor.h"
+#include "Loader.h"
 
 
 #define MAX_KEYS 300
@@ -164,7 +165,7 @@ bool Input::PreUpdate()
 			std::string filePathStr(filePath);
 			std::string extension = filePathStr.substr(filePathStr.find_last_of(".") + 1);
 
-			Engine::GetInstance().scene->HandleAssetDrop(filePathStr);
+			Engine::GetInstance().loader->HandleAssetDrop(filePathStr);
 			}
 			break;
 

@@ -28,6 +28,7 @@ struct MeshData
     unsigned int VBO = 0;
     unsigned int EBO = 0;
     int numIndices = 0;
+    int numVertices = 0;
 };
 
 struct NormalData
@@ -58,6 +59,7 @@ public:
     bool LoadPyramid();
 
     bool LoadToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
+    bool LoadNormalsToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
 
 
 public:

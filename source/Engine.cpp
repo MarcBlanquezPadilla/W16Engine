@@ -6,6 +6,7 @@
 #include "Camera.h"
 #include "Scene.h"
 #include "Editor.h"
+#include "Loader.h"
 
 
 Engine& Engine::GetInstance() {
@@ -25,6 +26,7 @@ Engine::Engine() {
     camera = new Camera(true);
     scene = new Scene(true);
     editor = new Editor(true);
+    loader = new Loader(true);
     
     AddModule(window);
     AddModule(input);
@@ -32,6 +34,7 @@ Engine::Engine() {
     AddModule(camera);
     AddModule(scene);
     AddModule(editor);
+    AddModule(loader);
 }
 
 

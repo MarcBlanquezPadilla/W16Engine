@@ -166,8 +166,6 @@ bool Render::RecursiveGameObjectsDraw(GameObject* gameObject, const glm::mat4& p
 		}
 	}
 
-	
-
 	return true;
 }
 
@@ -426,7 +424,7 @@ bool Render::UploadLinesToGPU(unsigned int& vao, unsigned int& vbo, const std::v
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
 
 	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0); // Desvincular VBO también
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	LOG("Lines of normals uploaded to GPU. VAO: %u, Vertices: %d", vao, lines.size());
 	return true;
@@ -437,7 +435,7 @@ void Render::DeleteMeshFromGPU(MeshData& meshData)
 	if (meshData.VBO != 0) glDeleteBuffers(1, &meshData.VBO);
 	if (meshData.EBO != 0) glDeleteBuffers(1, &meshData.EBO);
 	if (meshData.VAO != 0) glDeleteVertexArrays(1, &meshData.VAO);
-	meshData = MeshData(); // Resetea la struct
+	meshData = MeshData();
 }
 
 unsigned int Render::UploadTextureToGPU(unsigned char* data, int width, int height)

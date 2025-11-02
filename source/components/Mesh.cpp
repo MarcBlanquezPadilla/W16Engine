@@ -72,38 +72,12 @@ bool Mesh::LoadFromAssimpMesh(aiMesh* assimpMesh)
         return false;
     }
 
-    this->normalData.numVertices = vertices.size();
-    this->meshData.numIndices = indices.size();
-
-    //UPLOAD TO GPU
-    bool success = Engine::GetInstance().render->UploadMeshToGPU(this->meshData, vertices, indices);
-    if (!success) {
-        LOG("Error: Failed to upload Assimp main mesh to GPU.");
-        return false;
-    }
-
-    //NORMALS
-    std::vector<glm::vec3> normal_lines;
-    normal_lines.reserve(vertices.size() * 2);
-    const float NORMAL_LINE_LENGTH = 0.5f;
-
-    for (const Vertex& v : vertices)
-    {
-        normal_lines.push_back(v.position);
-        glm::vec3 lineEnd = v.position + (glm::normalize(v.normal) * NORMAL_LINE_LENGTH);
-        normal_lines.push_back(lineEnd);
-    }
-
-    if (!normal_lines.empty())
-    {
-        Engine::GetInstance().render->UploadLinesToGPU(
-            this->normalData.VAO,
-            this->normalData.VBO,
-            normal_lines
-        );
-        this->normalData.numVertices = normal_lines.size();
-    }
-
+    if (LoadToGpu(vertices, indices))
+        LOG("Error: Failed to upload mesh to GPU.");
+    
+    if (LoadNormalsToGpu(vertices, indices))
+        LOG("Error: Failed to upload normals to GPU.");
+    
     return true; 
 }
 
@@ -154,13 +128,15 @@ bool Mesh::LoadCube()
         20, 21, 22, 22, 23, 20
     };
 
-    this->hasUVs = true;
-    this->normalData.numVertices = vertices.size();
-    this->meshData.numIndices = indices.size();
+    if (LoadToGpu(vertices, indices))
+        LOG("Error: Failed to upload mesh to GPU.");
 
-    
-    return LoadToGpu(vertices, indices);
+    if (LoadNormalsToGpu(vertices, indices))
+        LOG("Error: Failed to upload normals to GPU.");
+
+    return true;
 }
+
 bool Mesh::LoadSphere()
 {
     std::vector<Vertex> vertices;
@@ -200,13 +176,15 @@ bool Mesh::LoadSphere()
         }
     }
 
-    this->hasUVs = true;
-    this->normalData.numVertices = vertices.size();
-    this->meshData.numIndices = indices.size();
+    if (LoadToGpu(vertices, indices))
+        LOG("Error: Failed to upload mesh to GPU.");
 
-    //LOAD TO GPU
-    return LoadToGpu(vertices, indices);
+    if (LoadNormalsToGpu(vertices, indices))
+        LOG("Error: Failed to upload normals to GPU.");
+
+    return true;
 }
+
 bool Mesh::LoadPyramid()
 {
     std::vector<Vertex> vertices;
@@ -245,13 +223,13 @@ bool Mesh::LoadPyramid()
         13, 14, 15
     };
 
-    
-    this->hasUVs = true;
-    this->normalData.numVertices = vertices.size();
-    this->meshData.numIndices = indices.size();
+    if (LoadToGpu(vertices, indices))
+        LOG("Error: Failed to upload mesh to GPU.");
 
-    //LOAD TO GPU
-    return LoadToGpu(vertices, indices);
+    if (LoadNormalsToGpu(vertices, indices))
+        LOG("Error: Failed to upload normals to GPU.");
+
+    return true;
 }
 
 bool Mesh::LoadToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
@@ -263,7 +241,7 @@ bool Mesh::LoadToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> ind
     }
 
     //UPLOAD MESH TO GPU
-    this->normalData.numVertices = vertices.size();
+    this->meshData.numVertices = vertices.size();
     this->meshData.numIndices = indices.size();
 
     bool success = Engine::GetInstance().render->UploadMeshToGPU(meshData, vertices, indices);
@@ -274,8 +252,12 @@ bool Mesh::LoadToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> ind
         return false;
     }
 
-    
-    //UPLOAD NORMALS TO GPU
+    hasUVs = true;
+    return true;
+}
+
+bool Mesh::LoadNormalsToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
+{
     std::vector<glm::vec3> normal_lines;
     normal_lines.reserve(vertices.size() * 2);
     const float NORMAL_LINE_LENGTH = 0.5f;
@@ -283,7 +265,6 @@ bool Mesh::LoadToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> ind
     for (const Vertex& v : vertices)
     {
         normal_lines.push_back(v.position);
-
         glm::vec3 lineEnd = v.position + (glm::normalize(v.normal) * NORMAL_LINE_LENGTH);
         normal_lines.push_back(lineEnd);
     }
@@ -295,12 +276,7 @@ bool Mesh::LoadToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> ind
             this->normalData.VBO,
             normal_lines
         );
-
         this->normalData.numVertices = normal_lines.size();
     }
-
-
-    hasUVs = true;
-    LOG("Created basic shape and normal lines");
     return true;
 }

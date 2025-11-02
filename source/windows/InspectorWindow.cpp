@@ -71,7 +71,7 @@ void InspectorWindow::Draw()
                     {
                         ImGui::Text("Vertices:");
                         ImGui::SameLine(); 
-                        ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.0f, 1.0f), "%d", mesh->normalData.numVertices);
+                        ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.0f, 1.0f), "%d", mesh->meshData.numVertices);
 
                         ImGui::Text("Indices:");
                         ImGui::SameLine();

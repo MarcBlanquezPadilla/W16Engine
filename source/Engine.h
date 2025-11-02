@@ -22,6 +22,7 @@ class Render;
 class Camera;
 class Scene;
 class Editor;
+class Loader;
 
 
 class Engine
@@ -63,6 +64,7 @@ public:
 	Camera* camera;
 	Scene* scene;
 	Editor* editor;
+	Loader* loader;
 
 private:
 

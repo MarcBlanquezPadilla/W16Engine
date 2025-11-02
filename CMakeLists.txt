@@ -35,6 +35,8 @@ add_executable(W16Engine
 	source/Editor.h
 	source/GameObject.cpp
 	source/GameObject.h
+	source/Loader.cpp
+	source/Loader.h
 	source/components/Component.h
 	source/components/Mesh.cpp
 	source/components/Mesh.h

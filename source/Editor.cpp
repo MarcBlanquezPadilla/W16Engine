@@ -104,7 +104,7 @@ bool Editor::Update(float dt)
 		{
 			if (ImGui::MenuItem("Documentation"))
 			{
-				SDL_OpenURL("https://github.com/MarcBlanquezPadilla/W16Engine");
+				SDL_OpenURL("https://github.com/MarcBlanquezPadilla/W16Engine/blob/main/README.md");
 			}
 			if (ImGui::MenuItem("Report a bug"))
 			{

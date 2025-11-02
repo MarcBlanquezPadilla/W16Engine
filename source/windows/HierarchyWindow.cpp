@@ -1,6 +1,7 @@
 #include "HierarchyWindow.h"
 #include "../Engine.h"
 #include "../Scene.h"
+#include "../Loader.h"
 #include "../Global.h"
 #include "../GameObject.h"
 #include "imgui.h"
@@ -27,6 +28,7 @@ void HierarchyWindow::Draw()
     }
 
     Scene* scene = Engine::GetInstance().scene;
+    Loader* loader = Engine::GetInstance().loader;
 
     for (GameObject* go : scene->GetGameObjects())
     {
@@ -37,9 +39,9 @@ void HierarchyWindow::Draw()
     {
         if (ImGui::BeginMenu("Create"))
         {
-            if (ImGui::MenuItem("Cube")) { scene->CreateBasic(CUBE); }
-            if (ImGui::MenuItem("Sphere")) { scene->CreateBasic(SPHERE); }
-            if (ImGui::MenuItem("Pyramid")) { scene->CreateBasic(PYRAMID); }
+            if (ImGui::MenuItem("Cube")) { loader->CreateBasic(CUBE); }
+            if (ImGui::MenuItem("Sphere")) { loader->CreateBasic(SPHERE); }
+            if (ImGui::MenuItem("Pyramid")) { loader->CreateBasic(PYRAMID); }
             ImGui::EndMenu();
         }
         ImGui::EndPopup();
