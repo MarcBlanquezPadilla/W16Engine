@@ -72,10 +72,10 @@ bool Mesh::LoadFromAssimpMesh(aiMesh* assimpMesh)
         return false;
     }
 
-    if (LoadToGpu(vertices, indices))
+    if (!LoadToGpu(vertices, indices))
         LOG("Error: Failed to upload mesh to GPU.");
     
-    if (LoadNormalsToGpu(vertices, indices))
+    if (!LoadNormalsToGpu(vertices, indices))
         LOG("Error: Failed to upload normals to GPU.");
     
     return true; 
@@ -128,10 +128,10 @@ bool Mesh::LoadCube()
         20, 21, 22, 22, 23, 20
     };
 
-    if (LoadToGpu(vertices, indices))
+    if (!LoadToGpu(vertices, indices))
         LOG("Error: Failed to upload mesh to GPU.");
 
-    if (LoadNormalsToGpu(vertices, indices))
+    if (!LoadNormalsToGpu(vertices, indices))
         LOG("Error: Failed to upload normals to GPU.");
 
     return true;
@@ -176,10 +176,10 @@ bool Mesh::LoadSphere()
         }
     }
 
-    if (LoadToGpu(vertices, indices))
+    if (!LoadToGpu(vertices, indices))
         LOG("Error: Failed to upload mesh to GPU.");
 
-    if (LoadNormalsToGpu(vertices, indices))
+    if (!LoadNormalsToGpu(vertices, indices))
         LOG("Error: Failed to upload normals to GPU.");
 
     return true;
@@ -223,10 +223,10 @@ bool Mesh::LoadPyramid()
         13, 14, 15
     };
 
-    if (LoadToGpu(vertices, indices))
+    if (!LoadToGpu(vertices, indices))
         LOG("Error: Failed to upload mesh to GPU.");
 
-    if (LoadNormalsToGpu(vertices, indices))
+    if (!LoadNormalsToGpu(vertices, indices))
         LOG("Error: Failed to upload normals to GPU.");
 
     return true;
