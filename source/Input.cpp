@@ -1,9 +1,11 @@
 #include "Engine.h"
 #include "Input.h"
 #include "Window.h"
+#include "Camera.h"
 #include "Log.h"
 #include "Module.h"
 #include "Scene.h"
+#include "Render.h"
 #include "Editor.h"
 
 
@@ -125,6 +127,10 @@ bool Input::PreUpdate()
 			windowEvents[WE_SHOW] = true;
 			break;
 		case SDL_EVENT_WINDOW_RESIZED:
+			Engine::GetInstance().window->width = event.window.data1;
+			Engine::GetInstance().window->height = event.window.data2;
+			Engine::GetInstance().camera->windowChanged = true;
+			Engine::GetInstance().render->ChangeWindowSize(event.window.data1, event.window.data2);
 			windowEvents[WE_SHOW] = true;
 			break;
 

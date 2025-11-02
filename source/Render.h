@@ -8,6 +8,7 @@
 
 struct MeshData;
 struct Vertex;
+class GameObject;
 
 #define CHECKERS_WIDTH 64
 #define CHECKERS_HEIGHT 64
@@ -39,6 +40,10 @@ public:
 
 	unsigned int UploadTextureToGPU(unsigned char* data, int width, int height);
 	void DeleteTextureFromGPU(unsigned int textureID);
+
+	bool RecursiveGameObjectsDraw(GameObject* gameObject, const glm::mat4& parentModelMatrix);
+
+	void ChangeWindowSize(int x, int y);
 
 	std::string GetGLVersion() { return glVersion; }
 	std::string GetGLSLVersion() { return glslVersion; }

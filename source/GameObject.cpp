@@ -36,6 +36,11 @@ bool GameObject::Update(float dt)
 		}
 	}
 
+	for (auto child : childs)
+	{
+		child->Update(dt);
+	}
+
 	return ret;
 }
 
@@ -87,4 +92,38 @@ Component* GameObject::GetComponent(ComponentType type)
 	}
 
 	return nullptr;
+}
+
+void GameObject::AddChild(GameObject* gameObject)
+{
+	std::string baseName = gameObject->name;
+	std::string newName = baseName;
+	int counter = 1;
+
+
+	while (true)
+	{
+		bool nameCollision = false;
+
+
+		for (GameObject* child : childs)
+		{
+			if (child->name == newName)
+			{
+				nameCollision = true;
+				break;
+			}
+		}
+
+		if (!nameCollision)
+		{
+			break;
+		}
+
+		newName = baseName + " (" + std::to_string(counter) + ")";
+		counter++;
+	}
+
+	gameObject->name = newName;
+	childs.push_back(gameObject);
 }

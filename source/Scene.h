@@ -25,10 +25,15 @@ public:
 
 	bool LoadModel(const std::string& filePath);
 	bool LoadTexture(const std::string& filePath);
+
 	std::vector<GameObject*>& GetGameObjects() { return gameObjects; }
 	GameObject* GetSelectedGameObject() { return selectedGameObject; }
+
 	void SetSelectedGameObject(GameObject* gameObject) { selectedGameObject = gameObject; }
+
 	void CreateBasic(int basic);
+
+	void AddGameObject(GameObject* gameObject);
 
 private:
 	std::vector<GameObject*> gameObjects;

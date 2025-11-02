@@ -87,22 +87,37 @@ bool Render::PostUpdate()
 {
 	bool ret = true;
 
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glUseProgram(shaderProgram);
 
-	unsigned int defaultTexture = checkerTextureID;
-
 	const std::vector<GameObject*>& gameObjects = Engine::GetInstance().scene->GetGameObjects();
 
+	const glm::mat4 rootMatrix = glm::mat4(1.0f);
 	for (GameObject* go : gameObjects)
 	{
-		Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
-		Transform* transform = (Transform*)go->GetComponent(ComponentType::Transform);
-		Texture* texture = (Texture*)go->GetComponent(ComponentType::Texture);
+		RecursiveGameObjectsDraw(go, rootMatrix);
+	}
 
-		if (go->enabled && mesh && transform && mesh->meshData.VAO != 0)
+	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glUseProgram(0);
+
+	return ret;
+}
+
+bool Render::RecursiveGameObjectsDraw(GameObject* gameObject, const glm::mat4& parentModelMatrix)
+{
+	unsigned int defaultTexture = checkerTextureID;
+
+	Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
+	Transform* transform = (Transform*)gameObject->GetComponent(ComponentType::Transform);
+	Texture* texture = (Texture*)gameObject->GetComponent(ComponentType::Texture);
+
+	if (gameObject->enabled)
+	{
+		glm::mat4 globalModelMatrix = parentModelMatrix * transform->GetLocalMatrix();
+		if (mesh && mesh->enabled && transform && mesh->meshData.VAO != 0)
 		{
 			unsigned int texToBind = defaultTexture;
 
@@ -124,7 +139,7 @@ bool Render::PostUpdate()
 			//DRAW MESH
 			glm::mat4 modelMatrix = transform->GetLocalMatrix();
 
-			glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+			glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(globalModelMatrix));
 			glUniform1i(hasUVsLoc, mesh->hasUVs);
 
 			glBindVertexArray(mesh->meshData.VAO);
@@ -135,7 +150,7 @@ bool Render::PostUpdate()
 			{
 				glUseProgram(normalShaderProgram);
 
-				glUniformMatrix4fv(normalModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+				glUniformMatrix4fv(normalModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(globalModelMatrix));
 
 				glBindVertexArray(mesh->normalData.VAO);
 
@@ -144,13 +159,16 @@ bool Render::PostUpdate()
 				glUseProgram(shaderProgram);
 			}
 		}
+
+		for (GameObject* go : gameObject->childs)
+		{
+			RecursiveGameObjectsDraw(go, globalModelMatrix);
+		}
 	}
 
-	glBindVertexArray(0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glUseProgram(0);
+	
 
-	return ret;
+	return true;
 }
 
 bool Render::CleanUp()
@@ -452,4 +470,9 @@ void Render::DeleteTextureFromGPU(unsigned int textureID)
 		glDeleteTextures(1, &textureID);
 		LOG("Texture removed from GPU. ID: %u", textureID);
 	}
+}
+
+void Render::ChangeWindowSize(int x, int y)
+{
+	glViewport(0, 0, x, y);
 }

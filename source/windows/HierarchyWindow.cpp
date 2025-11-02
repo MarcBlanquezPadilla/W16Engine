@@ -26,35 +26,60 @@ void HierarchyWindow::Draw()
         return;
     }
 
-    for each(GameObject * gameObject in Engine::GetInstance().scene->GetGameObjects())
+    Scene* scene = Engine::GetInstance().scene;
+
+    for (GameObject* go : scene->GetGameObjects())
     {
-        bool isSelected = (gameObject == Engine::GetInstance().scene->GetSelectedGameObject());
-        if (ImGui::Selectable(gameObject->name.c_str(), isSelected))
-        {
-            Engine::GetInstance().scene->SetSelectedGameObject(gameObject);
-        }
+        DrawGameObjectNode(go);
     }
 
     if (ImGui::BeginPopupContextWindow("HierarchyContextMenu"))
     {
         if (ImGui::BeginMenu("Create"))
         {
-            if (ImGui::MenuItem("Cube"))
-            {
-                Engine::GetInstance().scene->CreateBasic(CUBE);
-            }
-            if (ImGui::MenuItem("Sphere"))
-            {
-                Engine::GetInstance().scene->CreateBasic(SPHERE);
-            }
-            if (ImGui::MenuItem("Pyramid"))
-            {
-                Engine::GetInstance().scene->CreateBasic(PYRAMID);
-            }
+            if (ImGui::MenuItem("Cube")) { scene->CreateBasic(CUBE); }
+            if (ImGui::MenuItem("Sphere")) { scene->CreateBasic(SPHERE); }
+            if (ImGui::MenuItem("Pyramid")) { scene->CreateBasic(PYRAMID); }
             ImGui::EndMenu();
         }
         ImGui::EndPopup();
     }
 
     ImGui::End();
+}
+
+void HierarchyWindow::DrawGameObjectNode(GameObject* go)
+{
+    if (go == nullptr) return;
+
+    Scene* scene = Engine::GetInstance().scene;
+    GameObject* selected_go = scene->GetSelectedGameObject();
+
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+    if (go->childs.empty())
+    {
+        flags |= ImGuiTreeNodeFlags_Leaf;
+    }
+
+    if (go == selected_go)
+    {
+        flags |= ImGuiTreeNodeFlags_Selected;
+    }
+
+    bool node_open = ImGui::TreeNodeEx((void*)go, flags, go->name.c_str());
+
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left) || ImGui::IsItemClicked(ImGuiMouseButton_Right))
+    {
+        scene->SetSelectedGameObject(go);
+    }
+
+    if (node_open)
+    {
+        for (GameObject* child : go->childs)
+        {
+            DrawGameObjectNode(child);
+        }
+        ImGui::TreePop();
+    }
 }

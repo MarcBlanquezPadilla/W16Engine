@@ -3,7 +3,7 @@
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
 
-#define VERSION "0.1"
+#define VERSION "1.0"
 #define NAME "W16 Motor"
 #define DEVELOPER_1 "Marc Blanquez"
 #define DEVELOPER_2 "Arnau Balasch"

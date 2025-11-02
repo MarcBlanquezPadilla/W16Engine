@@ -19,6 +19,10 @@ public:
 private:
 	void CalcMouseVectors();
 
+public: 
+	bool windowChanged;
+	bool viewChanged;
+
 private:
 	glm::mat4 projectionMatrix;
 	glm::mat4 viewMatrix;
@@ -50,9 +54,4 @@ private:
 
 	bool shouldBeRelative;
 	bool mouseCaptured;
-
-	bool windowChanged;
-	bool viewChanged;
-
-
 };

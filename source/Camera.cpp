@@ -28,8 +28,6 @@ bool Camera::Awake()
 {
 	bool ret = true;
 	
-
-
 	position = glm::vec3(0.0f, 0.0f, 10.0f);
 	forward = glm::vec3(0.0f, 0.0f, -1.0f);
 	up = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -70,7 +68,7 @@ bool Camera::Awake()
 
 	projectionMatrix = glm::perspective(
 		glm::radians(fieldOfView),
-		(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT,
+		(float)Engine::GetInstance().window->width / (float)Engine::GetInstance().window->height,
 		0.1f,
 		1000.0f
 	);
@@ -220,11 +218,12 @@ bool Camera::PreUpdate()
 	{
 		projectionMatrix = glm::perspective(
 			glm::radians(fieldOfView),
-			(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT,
+			(float)Engine::GetInstance().window->width / (float)Engine::GetInstance().window->height,
 			0.1f,
 			1000.0f
 		);
 		Engine::GetInstance().render->UpdateProjectionMatix(projectionMatrix);
+		windowChanged = false;
 	}
 
 	return ret;

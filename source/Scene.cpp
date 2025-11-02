@@ -132,16 +132,44 @@ bool Scene::LoadModel(const std::string& filePath)
 		return false;
 	}
 
-	for (unsigned int i = 0; i < scene->mNumMeshes; i++)
+	GameObject* gameObject = new GameObject(true, scene->mRootNode->mName.C_Str());
+	if (scene->mNumMeshes > 1)
 	{
-		aiMesh* assimpMesh = scene->mMeshes[i];
-		GameObject* gameObject = new GameObject(true, assimpMesh->mName.C_Str());
+		for (unsigned int i = 0; i < scene->mNumMeshes; i++)
+		{
+			aiMesh* assimpMesh = scene->mMeshes[i];
+			GameObject* child = new GameObject(true, assimpMesh->mName.C_Str());
+			Mesh* meshComp = (Mesh*)child->AddComponent(ComponentType::Mesh);
+			if (!meshComp || !meshComp->LoadFromAssimpMesh(assimpMesh))
+			{
+				LOG("Error loading mesh, creation of this GameObject is aborted.");
+				delete gameObject;
+				continue;
+			}
+
+			if (scene->HasMaterials())
+			{
+				aiMaterial* material = scene->mMaterials[assimpMesh->mMaterialIndex];
+				Texture* texComp = (Texture*)child->AddComponent(ComponentType::Texture);
+				if (texComp != nullptr)
+				{
+					texComp->LoadFromAssimpMaterial(material, modelDirectory);
+				}
+			}
+
+			gameObject->AddChild(child);
+			selectedGameObject = child;
+		}
+	}
+	else
+	{
+		aiMesh* assimpMesh = scene->mMeshes[0];
+		gameObject->name = assimpMesh->mName.C_Str();
 		Mesh* meshComp = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
 		if (!meshComp || !meshComp->LoadFromAssimpMesh(assimpMesh))
 		{
 			LOG("Error loading mesh, creation of this GameObject is aborted.");
 			delete gameObject;
-			continue;
 		}
 
 		if (scene->HasMaterials())
@@ -153,9 +181,9 @@ bool Scene::LoadModel(const std::string& filePath)
 				texComp->LoadFromAssimpMaterial(material, modelDirectory);
 			}
 		}
-
-		gameObjects.push_back(gameObject);
 	}
+	AddGameObject(gameObject);
+	
 	return true;
 }
 
@@ -210,7 +238,41 @@ void Scene::CreateBasic(int basic)
 	
 	if (gameObject)
 	{
-		gameObjects.push_back(gameObject);
-		selectedGameObject = gameObject;
+		AddGameObject(gameObject);
 	}
+}
+
+void Scene::AddGameObject(GameObject* gameObject)
+{
+	std::string baseName = gameObject->name;
+	std::string newName = baseName;
+	int counter = 1;
+
+
+	while (true)
+	{
+		bool nameCollision = false;
+
+
+		for (GameObject* existingGO : gameObjects)
+		{
+			if (existingGO->name == newName)
+			{
+				nameCollision = true;
+				break;
+			}
+		}
+
+		if (!nameCollision)
+		{
+			break;
+		}
+
+		newName = baseName + " (" +std::to_string(counter) + ")";
+		counter++;
+	}
+
+	gameObject->name = newName;
+	gameObjects.push_back(gameObject);
+	selectedGameObject = gameObject;
 }

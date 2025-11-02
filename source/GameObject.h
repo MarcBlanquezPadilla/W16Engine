@@ -2,6 +2,7 @@
 #include "Module.h"
 #include "components/Component.h"
 #include <map>
+#include <list>
 #include <string>
 
 class GameObject
@@ -21,8 +22,14 @@ public:
 	Component* AddComponent(ComponentType type);
 	Component* GetComponent(ComponentType type);
 
+	void AddChild(GameObject* gameObject);
+
 public:
 	std::string name;
 	bool enabled;
+	
+	GameObject* parent;
+	std::list<GameObject*> childs;
+
 	std::map<ComponentType, Component*> components;
 };

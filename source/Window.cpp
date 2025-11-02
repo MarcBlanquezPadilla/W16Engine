@@ -45,7 +45,7 @@ bool Window::Awake()
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
 
-		window = SDL_CreateWindow("Platform Game", width, height, flags);
+		window = SDL_CreateWindow("W16Engine", width, height, flags);
 
 		context = SDL_GL_CreateContext(window);
 

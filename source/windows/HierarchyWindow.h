@@ -1,6 +1,8 @@
 #pragma once
 #include "UIWindow.h"
 
+class GameObject;
+
 class HierarchyWindow : public UIWindow
 {
 public:
@@ -8,7 +10,7 @@ public:
     virtual ~HierarchyWindow();
 
     void Draw() override;
-
+    void DrawGameObjectNode(GameObject* go);
 private:
 
 };
