@@ -32,13 +32,13 @@ bool Texture::LoadFromAssimpMaterial(aiMaterial* material, const std::string& mo
         }
         else
         {
-            LOG("Error: El componente Texture no pudo cargar la textura desde: %s", texPath.c_str());
+            LOG("Error: The Texture component could not load the texture from: %s", texPath.c_str());
             return false;
         }
     }
     else
     {
-        LOG("El material no tiene textura difusa.");
+        LOG("The material does not have a diffuse texture.");
         return false;
     }
 }
@@ -56,7 +56,7 @@ bool Texture::LoadTexture(const std::string& path)
     {
         if (!ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE))
         {
-            LOG("Error al convertir la imagen a RGBA: %s", path.c_str());
+            LOG("Error converting image to RGBA: %s", path.c_str());
             ilDeleteImages(1, &ilImageID);
             return false;
         }
@@ -64,7 +64,7 @@ bool Texture::LoadTexture(const std::string& path)
         width = ilGetInteger(IL_IMAGE_WIDTH);
         height = ilGetInteger(IL_IMAGE_HEIGHT);
 
-        LOG("Textura cargada en CPU desde: %s (Ancho: %d, Alto: %d)", path.c_str(), width, height);
+        LOG("Texture loaded into CPU from: %s (Width: %d, Height: %d)", path.c_str(), width, height);
 
         ilBindImage(0);
 
@@ -73,7 +73,7 @@ bool Texture::LoadTexture(const std::string& path)
     }
     else
     {
-        LOG("Error al cargar la textura desde: %s", path.c_str());
+        LOG("Error loading texture from: %s", path.c_str());
         ilDeleteImages(1, &ilImageID);
         return false;
     }
@@ -87,7 +87,7 @@ void Texture::UploadToGPU()
 {
     if (ilImageID == 0)
     {
-        LOG("Error: Se intentó subir textura a GPU sin cargarla en CPU primero.");
+        LOG("Error: An attempt was made to upload a texture to the GPU without first loading it to the CPU.");
         return;
     }
 

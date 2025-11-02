@@ -53,7 +53,6 @@ public:
     }
 
     bool LoadFromAssimpMesh(aiMesh* assimpMesh);
-
     bool LoadCube();
     bool LoadSphere();
     bool LoadPyramid();

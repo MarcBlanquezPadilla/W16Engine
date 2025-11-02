@@ -58,11 +58,11 @@ bool Scene::Start()
 
 	std::string modelPath = "Assets/BakerHouse.fbx";
 
-	LOG("Cargando modelo inicial: %s", modelPath.c_str());
+	LOG("Loading initial model: %s", modelPath.c_str());
 
 	if (!LoadModel(modelPath))
 	{
-		LOG("ERROR: Fallo al cargar el modelo inicial. Revise si el archivo existe en el directorio de la build.");
+		LOG("ERROR: Failed to load the initial model. Check if the file exists in the build directory.");
 		ret = false;
 	}
 
@@ -116,7 +116,7 @@ void Scene::HandleAssetDrop(const std::string& path)
 	}
 	else
 	{
-		LOG("Error cargando archivo, formato incompatible: %s", extension.c_str());
+		LOG("Error loading file, incompatible format: %s", extension.c_str());
 	}
 }
 
@@ -128,7 +128,7 @@ bool Scene::LoadModel(const std::string& filePath)
 	const aiScene* scene = importer.ReadFile(filePath, aiProcess_Triangulate | aiProcess_GenSmoothNormals);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
-		LOG("Error cargando modelo con Assimp: %s", importer.GetErrorString());
+		LOG("Error loading model with Assimp: %s", importer.GetErrorString());
 		return false;
 	}
 
@@ -139,7 +139,7 @@ bool Scene::LoadModel(const std::string& filePath)
 		Mesh* meshComp = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
 		if (!meshComp || !meshComp->LoadFromAssimpMesh(assimpMesh))
 		{
-			LOG("Error al cargar la malla, se aborta la creación de este GameObject.");
+			LOG("Error loading mesh, creation of this GameObject is aborted.");
 			delete gameObject;
 			continue;
 		}
@@ -172,13 +172,13 @@ bool Scene::LoadTexture(const std::string& filePath)
 
 		if (texture->LoadTexture(filePath))
 		{
-			LOG("Textura %s aplicada a GameObject: %s", filePath.c_str(), selectedGameObject->name.c_str());
+			LOG("Texture %s applied to GameObject: %s", filePath.c_str(), selectedGameObject->name.c_str());
 			return true;
 		}
 	}
 	else
 	{
-		LOG("Ningun objeto seleccionado.");
+		LOG("No object selected.");
 		return false;
 	}
 

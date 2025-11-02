@@ -50,7 +50,7 @@ Component* GameObject::AddComponent(ComponentType type)
 {
 	if (components.count(type) > 0)
 	{
-		LOG("Error: Este GameObject ya tiene un componente de este tipo.");
+		LOG("Error: This GameObject already has a component of this type.");
 		return components[type];
 	}
 

@@ -46,13 +46,13 @@ bool Editor::Awake()
 
 	if (!ImGui_ImplSDL3_InitForOpenGL(window, gl_context))
 	{
-		LOG("Error al inicializar ImGui_ImplSDL3_InitForOpenGL");
+		LOG("Error initializing ImGui_ImplSDL3_InitForOpenGL");
 		ret = false;
 	}
 
 	if (!ImGui_ImplOpenGL3_Init(glsl_version))
 	{
-		LOG("Error al inicializar ImGui_ImplOpenGL3_Init");
+		LOG("Error initializing ImGui_ImplOpenGL3_Init");
 		ret = false;
 	}
 
@@ -154,7 +154,7 @@ bool Editor::PostUpdate()
 
 bool Editor::CleanUp()
 {
-	LOG("Apagando ImGui");
+	LOG("Turning off ImGui");
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL3_Shutdown();
 	ImGui::DestroyContext();

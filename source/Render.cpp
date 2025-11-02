@@ -317,7 +317,7 @@ bool Render::CreateNormalShader()
 	glGetProgramiv(normalShaderProgram, GL_LINK_STATUS, &status);
 	if (status == GL_FALSE)
 	{
-		LOG("Error al linkar el shader de normales!");
+		LOG("Error linking normal shader!");
 		return false;
 	}
 
@@ -387,7 +387,7 @@ bool Render::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vert
 
 	meshData.numIndices = indices.size();
 
-	LOG("Malla subida a GPU. VAO: %u, VBO: %u, EBO: %u, Índices: %d",
+	LOG("Mesh uploaded to GPU. VAO: %u, VBO: %u, EBO: %u, Indices: %d",
 		meshData.VAO, meshData.VBO, meshData.EBO, meshData.numIndices);
 
 	return true;
@@ -410,7 +410,7 @@ bool Render::UploadLinesToGPU(unsigned int& vao, unsigned int& vbo, const std::v
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0); // Desvincular VBO también
 
-	LOG("Líneas de normales subidas a GPU. VAO: %u, Vértices: %d", vao, lines.size());
+	LOG("Lines of normals uploaded to GPU. VAO: %u, Vertices: %d", vao, lines.size());
 	return true;
 }
 
@@ -441,7 +441,7 @@ unsigned int Render::UploadTextureToGPU(unsigned char* data, int width, int heig
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	LOG("Textura subida a GPU. ID: %u", textureID);
+	LOG("Texture uploaded to GPU. ID: %u", textureID);
 	return textureID;
 }
 
@@ -450,6 +450,6 @@ void Render::DeleteTextureFromGPU(unsigned int textureID)
 	if (textureID != 0)
 	{
 		glDeleteTextures(1, &textureID);
-		LOG("Textura eliminada de GPU. ID: %u", textureID);
+		LOG("Texture removed from GPU. ID: %u", textureID);
 	}
 }

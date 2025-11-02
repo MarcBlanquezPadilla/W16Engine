@@ -153,7 +153,7 @@ bool Input::PreUpdate()
 
 			const char* filePath = event.drop.data;
 
-			SDL_Log("Archivo soltado en la ventana: %s", filePath);
+			LOG("File dropped in window: %s", filePath);
 
 			std::string filePathStr(filePath);
 			std::string extension = filePathStr.substr(filePathStr.find_last_of(".") + 1);

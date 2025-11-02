@@ -68,7 +68,7 @@ bool Mesh::LoadFromAssimpMesh(aiMesh* assimpMesh)
     }
 
     if (vertices.empty() || indices.empty()) {
-        LOG("Error: Malla de Assimp leída pero vectores vacíos.");
+        LOG("Error: Assimp mesh read but empty vectors.");
         return false;
     }
 
@@ -78,7 +78,7 @@ bool Mesh::LoadFromAssimpMesh(aiMesh* assimpMesh)
     //UPLOAD TO GPU
     bool success = Engine::GetInstance().render->UploadMeshToGPU(this->meshData, vertices, indices);
     if (!success) {
-        LOG("Error: Fallo al subir la malla principal de Assimp a la GPU.");
+        LOG("Error: Failed to upload Assimp main mesh to GPU.");
         return false;
     }
 
