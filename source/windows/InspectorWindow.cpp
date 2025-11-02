@@ -71,7 +71,7 @@ void InspectorWindow::Draw()
                     {
                         ImGui::Text("Vertices:");
                         ImGui::SameLine(); 
-                        ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.0f, 1.0f), "%d", mesh->meshData.numIndices);
+                        ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.0f, 1.0f), "%d", mesh->normalData.numVertices);
 
                         ImGui::Text("Indices:");
                         ImGui::SameLine();
@@ -84,6 +84,9 @@ void InspectorWindow::Draw()
                         ImGui::Text("Has UVs:");
                         ImGui::SameLine();
                         ImGui::TextUnformatted(mesh->hasUVs ? "Yes" : "No");
+
+                        ImGui::Separator();
+                        ImGui::Checkbox("Draw Normals", &mesh->drawNormals);
                     }
                 }
                 break;
@@ -102,7 +105,7 @@ void InspectorWindow::Draw()
                         ImGui::Text("Texture ID (GPU):");
                         ImGui::SameLine();
                         ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%u", texture->textureID);
-                        
+                        ImGui::Separator();
                         ImGui::Checkbox("Use Checker Texture", &texture->use_checker);
                     }
                 }

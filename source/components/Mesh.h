@@ -17,6 +17,7 @@ enum Basics
 struct Vertex
 {
     glm::vec3 position;
+    glm::vec3 normal;
     glm::vec2 texCoords;
 };
 
@@ -28,6 +29,14 @@ struct MeshData
     unsigned int EBO = 0;
     int numIndices = 0;
 };
+
+struct NormalData
+{
+    unsigned int VAO = 0;
+    unsigned int VBO = 0;
+    int numVertices = 0; 
+};
+
 
 class Mesh : public Component
 {
@@ -54,5 +63,7 @@ public:
 
 public:
     MeshData meshData;
+    NormalData normalData;
     bool hasUVs = false;
+    bool drawNormals = false;
 };

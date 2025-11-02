@@ -30,7 +30,7 @@ bool Editor::Awake()
 	LOG("Initializing ImGui");
 	bool ret = true;
 
-	//SETUP DE IMGUI
+	//IMGUI SETUP
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io_ref = ImGui::GetIO();
@@ -56,14 +56,12 @@ bool Editor::Awake()
 		ret = false;
 	}
 
-	//CREAR VENTANAS	//VIEW
+	//CREATE WINDOWS
 	windows[Menu::View].push_back(new ConfigWindow(true));
 	windows[Menu::View].push_back(new ConsoleWindow(true));
 	windows[Menu::View].push_back(new HierarchyWindow(true));
 	windows[Menu::View].push_back(new InspectorWindow(true));
 
-	
-	//HELP
 	windows[Menu::Help].push_back(new AboutWindow(false));
 
 	return ret;
@@ -166,6 +164,5 @@ bool Editor::CleanUp()
 
 void Editor::HandleInput(SDL_Event* event)
 {
-	// Pasa el evento de SDL a ImGui
 	ImGui_ImplSDL3_ProcessEvent(event);
 }

@@ -13,6 +13,7 @@ public:
 	virtual ~Scene();
 
 	bool Awake();
+	bool Start();
 
 	bool PreUpdate();
 	bool Update(float dt);

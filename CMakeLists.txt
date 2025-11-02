@@ -63,3 +63,7 @@ target_link_libraries(W16Engine PRIVATE
 	glm::glm
 	imgui::imgui
 )
+
+install(DIRECTORY Assets
+        DESTINATION bin
+        COMPONENT Runtime)

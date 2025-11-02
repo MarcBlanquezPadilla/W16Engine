@@ -22,7 +22,13 @@ int main()
 		case EngineState::AWAKE:
 			
 			if (Engine::GetInstance().Awake() == true)
+			{
 				state = EngineState::START;
+				LOG("\n");
+				LOG("------------------------------");
+				LOG("--- STARTED WITHOUT ERRORS ---");
+				LOG("------------------------------\n\n");
+			}
 			else
 			{
 				LOG("ERROR: Awake failed");
@@ -37,10 +43,7 @@ int main()
 			if (Engine::GetInstance().Start() == true)
 			{
 				state = EngineState::LOOP;
-				LOG("\n");
-				LOG("------------------------------");
-				LOG("--- STARTED WITHOUT ERRORS ---");
-				LOG("------------------------------\n\n");
+
 			}
 			else
 			{

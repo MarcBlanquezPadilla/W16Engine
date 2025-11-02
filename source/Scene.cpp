@@ -29,7 +29,6 @@ std::string GetFileExtension(const std::string& filePath)
 
 	std::string ext = filePath.substr(pos + 1);
 
-	// Convertir a minúsculas
 	std::transform(ext.begin(), ext.end(), ext.begin(),
 		[](unsigned char c) { return std::tolower(c); });
 
@@ -50,6 +49,23 @@ bool Scene::Awake()
 {
 	bool ret = true;
 	selectedGameObject = nullptr;
+	return ret;
+}
+
+bool Scene::Start()
+{
+	bool ret = true;
+
+	std::string modelPath = "Assets/BakerHouse.fbx";
+
+	LOG("Cargando modelo inicial: %s", modelPath.c_str());
+
+	if (!LoadModel(modelPath))
+	{
+		LOG("ERROR: Fallo al cargar el modelo inicial. Revise si el archivo existe en el directorio de la build.");
+		ret = false;
+	}
+
 	return ret;
 }
 
@@ -191,5 +207,10 @@ void Scene::CreateBasic(int basic)
 		mesh->LoadPyramid();
 		break;
 	}
-	if (gameObject) gameObjects.push_back(gameObject);
+	
+	if (gameObject)
+	{
+		gameObjects.push_back(gameObject);
+		selectedGameObject = gameObject;
+	}
 }

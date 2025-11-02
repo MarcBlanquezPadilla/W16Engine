@@ -34,6 +34,8 @@ public:
 	
 	bool UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
 	void DeleteMeshFromGPU(MeshData& meshData);
+	
+	bool UploadLinesToGPU(unsigned int& vao, unsigned int& vbo, const std::vector<glm::vec3>& lines);
 
 	unsigned int UploadTextureToGPU(unsigned char* data, int width, int height);
 	void DeleteTextureFromGPU(unsigned int textureID);
@@ -46,18 +48,25 @@ public:
 private:
 	bool CreateDefaultShader();
 	bool CreateCheckerTexture();
+	bool CreateNormalShader();
 
 private:
 	unsigned int shaderProgram;
+	unsigned int normalShaderProgram;
 	unsigned int checkerTextureID;
 
 	GLint modelMatrixLoc;
 	GLint viewMatrixLoc;
 	GLint projectionMatrixLoc;
+
+	GLint normalModelMatrixLoc;
+	GLint normalViewMatrixLoc;
+	GLint normalProjectionMatrixLoc;
+
 	GLint hasUVsLoc;
 
 	std::string glVersion;
 	std::string glslVersion;
-	std::string devilVersion; //NO CONSIGO CONSEGUIRLA
+	std::string devilVersion;
 	std::string gpu;
 };

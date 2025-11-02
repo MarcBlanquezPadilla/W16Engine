@@ -13,10 +13,6 @@
 #include "components/Texture.h"
 #include "Log.h"
 
-
-
-
-
 Render::Render(bool startEnabled) : Module(startEnabled)
 {
 	name = "Render";
@@ -56,14 +52,21 @@ bool Render::Awake()
 	glVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
 	glslVersion = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-
+	//CREATE DEFAULT SHADER
 	if (!CreateDefaultShader())
 	{
 		LOG("Error creating default shader");
 		return false;
 	}
 
-	// 4. Crear la Textura de Damero por defecto
+	//CREATE NORMAL SHADER
+	if (!CreateNormalShader())
+	{
+		LOG("Error creating normal shader");
+		return false;
+	}
+
+	//CREATE CHECKER TEXTURE
 	if (!CreateCheckerTexture())
 	{
 		LOG("Error creating checker texture");
@@ -92,7 +95,7 @@ bool Render::PostUpdate()
 	unsigned int defaultTexture = checkerTextureID;
 
 	const std::vector<GameObject*>& gameObjects = Engine::GetInstance().scene->GetGameObjects();
-	int i = 0;
+
 	for (GameObject* go : gameObjects)
 	{
 		Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
@@ -102,15 +105,23 @@ bool Render::PostUpdate()
 		if (go->enabled && mesh && transform && mesh->meshData.VAO != 0)
 		{
 			unsigned int texToBind = defaultTexture;
-			if (texture && texture->GetTextureID() != 0 && !texture->use_checker)
+
+			if (texture != nullptr)
 			{
-				texToBind = texture->GetTextureID();
+				if (texture->use_checker)
+				{
+					texToBind = checkerTextureID;
+				}
+				else if (texture->GetTextureID() != 0)
+				{
+					texToBind = texture->GetTextureID();
+				}
 			}
-			else texToBind = checkerTextureID;
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, texToBind);
 
+			//DRAW MESH
 			glm::mat4 modelMatrix = transform->GetLocalMatrix();
 
 			glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
@@ -118,9 +129,21 @@ bool Render::PostUpdate()
 
 			glBindVertexArray(mesh->meshData.VAO);
 			glDrawElements(GL_TRIANGLES, mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
-			
+
+			//DRAW NORMALS
+			if (mesh->drawNormals && mesh->normalData.VAO != 0)
+			{
+				glUseProgram(normalShaderProgram);
+
+				glUniformMatrix4fv(normalModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+
+				glBindVertexArray(mesh->normalData.VAO);
+
+				glDrawArrays(GL_LINES, 0, mesh->normalData.numVertices);
+
+				glUseProgram(shaderProgram);
+			}
 		}
-		i++;
 	}
 
 	glBindVertexArray(0);
@@ -166,18 +189,28 @@ bool Render::CreateShaderFromSources(unsigned int& shaderID, int type, const cha
 
 void Render::UpdateProjectionMatix(glm::mat4 pm)
 {
+	//UPDATE DEFAULT SHADER
 	glUseProgram(shaderProgram);
+	glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
 
-	GLint projLoc = glGetUniformLocation(shaderProgram, "projection");
-	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pm));
+	//UPDATE NORMAL SHADER
+	glUseProgram(normalShaderProgram);
+	glUniformMatrix4fv(normalProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
+
+	glUseProgram(shaderProgram);
 }
 
 void Render::UpdateViewMatix(glm::mat4 vm)
 {
+	//UPDATE DEFAULT SHADER
 	glUseProgram(shaderProgram);
+	glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
 
-	GLint viewLoc = glGetUniformLocation(shaderProgram, "view");
-	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(vm));
+	//UPDATE NORMAL SHADER
+	glUseProgram(normalShaderProgram);
+	glUniformMatrix4fv(normalViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
+
+	glUseProgram(shaderProgram);
 }
 
 bool Render::CreateDefaultShader()
@@ -221,7 +254,6 @@ bool Render::CreateDefaultShader()
 	if (!CreateShaderFromSources(fShader, GL_FRAGMENT_SHADER, fragmentShaderSource, strlen(fragmentShaderSource)))
 		return false;
 
-	// --- CREAR PROGRAM (copiado de tu Awake) ---
 	shaderProgram = glCreateProgram();
 	glAttachShader(shaderProgram, vShader);
 	glAttachShader(shaderProgram, fShader);
@@ -239,24 +271,68 @@ bool Render::CreateDefaultShader()
 			LOG("%s", logg);
 			delete[] logg;
 		}
-		return false; // Falla aquí si el linkeo va mal
+		return false;
 	}
 	glDeleteShader(vShader);
 	glDeleteShader(fShader);
 
-	// --- ¡EXTRA! Cachear los uniforms ---
-	// (Esto lo teníamos en el Render.h de antes)
 	modelMatrixLoc = glGetUniformLocation(shaderProgram, "model");
 	viewMatrixLoc = glGetUniformLocation(shaderProgram, "view");
 	projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projection");
 	hasUVsLoc = glGetUniformLocation(shaderProgram, "u_hasUVs");
 
-	return true; // Todo ha ido bien
+	return true;
+}
+
+bool Render::CreateNormalShader()
+{
+	unsigned int vShader = 0;
+	const char* vertexShaderSource = "#version 460 core\n"
+		"layout (location = 0) in vec3 position;\n"
+		"uniform mat4 model; \n"
+		"uniform mat4 view; \n"
+		"uniform mat4 projection; \n"
+		"void main()\n"
+		"{\n"
+		"   gl_Position = projection * view * model * vec4(position, 1.0f);\n"
+		"}\n";
+
+	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
+		return false;
+
+	unsigned int fShader = 0;
+	const char* fragmentShaderSource = "#version 460 core\n"
+		"out vec4 color;\n"
+		"void main() { color = vec4(1.0, 1.0, 0.0, 1.0); }\n";
+
+	if (!CreateShaderFromSources(fShader, GL_FRAGMENT_SHADER, fragmentShaderSource, strlen(fragmentShaderSource)))
+		return false;
+
+	normalShaderProgram = glCreateProgram();
+	glAttachShader(normalShaderProgram, vShader);
+	glAttachShader(normalShaderProgram, fShader);
+	glLinkProgram(normalShaderProgram);
+
+	int status = 0;
+	glGetProgramiv(normalShaderProgram, GL_LINK_STATUS, &status);
+	if (status == GL_FALSE)
+	{
+		LOG("Error al linkar el shader de normales!");
+		return false;
+	}
+
+	glDeleteShader(vShader);
+	glDeleteShader(fShader);
+
+	normalModelMatrixLoc = glGetUniformLocation(normalShaderProgram, "model");
+	normalViewMatrixLoc = glGetUniformLocation(normalShaderProgram, "view");
+	normalProjectionMatrixLoc = glGetUniformLocation(normalShaderProgram, "projection");
+
+	return true;
 }
 
 bool Render::CreateCheckerTexture()
 {
-	// --- CREATE TEXTURE CHECKERS (copiado de tu Awake) ---
 	GLubyte checkerImage[CHECKERS_HEIGHT][CHECKERS_WIDTH][4];
 	for (int i = 0; i < CHECKERS_HEIGHT; i++) {
 		for (int j = 0; j < CHECKERS_WIDTH; j++) {
@@ -287,39 +363,54 @@ bool Render::CreateCheckerTexture()
 
 bool Render::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
 {
-	// 1. Crear VAO (Vertex Array Object)
+	//CREATE VAO
 	glGenVertexArrays(1, &meshData.VAO);
 	glBindVertexArray(meshData.VAO);
 
-	// 2. Crear y llenar VBO (Vertex Buffer Object)
-	// Esto crea el buffer de vértices y guarda su ID en meshData.VBO
+	//CREATE VBO
 	glGenBuffers(1, &meshData.VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, meshData.VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 
-	// 3. Crear y llenar EBO (Element Buffer Object / Index Buffer)
-	// Esto crea el buffer de índices y guarda su ID en meshData.EBO
+	//CREATE EBO
 	glGenBuffers(1, &meshData.EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshData.EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 
-	// 4. Configurar Atributos (Solo Posición)
-	// Le dice al VAO cómo leer el VBO
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
 
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
 
-	// 5. Desvincular VAO (buena práctica)
 	glBindVertexArray(0);
 
-	// 6. Guardar el número de índices
 	meshData.numIndices = indices.size();
 
 	LOG("Malla subida a GPU. VAO: %u, VBO: %u, EBO: %u, Índices: %d",
 		meshData.VAO, meshData.VBO, meshData.EBO, meshData.numIndices);
 
+	return true;
+}
+
+bool Render::UploadLinesToGPU(unsigned int& vao, unsigned int& vbo, const std::vector<glm::vec3>& lines)
+{
+	//CREATE VAO
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	//CREATE VBO
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, lines.size() * sizeof(glm::vec3), &lines[0], GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0); // Desvincular VBO también
+
+	LOG("Líneas de normales subidas a GPU. VAO: %u, Vértices: %d", vao, lines.size());
 	return true;
 }
 
@@ -338,20 +429,16 @@ unsigned int Render::UploadTextureToGPU(unsigned char* data, int width, int heig
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 
-	// Configurar filtros
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// Configurar wrapping
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	// Subir los datos a la VRAM
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
-	// Generar Mipmaps
 	glGenerateMipmap(GL_TEXTURE_2D);
 
-	// Desvincular
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	LOG("Textura subida a GPU. ID: %u", textureID);

@@ -28,28 +28,20 @@ class Engine
 {
 public:
 
-	//Singelton
 	static Engine& GetInstance();
 
-	//Awake all modules
 	bool Awake();
 
-	//Start all modules
 	bool Start();
 
-	//Preupdate all modules
 	bool PreUpdate();
 
-	//Update all modules
 	bool Update();
 
-	//Postupdate all modules
 	bool PostUpdate();
 
-	//CleanUp all modules
 	bool CleanUp();
 
-	//Add modules to module list
 	void AddModule(Module* module);
 
 	float GetDtMs();
