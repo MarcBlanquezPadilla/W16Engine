@@ -118,7 +118,7 @@ bool Camera::PreUpdate()
 		Transform* transform = (Transform*)gameObject->GetComponent(ComponentType::Transform);
 		if (transform)
 		{
-			glm::vec3 targetPosition = transform->position;
+			glm::vec3 targetPosition = transform->GetPosition();
 
 			forward = glm::normalize(targetPosition - position);
 
@@ -142,9 +142,9 @@ bool Camera::PreUpdate()
 		Transform* transform = (Transform*)gameObject->GetComponent(ComponentType::Transform);
 		if (transform)
 		{
-			glm::vec3 vectorOrbit = { transform->position.x - position.x, transform->position.y - position.y, transform->position.z - position.z };
+			glm::vec3 vectorOrbit = { transform->GetPosition().x - position.x, transform->GetPosition().y - position.y, transform->GetPosition().z - position.z };
 			orbitDistance = glm::length(vectorOrbit);
-			glm::vec3 targetPosition = transform->position;
+			glm::vec3 targetPosition = transform->GetPosition();
 			position = targetPosition - (forward * orbitDistance);
 			viewChanged = true;
 		}

@@ -48,7 +48,12 @@ void InspectorWindow::Draw()
                     if (transform)
                     {
                         ImGui::Text("Position");
-                        ImGui::InputFloat3("##Pos", &transform->position.x);
+                        glm::vec3 current_position = transform->GetPosition();
+                        if (ImGui::InputFloat3("##Pos", &current_position.x))
+                        {
+                            transform->SetPosition(current_position);
+                        }
+
 
                         ImGui::Text("Rotation");
                         glm::vec3 current_euler_degrees = transform->GetEulerRotation();
@@ -58,7 +63,11 @@ void InspectorWindow::Draw()
                         }
 
                         ImGui::Text("Scale");
-                        ImGui::InputFloat3("##Scale", &transform->scale.x);
+                        glm::vec3 current_scale = transform->GetScale();
+                        if(ImGui::InputFloat3("##Scale", &current_scale.x))
+                        {
+                            transform->SetScale(current_scale);
+                        }
                     }
                 }
                 break;
