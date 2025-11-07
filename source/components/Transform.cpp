@@ -37,7 +37,7 @@ glm::mat4 Transform::GetGlobalMatrix() const
 
         glm::mat4 localMatrix = matTranslation * matRotation * matScale;
         glm::mat4 con = ((Transform*)owner->GetComponent(ComponentType::Transform))->GetGlobalMatrix() * localMatrix;
-        modelMatrix = con;
+        modelMatrix;
     }
     
     return modelMatrix;
