@@ -8,6 +8,10 @@
 
 GameObject::GameObject(bool _enabled, std::string _name) : enabled(_enabled), name(_name)
 {
+	parent = nullptr;
+	transform = nullptr;
+	childs.clear();
+	components.clear();
 	AddComponent(ComponentType::Transform);
 }
 
@@ -66,6 +70,7 @@ Component* GameObject::AddComponent(ComponentType type)
 		break;
 	case ComponentType::Transform:
 		component = new Transform(this, true);
+		transform = (Transform*)component;
 		break;
 	case ComponentType::Mesh:
 		component = new Mesh(this, true);
@@ -100,7 +105,6 @@ void GameObject::AddChild(GameObject* gameObject)
 	std::string newName = baseName;
 	int counter = 1;
 
-
 	while (true)
 	{
 		bool nameCollision = false;
@@ -123,7 +127,8 @@ void GameObject::AddChild(GameObject* gameObject)
 		newName = baseName + " (" + std::to_string(counter) + ")";
 		counter++;
 	}
-
 	gameObject->name = newName;
+
+	gameObject->parent = this;
 	childs.push_back(gameObject);
 }

@@ -21,8 +21,6 @@ public:
 
     bool LoadTexture(const std::string& path);
 
-    bool LoadFromAssimpMaterial(aiMaterial* material, const std::string& modelDirectory);
-
     void UploadToGPU();
 
     void UnloadFromCPU();

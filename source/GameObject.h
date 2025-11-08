@@ -1,6 +1,7 @@
 #pragma once
 #include "Module.h"
 #include "components/Component.h"
+#include "components/Transform.h"
 #include <map>
 #include <list>
 #include <string>
@@ -31,5 +32,6 @@ public:
 	GameObject* parent;
 	std::list<GameObject*> childs;
 
+	Transform* transform;
 	std::map<ComponentType, Component*> components;
 };

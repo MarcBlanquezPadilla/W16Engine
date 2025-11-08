@@ -17,32 +17,6 @@ Texture::~Texture()
     
 }
 
-bool Texture::LoadFromAssimpMaterial(aiMaterial* material, const std::string& modelDirectory)
-{
-    if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
-    {
-        aiString aiPath;
-        material->GetTexture(aiTextureType_DIFFUSE, 0, &aiPath);
-
-        std::string texPath = modelDirectory + aiPath.C_Str();
-
-        if (LoadTexture(texPath)) 
-        {
-            return true;
-        }
-        else
-        {
-            LOG("Error: The Texture component could not load the texture from: %s", texPath.c_str());
-            return false;
-        }
-    }
-    else
-    {
-        LOG("The material does not have a diffuse texture.");
-        return false;
-    }
-}
-
 bool Texture::LoadTexture(const std::string& path)
 {
     bool ret = true;
@@ -66,8 +40,6 @@ bool Texture::LoadTexture(const std::string& path)
 
         LOG("Texture loaded into CPU from: %s (Width: %d, Height: %d)", path.c_str(), width, height);
 
-        ilBindImage(0);
-
         UploadToGPU();
         return true;
     }
@@ -78,8 +50,7 @@ bool Texture::LoadTexture(const std::string& path)
         return false;
     }
 
-    
-
+  
     return ret;
 }
 

@@ -47,6 +47,7 @@ bool Render::Awake()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
 
 	gpu = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
 	glVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
@@ -93,10 +94,9 @@ bool Render::PostUpdate()
 
 	const std::vector<GameObject*>& gameObjects = Engine::GetInstance().scene->GetGameObjects();
 
-	const glm::mat4 rootMatrix = glm::mat4(1.0f);
 	for (GameObject* go : gameObjects)
 	{
-		RecursiveGameObjectsDraw(go, rootMatrix);
+		RecursiveGameObjectsDraw(go);
 	}
 
 	glBindVertexArray(0);
@@ -106,7 +106,7 @@ bool Render::PostUpdate()
 	return ret;
 }
 
-bool Render::RecursiveGameObjectsDraw(GameObject* gameObject, const glm::mat4& parentModelMatrix)
+bool Render::RecursiveGameObjectsDraw(GameObject* gameObject)
 {
 	unsigned int defaultTexture = checkerTextureID;
 
@@ -116,7 +116,7 @@ bool Render::RecursiveGameObjectsDraw(GameObject* gameObject, const glm::mat4& p
 
 	if (gameObject->enabled)
 	{
-		glm::mat4 globalModelMatrix = parentModelMatrix * transform->GetLocalMatrix();
+		glm::mat4 globalModelMatrix = transform->GetGlobalMatrix();
 		if (mesh && mesh->enabled && transform && mesh->meshData.VAO != 0)
 		{
 			unsigned int texToBind = defaultTexture;
@@ -137,13 +137,12 @@ bool Render::RecursiveGameObjectsDraw(GameObject* gameObject, const glm::mat4& p
 			glBindTexture(GL_TEXTURE_2D, texToBind);
 
 			//DRAW MESH
-			glm::mat4 modelMatrix = transform->GetLocalMatrix();
-
 			glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(globalModelMatrix));
 			glUniform1i(hasUVsLoc, mesh->hasUVs);
 
 			glBindVertexArray(mesh->meshData.VAO);
 			glDrawElements(GL_TRIANGLES, mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
+
 
 			//DRAW NORMALS
 			if (mesh->drawNormals && mesh->normalData.VAO != 0)
@@ -162,7 +161,7 @@ bool Render::RecursiveGameObjectsDraw(GameObject* gameObject, const glm::mat4& p
 
 		for (GameObject* go : gameObject->childs)
 		{
-			RecursiveGameObjectsDraw(go, globalModelMatrix);
+			RecursiveGameObjectsDraw(go);
 		}
 	}
 

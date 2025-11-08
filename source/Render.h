@@ -41,7 +41,7 @@ public:
 	unsigned int UploadTextureToGPU(unsigned char* data, int width, int height);
 	void DeleteTextureFromGPU(unsigned int textureID);
 
-	bool RecursiveGameObjectsDraw(GameObject* gameObject, const glm::mat4& parentModelMatrix);
+	bool RecursiveGameObjectsDraw(GameObject* gameObject);
 
 	void ChangeWindowSize(int x, int y);
 

@@ -53,11 +53,9 @@ public:
         return ComponentType::Mesh;
     }
 
-    bool LoadFromAssimpMesh(aiMesh* assimpMesh);
-    bool LoadCube();
-    bool LoadSphere();
-    bool LoadPyramid();
+    bool LoadModel(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
 
+private:
     bool LoadToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
     bool LoadNormalsToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
 
