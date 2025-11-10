@@ -52,6 +52,7 @@ bool Camera::Awake()
 
 	shouldBeRelative = false;
 	mouseCaptured = false;
+	lockCamera = false;
 
 	forward.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
 	forward.y = sin(glm::radians(pitch));
@@ -83,6 +84,11 @@ bool Camera::Awake()
 bool Camera::PreUpdate()
 {
 	bool ret = true;
+
+	if (lockCamera)
+	{
+		return ret;
+	}
 
 	SDL_SetWindowRelativeMouseMode(Engine::GetInstance().window->window, false);
 

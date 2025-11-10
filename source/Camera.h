@@ -16,6 +16,11 @@ public:
 
 	bool CleanUp();
 
+	glm::mat4 GetViewMatrix() const { return viewMatrix; }
+	glm::mat4 GetProjectionMatrix() const { return projectionMatrix; }
+
+	void LockCamera(bool _lockCamera) { lockCamera = _lockCamera; }
+
 private:
 	void CalcMouseVectors();
 
@@ -54,4 +59,5 @@ private:
 
 	bool shouldBeRelative;
 	bool mouseCaptured;
+	bool lockCamera;
 };

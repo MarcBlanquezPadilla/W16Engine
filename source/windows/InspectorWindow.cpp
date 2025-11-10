@@ -6,8 +6,12 @@
 #include "../components/Transform.h"
 #include "../components/Mesh.h"
 #include "../components/Texture.h"
-#include "imgui.h"
 #include "../Log.h"
+#include "../Editor.h"
+
+#include "imgui.h"
+#include "ImGuizmo.h"
+
 
 InspectorWindow::InspectorWindow(bool active) : UIWindow("Inspector", active)
 {
@@ -30,9 +34,19 @@ void InspectorWindow::Draw()
     }
 
     GameObject* gameObject = Engine::GetInstance().scene->GetSelectedGameObject();
+    Editor* editor = Engine::GetInstance().editor;
 
     if (gameObject != nullptr)
     {
+        if (ImGui::RadioButton("Translate", editor->currentGizmoOperation == ImGuizmo::TRANSLATE))
+            editor->currentGizmoOperation = ImGuizmo::TRANSLATE;
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Rotate", editor->currentGizmoOperation == ImGuizmo::ROTATE))
+            editor->currentGizmoOperation = ImGuizmo::ROTATE;
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Scale", editor->currentGizmoOperation == ImGuizmo::SCALE))
+            editor->currentGizmoOperation = ImGuizmo::SCALE;
+
         char name_buffer[64];
         sprintf_s(name_buffer, "%s", gameObject->name.c_str());
         ImGui::Checkbox(name_buffer, &gameObject->enabled);

@@ -3,7 +3,9 @@
 #include <vector>
 #include <map>
 
-struct ImGuiIO;
+#include "imgui.h"
+#include "ImGuizmo.h"
+
 union SDL_Event;
 class UIWindow;
 
@@ -31,6 +33,8 @@ public:
 	bool CleanUp();
 
 	void HandleInput(SDL_Event* event);
+
+	ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;
 
 private:
 	ImGuiIO* io = nullptr;

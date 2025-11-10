@@ -4,6 +4,11 @@
 #include "Render.h" 
 #include "Window.h"
 
+#include "Camera.h"
+#include "Scene.h"
+#include "GameObject.h"
+#include "components/Transform.h"
+
 #include "windows/UIWindow.h"
 #include "windows/ConfigWindow.h"
 #include "windows/ConsoleWindow.h"
@@ -11,11 +16,19 @@
 #include "windows/HierarchyWindow.h"
 #include "windows/InspectorWindow.h"
 
+
 #include <SDL3/SDL_events.h>
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_internal.h"
+#include "ImGuizmo.h"
+
+#include "glm/gtc/type_ptr.hpp"
+#include <cmath>
+
+
+
 
 
 Editor::Editor(bool startEnabled) : Module(startEnabled)
@@ -72,6 +85,7 @@ bool Editor::PreUpdate()
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
+	ImGuizmo::BeginFrame();
 
 	return true;
 }
@@ -79,6 +93,51 @@ bool Editor::PreUpdate()
 bool Editor::Update(float dt)
 {
 	ImGui::DockSpaceOverViewport(0U,nullptr,ImGuiDockNodeFlags_PassthruCentralNode);
+
+	GameObject* selectedGameObject = Engine::GetInstance().scene->GetSelectedGameObject();
+	Camera* camera = Engine::GetInstance().camera;
+
+	if (selectedGameObject != nullptr)
+	{
+		Transform* transform = (Transform*)selectedGameObject->GetComponent(ComponentType::Transform);
+		if (transform)
+		{
+			ImGuizmo::SetOrthographic(false);
+
+			ImGuiViewport* viewport = ImGui::GetMainViewport();
+			ImGuizmo::SetRect(viewport->Pos.x, viewport->Pos.y, viewport->Size.x, viewport->Size.y);
+
+			const glm::mat4& viewMatrix = camera->GetViewMatrix();
+			const glm::mat4& projectionMatrix = camera->GetProjectionMatrix();
+			glm::mat4 modelMatrix = transform->GetLocalMatrix();
+
+			ImGuizmo::Manipulate(
+				glm::value_ptr(viewMatrix),
+				glm::value_ptr(projectionMatrix),
+				currentGizmoOperation,
+				ImGuizmo::LOCAL,
+				glm::value_ptr(modelMatrix)
+			);
+
+			bool isGuizmoUsing = ImGuizmo::IsUsing();
+			camera->LockCamera(isGuizmoUsing);
+			if (isGuizmoUsing)
+			{
+				glm::vec3 newPos, newEulerRot, newScale;
+
+				ImGuizmo::DecomposeMatrixToComponents(
+					glm::value_ptr(modelMatrix),
+					glm::value_ptr(newPos),
+					glm::value_ptr(newEulerRot),
+					glm::value_ptr(newScale)
+				);
+
+				transform->SetPosition(newPos);
+				transform->SetEulerRotation(newEulerRot);
+				transform->SetScale(newScale);
+			}
+		}
+	}
 
 	if (ImGui::BeginMainMenuBar())
 	{

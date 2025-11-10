@@ -8,6 +8,7 @@ find_package(assimp CONFIG REQUIRED)
 find_package(DevIL REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+find_package(ImGuizmo CONFIG REQUIRED)
 
 add_executable(W16Engine
 	source/Global.h
@@ -64,6 +65,7 @@ target_link_libraries(W16Engine PRIVATE
 	DevIL::IL
 	glm::glm
 	imgui::imgui
+	imguizmo::imguizmo
 )
 
 install(DIRECTORY Assets
