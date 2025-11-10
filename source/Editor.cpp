@@ -1,5 +1,6 @@
 #include "Editor.h"
 #include "Engine.h"
+#include "Input.h"
 #include "Log.h" 
 #include "Render.h" 
 #include "Window.h"
@@ -48,6 +49,7 @@ bool Editor::Awake()
 	ImGui::CreateContext();
 	ImGuiIO& io_ref = ImGui::GetIO();
 	this->io = &io_ref;
+	io->IniFilename = NULL;
 
 	io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
@@ -70,12 +72,14 @@ bool Editor::Awake()
 	}
 
 	//CREATE WINDOWS
-	windows[Menu::View].push_back(new ConfigWindow(true));
+	windows[Menu::View].push_back(new ConfigWindow(false));
 	windows[Menu::View].push_back(new ConsoleWindow(true));
 	windows[Menu::View].push_back(new HierarchyWindow(true));
 	windows[Menu::View].push_back(new InspectorWindow(true));
 
 	windows[Menu::Help].push_back(new AboutWindow(false));
+
+	setDefaultUI = true;
 
 	return ret;
 }
@@ -92,13 +96,23 @@ bool Editor::PreUpdate()
 
 bool Editor::Update(float dt)
 {
-	ImGui::DockSpaceOverViewport(0U,nullptr,ImGuiDockNodeFlags_PassthruCentralNode);
+	ImGuiID dockspace_id = ImGui::DockSpaceOverViewport(0U, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
+
+	if (setDefaultUI)
+	{
+		SetupDockspace(dockspace_id);
+		setDefaultUI = false;
+	}
 
 	GameObject* selectedGameObject = Engine::GetInstance().scene->GetSelectedGameObject();
 	Camera* camera = Engine::GetInstance().camera;
 
 	if (selectedGameObject != nullptr)
 	{
+		if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_W) == KEY_DOWN) currentGizmoOperation = ImGuizmo::TRANSLATE;
+		else if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_E) == KEY_DOWN) currentGizmoOperation = ImGuizmo::SCALE;
+		else if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_R) == KEY_DOWN) currentGizmoOperation = ImGuizmo::ROTATE;
+
 		Transform* transform = (Transform*)selectedGameObject->GetComponent(ComponentType::Transform);
 		if (transform)
 		{
@@ -180,10 +194,17 @@ bool Editor::Update(float dt)
 			ImGui::EndMenu();
 		}
 
+		if (ImGui::BeginMenu("Preferences"))
+		{
+			if (ImGui::MenuItem("Set Default Interface"))
+			{
+				setDefaultUI = true;
+			}
+			ImGui::EndMenu();
+		}
+
 		ImGui::EndMainMenuBar();
 	}
-
-	
 
 	for (auto const& pair : windows)
 	{
@@ -224,4 +245,37 @@ bool Editor::CleanUp()
 void Editor::HandleInput(SDL_Event* event)
 {
 	ImGui_ImplSDL3_ProcessEvent(event);
+}
+
+void Editor::SetupDockspace(unsigned int dockspace_id)
+{
+	for (auto& window : windows[Menu::Help])
+	{
+		window->is_active = window->defaultEnabled;
+	}
+
+	for (auto& window : windows[Menu::View])
+	{
+		window->is_active = window->defaultEnabled;
+	}
+
+	ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImGui::DockBuilderRemoveNode(dockspace_id);
+	ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+	ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+	ImGuiID dock_main_id = dockspace_id;
+	ImGuiID dock_left_id;
+	ImGuiID dock_right_id;
+	ImGuiID dock_bottom_id;
+
+	dock_left_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.1666f, nullptr, &dock_main_id);
+
+	dock_right_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.20f, nullptr, &dock_main_id);
+
+	dock_bottom_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.30f, nullptr, &dock_main_id);
+
+	ImGui::DockBuilderDockWindow("Hierarchy", dock_left_id);
+	ImGui::DockBuilderDockWindow("Inspector", dock_right_id);
+	ImGui::DockBuilderDockWindow("Console", dock_bottom_id);
+	ImGui::DockBuilderFinish(dockspace_id);
 }

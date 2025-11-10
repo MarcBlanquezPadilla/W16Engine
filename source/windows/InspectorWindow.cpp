@@ -38,15 +38,6 @@ void InspectorWindow::Draw()
 
     if (gameObject != nullptr)
     {
-        if (ImGui::RadioButton("Translate", editor->currentGizmoOperation == ImGuizmo::TRANSLATE))
-            editor->currentGizmoOperation = ImGuizmo::TRANSLATE;
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Rotate", editor->currentGizmoOperation == ImGuizmo::ROTATE))
-            editor->currentGizmoOperation = ImGuizmo::ROTATE;
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Scale", editor->currentGizmoOperation == ImGuizmo::SCALE))
-            editor->currentGizmoOperation = ImGuizmo::SCALE;
-
         char name_buffer[64];
         sprintf_s(name_buffer, "%s", gameObject->name.c_str());
         ImGui::Checkbox(name_buffer, &gameObject->enabled);
@@ -61,6 +52,26 @@ void InspectorWindow::Draw()
                     Transform* transform = (Transform*)pair.second;
                     if (transform)
                     {
+                        //GIZMO MODE SELECTION
+                        const char* gizmoNames[] = { "Translate", "Rotate", "Scale" };
+                        static int gizmoIndex = 0;
+
+                        if (editor->currentGizmoOperation == ImGuizmo::TRANSLATE) gizmoIndex = 0;
+                        if (editor->currentGizmoOperation == ImGuizmo::ROTATE) gizmoIndex = 1;
+                        if (editor->currentGizmoOperation == ImGuizmo::SCALE) gizmoIndex = 2;
+
+                        if (ImGui::Combo("Gizmo Mode", &gizmoIndex, gizmoNames, IM_ARRAYSIZE(gizmoNames)))
+                        {
+                            switch (gizmoIndex)
+                            {
+                            case 0: editor->currentGizmoOperation = ImGuizmo::TRANSLATE; break;
+                            case 1: editor->currentGizmoOperation = ImGuizmo::ROTATE;    break;
+                            case 2: editor->currentGizmoOperation = ImGuizmo::SCALE;     break;
+                            }
+                        }
+                        ImGui::Separator();
+
+                        //ATRIBUTES
                         ImGui::Text("Position");
                         glm::vec3 current_position = transform->GetPosition();
                         if (ImGui::InputFloat3("##Pos", &current_position.x))
