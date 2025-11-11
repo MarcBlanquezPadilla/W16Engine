@@ -5,6 +5,8 @@
 #include <map>
 #include <list>
 #include <string>
+#include "pugixml.hpp"
+
 
 class GameObject
 {
@@ -25,6 +27,9 @@ public:
 
 	void AddChild(GameObject* gameObject);
 
+	void Save(pugi::xml_node gameObjectNode);
+	void Load(pugi::xml_node gameObjectNode);
+
 public:
 	std::string name;
 	bool enabled;
@@ -34,4 +39,9 @@ public:
 
 	Transform* transform;
 	std::map<ComponentType, Component*> components;
+
+	uint32_t UUID;
+	uint32_t parentUUID;
+private:
+	
 };

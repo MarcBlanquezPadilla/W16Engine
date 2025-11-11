@@ -17,6 +17,19 @@ Texture::~Texture()
     
 }
 
+
+void Texture::Save(pugi::xml_node componentNode)
+{
+    componentNode.append_attribute("type") = (int)GetType();
+    componentNode.append_attribute("path") = path.c_str();
+}
+
+void Texture::Load(pugi::xml_node componentNode)
+{
+    path = componentNode.attribute("path").as_string();
+    LoadTexture(path);
+}
+
 bool Texture::LoadTexture(const std::string& path)
 {
     bool ret = true;
@@ -45,7 +58,6 @@ bool Texture::LoadTexture(const std::string& path)
     }
     else
     {
-        LOG("Error loading texture from: %s", path.c_str());
         ilDeleteImages(1, &ilImageID);
         return false;
     }

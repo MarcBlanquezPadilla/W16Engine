@@ -9,6 +9,7 @@ find_package(DevIL REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(ImGuizmo CONFIG REQUIRED)
+find_package(pugixml CONFIG REQUIRED)
 
 add_executable(W16Engine
 	source/Global.h
@@ -66,8 +67,13 @@ target_link_libraries(W16Engine PRIVATE
 	glm::glm
 	imgui::imgui
 	imguizmo::imguizmo
+	pugixml::pugixml
 )
 
 install(DIRECTORY Assets
+        DESTINATION bin
+        COMPONENT Runtime)
+
+install(DIRECTORY Library
         DESTINATION bin
         COMPONENT Runtime)

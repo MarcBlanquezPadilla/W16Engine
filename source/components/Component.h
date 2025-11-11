@@ -1,4 +1,5 @@
 #pragma once
+#include "pugixml.hpp"
 class GameObject;
 
 enum class ComponentType {
@@ -27,6 +28,10 @@ public:
     virtual void OnDisable() {}
     
     virtual ComponentType GetType() { return ComponentType::None; };
+
+    virtual void Save(pugi::xml_node componentNode) {}
+
+    virtual void Load(pugi::xml_node componentNode) {}
 
 public:
     GameObject* owner;

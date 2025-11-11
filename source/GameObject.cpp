@@ -3,11 +3,23 @@
 #include "components/Mesh.h"
 #include "components/Transform.h"
 #include "components/Texture.h"
-#include <list>
 #include "Log.h"
+
+#include <list>
+#include <random>
+
+uint32_t GenerateUUID()
+{
+	static std::random_device rd;
+	static std::mt19937 gen(rd());
+	static std::uniform_int_distribution<uint32_t> dis(1, UINT32_MAX);
+	return dis(gen);
+}
 
 GameObject::GameObject(bool _enabled, std::string _name) : enabled(_enabled), name(_name)
 {
+	UUID = GenerateUUID();
+	parentUUID = 0;
 	parent = nullptr;
 	transform = nullptr;
 	childs.clear();
@@ -90,7 +102,6 @@ Component* GameObject::AddComponent(ComponentType type)
 
 Component* GameObject::GetComponent(ComponentType type)
 {
-
 	if (components.count(type) > 0)
 	{
 		return components[type];
@@ -128,7 +139,84 @@ void GameObject::AddChild(GameObject* gameObject)
 		counter++;
 	}
 	gameObject->name = newName;
-
+	gameObject->parentUUID = UUID;
 	gameObject->parent = this;
 	childs.push_back(gameObject);
+}
+
+void GameObject::Save(pugi::xml_node gameObjectNode)
+{
+	gameObjectNode.append_attribute("Name") = name.c_str();
+	gameObjectNode.append_attribute("UID") = UUID;
+	gameObjectNode.append_attribute("ParentUID") = parentUUID;
+	gameObjectNode.append_attribute("Enabled") = enabled;
+
+	if (components.size() > 0)
+	{
+		pugi::xml_node componentsNode = gameObjectNode.append_child("Components");
+		for (auto const& pair : components)
+		{
+			pugi::xml_node compoenntNode = componentsNode.append_child("Component");
+			Component* component = pair.second;
+			if (component->enabled)
+			{
+				component->Save(compoenntNode);
+			}
+		}
+	}
+
+	if (childs.size() > 0)
+	{
+		pugi::xml_node childsNode = gameObjectNode.append_child("Childs");
+		for (GameObject* child : childs)
+		{
+			pugi::xml_node childNode = childsNode.append_child("GameObject");
+			child->Save(childNode);
+		}
+	}
+}
+
+void GameObject::Load(pugi::xml_node gameObjectNode)
+{
+	name = gameObjectNode.attribute("Name").as_string();
+	UUID = gameObjectNode.attribute("UID").as_uint();
+	enabled = gameObjectNode.attribute("Enabled").as_bool();
+
+	pugi::xml_node componentsNode = gameObjectNode.child("Components");
+
+	if (!componentsNode.empty())
+	{
+		for (pugi::xml_node componentNode = componentsNode.child("Component"); componentNode; componentNode = componentNode.next_sibling("Component"))
+		{
+			ComponentType type = (ComponentType)componentNode.attribute("type").as_int();
+			Component* component = GetComponent(type);
+			if (!component)
+				component = AddComponent(type);
+			
+			if(component) component->Load(componentNode);
+			else
+			{
+				LOG("Failed to load component %d to %s game object", (int)type, name);
+			}
+		}
+	}
+
+	pugi::xml_node childsNode = gameObjectNode.child("Childs");
+	if (!childsNode.empty())
+	{
+		for (pugi::xml_node childNode = childsNode.child("GameObject"); childNode; childNode = childNode.next_sibling("GameObject"))
+		{
+			GameObject* childObject = new GameObject(true, childNode.attribute("Name").as_string());
+
+			if (childObject)
+			{
+				childObject->Load(childNode);
+				AddChild(childObject);
+			}
+			else
+			{
+				LOG("Error: Could not create new GameObject while loading scene.");
+			}
+		}
+	}
 }

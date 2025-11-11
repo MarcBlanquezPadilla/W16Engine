@@ -18,6 +18,8 @@ public:
         return ComponentType::Texture;
     };
 
+    void Save(pugi::xml_node componentNode) override;
+    void Load(pugi::xml_node componentNode) override;
 
     bool LoadTexture(const std::string& path);
 

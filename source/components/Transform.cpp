@@ -21,6 +21,80 @@ Transform::~Transform()
     
 }
 
+void Transform::Save(pugi::xml_node componentNode)
+{
+    componentNode.append_attribute("type") = (int)GetType();
+
+    pugi::xml_node positionNode = componentNode.append_child("Position");
+    positionNode.append_attribute("x") = GetPosition().x;
+    positionNode.append_attribute("y") = GetPosition().y;
+    positionNode.append_attribute("z") = GetPosition().z;
+
+    pugi::xml_node rotationNode = componentNode.append_child("Rotation");
+    rotationNode.append_attribute("x") = GetQuaterionRotation().x;
+    rotationNode.append_attribute("y") = GetQuaterionRotation().y;
+    rotationNode.append_attribute("z") = GetQuaterionRotation().z;
+    rotationNode.append_attribute("w") = GetQuaterionRotation().w;
+
+    pugi::xml_node scaleNode = componentNode.append_child("Scale");
+    scaleNode.append_attribute("x") = GetScale().x;
+    scaleNode.append_attribute("y") = GetScale().y;
+    scaleNode.append_attribute("z") = GetScale().z;
+}
+
+void Transform::Load(pugi::xml_node componentNode)
+{
+    pugi::xml_node positionNode = componentNode.child("Position");
+    if (positionNode)
+    {
+        glm::vec3 position = glm::vec3(
+            positionNode.attribute("x").as_float(),
+            positionNode.attribute("y").as_float(),
+            positionNode.attribute("z").as_float()
+        );
+
+        SetPosition(position);
+    }
+    else
+    {
+        LOG("Error: <Position> node not found for this component.");
+    }
+
+    pugi::xml_node rotationNode = componentNode.child("Rotation");
+    if (rotationNode)
+    {
+        glm::quat rotation = glm::quat(
+            rotationNode.attribute("w").as_float(),
+            rotationNode.attribute("x").as_float(),
+            rotationNode.attribute("y").as_float(),
+            rotationNode.attribute("z").as_float()
+        );
+
+        SetQuaternionRotation(rotation);
+    }
+    else
+    {
+        LOG("Error: <Rotation> node not found for this component.");
+    }
+
+    pugi::xml_node scaleNode = componentNode.child("Scale");
+    if (scaleNode)
+    {
+        glm::vec3 scale = glm::vec3(
+            scaleNode.attribute("x").as_float(),
+            scaleNode.attribute("y").as_float(),
+            scaleNode.attribute("z").as_float()
+        );
+
+        SetScale(scale);
+    }
+    else
+    {
+        LOG("Error: <Scale> node not found for this component.");
+    }
+}
+
+
 glm::mat4 Transform::GetLocalMatrix()
 {
     if (dirtyLocalMatrix)

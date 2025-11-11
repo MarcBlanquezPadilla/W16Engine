@@ -16,6 +16,9 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "SDL3/SDL_filesystem.h"
+
+#include "pugixml.hpp"
 
 std::string GetDirectoryFromPath(const std::string& filePath)
 {
@@ -34,6 +37,38 @@ std::string GetFileExtension(const std::string& filePath)
 		[](unsigned char c) { return std::tolower(c); });
 
 	return ext;
+}
+
+std::string GetFileName(const std::string& filePath)
+{
+	size_t pos = filePath.find_last_of("/\\");
+	if (std::string::npos == pos) return filePath;
+	return filePath.substr(pos + 1);
+}
+
+std::string FindFileInDirectory(const std::string& directoryPath, const std::string& fileName)
+{
+	std::string resultPath = "";
+
+	struct CallbackData {
+		std::string* result;
+		const std::string* target;
+	} data{ &resultPath, &fileName };
+
+	SDL_EnumerateDirectory(
+		directoryPath.c_str(),
+		[](void* userdata, const char* dirname, const char* fname) -> SDL_EnumerationResult {
+			auto* d = static_cast<CallbackData*>(userdata);
+			if (fname && *d->target == fname) {
+				*d->result = std::string(dirname) + "/" + fname;
+				return SDL_ENUM_SUCCESS;
+			}
+			return SDL_ENUM_CONTINUE;
+		},
+		&data
+	);
+
+	return resultPath;
 }
 
 Loader::Loader(bool startEnabled) : Module(startEnabled)
@@ -56,15 +91,15 @@ bool Loader::Start()
 {
 	bool ret = true;
 
-	std::string modelPath = "Assets/BakerHouse.fbx";
+	//std::string modelPath = "Assets/BakerHouse.fbx";
 
-	LOG("Loading initial model: %s", modelPath.c_str());
+	//LOG("Loading initial model: %s", modelPath.c_str());
 
-	if (!LoadModel(modelPath))
-	{
-		LOG("ERROR: Failed to load the initial model. Check if the file exists in the build directory.");
-		ret = false;
-	}
+	//if (!LoadModel(modelPath))
+	//{
+	//	LOG("ERROR: Failed to load the initial model. Check if the file exists in the build directory.");
+	//	ret = false;
+	//}
 
 	return ret;
 }
@@ -293,19 +328,31 @@ bool Loader::LoadFromAssimpMaterial(aiMaterial* material, const std::string& mod
 		aiString aiPath;
 		material->GetTexture(aiTextureType_DIFFUSE, 0, &aiPath);
 
+		std::string fileName = GetFileName(aiPath.C_Str());
+
+		// Intento 1: Ruta tal como viene en el material
 		std::string texPath = modelDirectory + aiPath.C_Str();
-
-
-
 		if (texture->LoadTexture(texPath))
 		{
 			return true;
 		}
-		else
+
+		// Intento 2: Solo el nombre del archivo en el directorio del modelo
+		texPath = modelDirectory + fileName;
+		if (texture->LoadTexture(texPath))
 		{
-			LOG("Error: The Texture component could not load the texture from: %s", texPath.c_str());
-			return false;
+			return true;
 		}
+
+		// Intento 3: Buscar el archivo en el directorio del modelo
+		texPath = FindFileInDirectory(modelDirectory, fileName);
+		if (!texPath.empty() && texture->LoadTexture(texPath))
+		{
+			return true;
+		}
+
+		LOG("Error: Could not find texture '%s' in any location", fileName.c_str());
+		return false;
 	}
 	else
 	{
@@ -489,6 +536,82 @@ void Loader::CreatePyramid()
 	{
 		Engine::GetInstance().scene->AddGameObject(gameObject);
 	}
+}
+
+#pragma endregion
+
+#pragma region Load&Save
+
+bool Loader::SaveScene()
+{
+	std::string savePath = "Assets/Scenes/scene.W16Scene";
+	LOG("Saving scene in: %s", savePath.c_str());
+
+	pugi::xml_document doc;
+
+	pugi::xml_node sceneNode = doc.append_child("Scene");
+
+	pugi::xml_node gameObjectsNode = sceneNode.append_child("GameObjects");
+
+	for (GameObject* gameObject : Engine::GetInstance().scene->GetGameObjects())
+	{
+		pugi::xml_node currentGameObjectNode = gameObjectsNode.append_child("GameObject");
+		gameObject->Save(currentGameObjectNode);
+	}
+
+	if (!doc.save_file(savePath.c_str()))
+	{
+		LOG("Error saving the scene file.");
+		return false;
+	}
+	return true;
+}
+
+bool Loader::LoadScene()
+{
+	std::string loadPath = "Assets/Scenes/scene.W16Scene";
+	LOG("Loading scene with path: %s", loadPath.c_str());
+
+	pugi::xml_document doc;
+	pugi::xml_parse_result result = doc.load_file(loadPath.c_str());
+
+	if (!result)
+	{
+		LOG("Error loading scene file '%s': %s", loadPath.c_str(), result.description());
+		return false;
+	}
+
+	pugi::xml_node sceneNode = doc.child("Scene");
+	if (!sceneNode)
+	{
+		LOG("Error: <Scene> node not found in %s", loadPath.c_str());
+		return false;
+	}
+
+	pugi::xml_node gameObjectsNode = sceneNode.child("GameObjects");
+	if (!gameObjectsNode)
+	{
+		LOG("Error: <GameObjects> node not found in %s", loadPath.c_str());
+		return false;
+	}
+
+	//Engine::GetInstance().scene->ClearGameObjects(); // O algo similar
+
+	for (pugi::xml_node gameObjectNode = gameObjectsNode.child("GameObject"); gameObjectNode; gameObjectNode = gameObjectNode.next_sibling("GameObject"))
+	{
+		GameObject* gameObject = new GameObject(true, gameObjectNode.attribute("Name").as_string());
+
+		if (!gameObject)
+		{
+			LOG("Error: Could not create new GameObject while loading scene.");
+			continue;
+		}
+		gameObject->Load(gameObjectNode);
+		Engine::GetInstance().scene->AddGameObject(gameObject);
+	}
+
+	LOG("Scene loaded successfully.");
+	return true;
 }
 
 #pragma endregion

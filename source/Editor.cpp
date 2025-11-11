@@ -4,6 +4,7 @@
 #include "Log.h" 
 #include "Render.h" 
 #include "Window.h"
+#include "Loader.h"
 
 #include "Camera.h"
 #include "Scene.h"
@@ -160,6 +161,14 @@ bool Editor::Update(float dt)
 			if (ImGui::MenuItem("Exit"))
 			{
 				Engine::GetInstance().QuitApplication();
+			}
+			if (ImGui::MenuItem("Save Scene"))
+			{
+				Engine::GetInstance().loader->SaveScene();
+			}
+			if (ImGui::MenuItem("Load Scene"))
+			{
+				Engine::GetInstance().loader->LoadScene();
 			}
 			ImGui::EndMenu();
 		}

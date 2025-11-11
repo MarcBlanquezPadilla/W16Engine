@@ -38,6 +38,9 @@ public:
 	//BASICS
 	void CreateBasic(int basic);
 
+	bool SaveScene();
+	bool LoadScene();
+
 private:
 	void CreateCube();
 	void CreateSphere();

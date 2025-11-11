@@ -17,11 +17,14 @@ public:
         return ComponentType::Transform;
     };
 
+    void Save(pugi::xml_node componentNode) override;
+    void Load(pugi::xml_node componentNode) override;
+
     void SetEulerRotation(glm::vec3 _rotation);
     void SetQuaternionRotation(glm::quat _rotation);
     void SetPosition(glm::vec3 _position);
     void SetScale(glm::vec3 _position);
-   
+
     glm::vec3 GetPosition();
     glm::vec3 GetEulerRotation();
     glm::quat GetQuaterionRotation();
@@ -30,6 +33,8 @@ public:
     glm::mat4 GetLocalMatrix();
     glm::mat4 GetGlobalMatrix();
     void InvalidateGlobalMatrix();
+
+
 
 public:
     
