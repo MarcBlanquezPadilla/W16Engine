@@ -3,7 +3,7 @@
 #include "components/Component.h"
 #include "components/Transform.h"
 #include <map>
-#include <list>
+#include <vector>
 #include <string>
 #include "pugixml.hpp"
 
@@ -35,7 +35,7 @@ public:
 	bool enabled;
 	
 	GameObject* parent;
-	std::list<GameObject*> childs;
+	std::vector<GameObject*> childs;
 
 	Transform* transform;
 	std::map<ComponentType, Component*> components;

@@ -4,14 +4,23 @@
 #include "glad/glad.h"
 #include <glm/glm.hpp>
 #include <vector>
+#include <map>
 #include <string>
 
 struct MeshData;
 struct Vertex;
 class GameObject;
+class Mesh;
 
 #define CHECKERS_WIDTH 64
 #define CHECKERS_HEIGHT 64
+
+struct RenderObject
+{
+	Mesh* mesh;
+	unsigned int textToBind;
+	glm::mat4 globalModelMatrix;
+};
 
 class Render : public Module
 {
@@ -41,7 +50,8 @@ public:
 	unsigned int UploadTextureToGPU(unsigned char* data, int width, int height);
 	void DeleteTextureFromGPU(unsigned int textureID);
 
-	bool RecursiveGameObjectsDraw(GameObject* gameObject);
+	void BuildRenderListsRecursive(GameObject* gameObject);
+	void DrawRenderList(const std::multimap<float,RenderObject>& map);
 
 	void ChangeWindowSize(int x, int y);
 
@@ -74,4 +84,7 @@ private:
 	std::string glslVersion;
 	std::string devilVersion;
 	std::string gpu;
+
+	std::multimap<float,RenderObject> opaqueList;
+	std::multimap<float,RenderObject> transparentList;
 };

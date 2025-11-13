@@ -47,7 +47,7 @@ public:
 
     ~Mesh() override;
 
-    void OnDestroy() override;
+    void CleanUp() override;
     
     ComponentType GetType() override {
         return ComponentType::Mesh;

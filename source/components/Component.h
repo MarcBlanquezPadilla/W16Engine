@@ -21,11 +21,7 @@ public:
 
     virtual void Update(float deltaTime) {}
 
-    virtual void OnDestroy() {}
-
-    virtual void OnEnable() {}
-    
-    virtual void OnDisable() {}
+    virtual void CleanUp() {}
     
     virtual ComponentType GetType() { return ComponentType::None; };
 

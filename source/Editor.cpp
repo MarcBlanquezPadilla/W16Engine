@@ -162,6 +162,10 @@ bool Editor::Update(float dt)
 			{
 				Engine::GetInstance().QuitApplication();
 			}
+			if (ImGui::MenuItem("New Scene"))
+			{
+				Engine::GetInstance().scene->CleanUp();
+			}
 			if (ImGui::MenuItem("Save Scene"))
 			{
 				Engine::GetInstance().loader->SaveScene();
@@ -243,6 +247,17 @@ bool Editor::PostUpdate()
 
 bool Editor::CleanUp()
 {
+	for (auto const& pair : windows)
+	{
+		const std::vector<UIWindow*>& windows = pair.second;
+
+		for (int i = 0; i < windows.size(); i++)
+		{
+			windows[i]->CleanUp();
+			delete windows[i];
+		}
+	}
+
 	LOG("Turning off ImGui");
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL3_Shutdown();

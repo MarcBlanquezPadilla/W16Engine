@@ -17,16 +17,30 @@ Texture::~Texture()
     
 }
 
+void Texture::CleanUp()
+{
+    if (textureID != 0)
+    {
+        Engine::GetInstance().render->DeleteTextureFromGPU(textureID);
+        textureID = 0;
+    }
+
+    UnloadFromCPU();
+}
 
 void Texture::Save(pugi::xml_node componentNode)
 {
     componentNode.append_attribute("type") = (int)GetType();
     componentNode.append_attribute("path") = path.c_str();
+    componentNode.append_attribute("useChecker") = use_checker;
+    componentNode.append_attribute("transparent") = transparent;
 }
 
 void Texture::Load(pugi::xml_node componentNode)
 {
     path = componentNode.attribute("path").as_string();
+    use_checker = componentNode.attribute("useChecker").as_bool();
+    transparent = componentNode.attribute("transparent").as_bool();
     LoadTexture(path);
 }
 
@@ -95,15 +109,4 @@ void Texture::UnloadFromCPU()
         ilDeleteImages(1, &ilImageID);
         ilImageID = 0;
     }
-}
-
-void Texture::OnDestroy()
-{
-    if (textureID != 0)
-    {
-        Engine::GetInstance().render->DeleteTextureFromGPU(textureID);
-        textureID = 0;
-    }
-
-    UnloadFromCPU();
 }

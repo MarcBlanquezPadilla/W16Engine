@@ -12,6 +12,8 @@ public:
     Transform(GameObject* owner, bool enabled);
 
     virtual ~Transform() override;
+
+    void CleanUp() override;
     
     ComponentType GetType() override {
         return ComponentType::Transform;

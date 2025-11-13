@@ -18,7 +18,7 @@ Mesh::~Mesh()
 	
 }
 
-void Mesh::OnDestroy()
+void Mesh::CleanUp()
 {
 	Engine::GetInstance().render->DeleteMeshFromGPU(this->meshData);
 }

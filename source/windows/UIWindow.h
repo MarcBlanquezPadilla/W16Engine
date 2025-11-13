@@ -7,6 +7,8 @@ public:
 
     virtual ~UIWindow() {}
 
+    virtual void CleanUp() {}
+
     virtual void Draw() = 0;
 
 public:

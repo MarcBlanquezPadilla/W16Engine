@@ -6,6 +6,7 @@
 #include "Render.h"
 #include "Window.h"
 #include "Engine.h"
+#include "Camera.h"
 #include "Scene.h"
 #include "GameObject.h"
 #include "components/Mesh.h"
@@ -81,6 +82,14 @@ bool Render::PreUpdate()
 {
 	bool ret = true;
 
+	opaqueList.clear();
+	transparentList.clear();
+
+	for (GameObject* gameObject : Engine::GetInstance().scene->GetGameObjects())
+	{
+		BuildRenderListsRecursive(gameObject);
+	}
+
 	return ret;
 }
 
@@ -92,12 +101,17 @@ bool Render::PostUpdate()
 
 	glUseProgram(shaderProgram);
 
-	const std::vector<GameObject*>& gameObjects = Engine::GetInstance().scene->GetGameObjects();
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_TRUE);
+	glDisable(GL_BLEND);
+	DrawRenderList(opaqueList);
 
-	for (GameObject* go : gameObjects)
-	{
-		RecursiveGameObjectsDraw(go);
-	}
+	glEnable(GL_BLEND);
+	glDepthMask(GL_FALSE);
+	DrawRenderList(transparentList);
+
+	glDepthMask(GL_TRUE);
+	glDisable(GL_BLEND);
 
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -106,66 +120,86 @@ bool Render::PostUpdate()
 	return ret;
 }
 
-bool Render::RecursiveGameObjectsDraw(GameObject* gameObject)
+
+
+void Render::BuildRenderListsRecursive(GameObject* gameObject)
 {
-	unsigned int defaultTexture = checkerTextureID;
-
-	Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
-	Transform* transform = (Transform*)gameObject->GetComponent(ComponentType::Transform);
-	Texture* texture = (Texture*)gameObject->GetComponent(ComponentType::Texture);
-
-	if (gameObject->enabled)
+	if (gameObject && gameObject->enabled)
 	{
-		glm::mat4 globalModelMatrix = transform->GetGlobalMatrix();
-		if (mesh && mesh->enabled && transform && mesh->meshData.VAO != 0)
+		Transform* transform = (Transform*)gameObject->GetComponent(ComponentType::Transform);
+
+		if (transform)
 		{
-			unsigned int texToBind = defaultTexture;
+			glm::mat4 globalModelMatrix = transform->GetGlobalMatrix();
+			Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
 
-			if (texture != nullptr)
+			if (mesh && mesh->enabled && mesh->meshData.VAO != 0)
 			{
-				if (texture->use_checker)
+				Texture* texture = (Texture*)gameObject->GetComponent(ComponentType::Texture);
+				unsigned int texToBind = checkerTextureID;
+
+				if (texture)
 				{
-					texToBind = checkerTextureID;
+					if (texture->GetTextureID() != 0 && !texture->use_checker)
+					{
+						texToBind = texture->GetTextureID();
+					}
 				}
-				else if (texture->GetTextureID() != 0)
+
+				RenderObject renderObject = { mesh, texToBind, globalModelMatrix };
+				float distanceToCamera = glm::distance(transform->GetPosition(), Engine::GetInstance().camera->GetPosition());
+
+				if (texture && texture->transparent)
 				{
-					texToBind = texture->GetTextureID();
+					transparentList.emplace(distanceToCamera, renderObject);
 				}
+				else
+				{
+					opaqueList.emplace(distanceToCamera, renderObject);
+				}
+
+				
 			}
 
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, texToBind);
-
-			//DRAW MESH
-			glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(globalModelMatrix));
-			glUniform1i(hasUVsLoc, mesh->hasUVs);
-
-			glBindVertexArray(mesh->meshData.VAO);
-			glDrawElements(GL_TRIANGLES, mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
-
-
-			//DRAW NORMALS
-			if (mesh->drawNormals && mesh->normalData.VAO != 0)
-			{
-				glUseProgram(normalShaderProgram);
-
-				glUniformMatrix4fv(normalModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(globalModelMatrix));
-
-				glBindVertexArray(mesh->normalData.VAO);
-
-				glDrawArrays(GL_LINES, 0, mesh->normalData.numVertices);
-
-				glUseProgram(shaderProgram);
-			}
 		}
-
 		for (GameObject* go : gameObject->childs)
 		{
-			RecursiveGameObjectsDraw(go);
+			BuildRenderListsRecursive(go);
 		}
 	}
 
-	return true;
+}
+
+void Render::DrawRenderList(const std::multimap<float, RenderObject>& map)
+{
+	for (auto pair = map.rbegin(); pair != map.rend(); ++pair)
+	{
+		RenderObject renderObject = pair->second;
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, renderObject.textToBind);
+
+		//DRAW MESH
+		glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
+		glUniform1i(hasUVsLoc, renderObject.mesh->hasUVs);
+
+		glBindVertexArray(renderObject.mesh->meshData.VAO);
+		glDrawElements(GL_TRIANGLES, renderObject.mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
+
+
+		//DRAW NORMALS
+		if (renderObject.mesh->drawNormals && renderObject.mesh->normalData.VAO != 0)
+		{
+			glUseProgram(normalShaderProgram);
+
+			glUniformMatrix4fv(normalModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
+
+			glBindVertexArray(renderObject.mesh->normalData.VAO);
+
+			glDrawArrays(GL_LINES, 0, renderObject.mesh->normalData.numVertices);
+
+			glUseProgram(shaderProgram);
+		}
+	}
 }
 
 bool Render::CleanUp()
@@ -431,6 +465,7 @@ bool Render::UploadLinesToGPU(unsigned int& vao, unsigned int& vbo, const std::v
 
 void Render::DeleteMeshFromGPU(MeshData& meshData)
 {
+	LOG("Mesh removed from GPU. VAO: %d, EBO: %d, VBO: %d", meshData.VAO, meshData.EBO, meshData.VBO);
 	if (meshData.VBO != 0) glDeleteBuffers(1, &meshData.VBO);
 	if (meshData.EBO != 0) glDeleteBuffers(1, &meshData.EBO);
 	if (meshData.VAO != 0) glDeleteVertexArrays(1, &meshData.VAO);

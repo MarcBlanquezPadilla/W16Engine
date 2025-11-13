@@ -12,7 +12,7 @@ public:
 
     virtual ~Texture() override;
 
-    void OnDestroy() override;
+    void CleanUp() override;
     
     ComponentType GetType() override {
         return ComponentType::Texture;
@@ -37,4 +37,5 @@ public:
     int width = 0;
     int height = 0;
     bool use_checker = false;
+    bool transparent = false;
 };

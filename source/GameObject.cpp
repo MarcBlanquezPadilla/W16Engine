@@ -1,11 +1,11 @@
 #include "GameObject.h"
+#include "Engine.h"
 #include "components/Component.h"
 #include "components/Mesh.h"
 #include "components/Transform.h"
 #include "components/Texture.h"
 #include "Log.h"
 
-#include <list>
 #include <random>
 
 uint32_t GenerateUUID()
@@ -63,6 +63,21 @@ bool GameObject::Update(float dt)
 bool GameObject::CleanUp()
 {
 	bool ret = true;
+
+	for each(auto pair in components)
+	{
+		pair.second->CleanUp();
+		delete pair.second;
+	}
+
+	components.clear();
+
+	for (int i = 0; i < childs.size(); i++)
+	{
+		childs[i]->CleanUp();
+		delete childs[i];
+	}
+	childs.clear();
 
 	return ret;
 }

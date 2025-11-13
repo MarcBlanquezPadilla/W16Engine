@@ -141,6 +141,7 @@ void InspectorWindow::Draw()
                         ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%u", texture->textureID);
                         ImGui::Separator();
                         ImGui::Checkbox("Use Checker Texture", &texture->use_checker);
+                        ImGui::Checkbox("Transparent", &texture->transparent);
                     }
                 }
                 break;

@@ -21,6 +21,11 @@ Transform::~Transform()
     
 }
 
+void Transform::CleanUp()
+{
+
+}
+
 void Transform::Save(pugi::xml_node componentNode)
 {
     componentNode.append_attribute("type") = (int)GetType();

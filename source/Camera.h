@@ -19,6 +19,8 @@ public:
 	glm::mat4 GetViewMatrix() const { return viewMatrix; }
 	glm::mat4 GetProjectionMatrix() const { return projectionMatrix; }
 
+	glm::vec3 GetPosition() const { return position; }
+
 	void LockCamera(bool _lockCamera) { lockCamera = _lockCamera; }
 
 private:

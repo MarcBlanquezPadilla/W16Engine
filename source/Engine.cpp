@@ -136,14 +136,17 @@ bool Engine::CleanUp() {
 
     bool ret = true;
 
-    for (Module* module : moduleList) {
+    for (int i = 0; i < moduleList.size(); i++) {
 
-        ret = module->CleanUp();
+        ret = moduleList[i]->CleanUp();
         if (!ret) {
 
             continue;
         }
+        delete moduleList[i];
     }
+
+    moduleList.clear();
 
     return ret;
 }

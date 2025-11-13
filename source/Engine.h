@@ -1,7 +1,7 @@
 #pragma once
 #include "Timer.h"
 #include <memory>
-#include <list>
+#include <vector>
 
 enum EngineState
 {
@@ -74,5 +74,5 @@ private:
 	float dt;
 	bool quit;
 
-	std::list<Module*> moduleList;
+	std::vector<Module*> moduleList;
 };

@@ -1,5 +1,6 @@
 #include "Scene.h"
 #include "GameObject.h"
+#include "Log.h"
 #include <list>
 
 Scene::Scene(bool startEnabled) : Module(startEnabled)
@@ -55,6 +56,17 @@ bool Scene::PostUpdate()
 bool Scene::CleanUp()
 {
 	bool ret = true;
+
+	LOG("Cleaning Scene");
+
+	for (int i = 0; i < gameObjects.size(); i++)
+	{
+		gameObjects[i]->CleanUp();
+		delete gameObjects[i];
+	}
+	gameObjects.clear();
+
+	selectedGameObject = nullptr;
 
 	return ret;
 }
