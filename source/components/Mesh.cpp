@@ -7,6 +7,7 @@
 #include "../Engine.h"
 #include "../Render.h"
 #include <fstream>
+#include <cmath>
 
 Mesh::Mesh(GameObject* owner, bool enabled) : Component(owner, enabled)
 {
@@ -30,7 +31,21 @@ bool Mesh::LoadModel(std::vector<Vertex> vertices, std::vector<unsigned int> ind
         return false;
     }
 
-    
+    meshData.numVertices = vertices.size();
+    meshData.numIndices = indices.size();
+
+    aabb.min = {INFINITY, INFINITY, INFINITY};
+    aabb.max = {-INFINITY, -INFINITY, -INFINITY};
+
+    for (const Vertex& vertex : vertices)
+    {
+        aabb.min.x = fmin(aabb.min.x, vertex.position.x);
+        aabb.min.y = fmin(aabb.min.y, vertex.position.y);
+        aabb.min.z = fmin(aabb.min.z, vertex.position.z);
+        aabb.max.x = fmax(aabb.max.x, vertex.position.x);
+        aabb.max.y = fmax(aabb.max.y, vertex.position.y);
+        aabb.max.z = fmax(aabb.max.z, vertex.position.z);
+    }
 
     if (!LoadToGpu(vertices, indices))
     {
@@ -58,10 +73,6 @@ bool Mesh::LoadToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> ind
         LOG("Error: Vertices or indices were empty");
         return false;
     }
-
-    //UPLOAD MESH TO GPU
-    this->meshData.numVertices = vertices.size();
-    this->meshData.numIndices = indices.size();
 
     bool success = Engine::GetInstance().render->UploadMeshToGPU(meshData, vertices, indices);
 
