@@ -64,10 +64,12 @@ private:
 	bool CreateDefaultShader();
 	bool CreateCheckerTexture();
 	bool CreateNormalShader();
+	bool CreateOutlineShader();
 
 private:
 	unsigned int shaderProgram;
 	unsigned int normalShaderProgram;
+	unsigned int outlineShaderProgram;
 	unsigned int checkerTextureID;
 
 	GLint modelMatrixLoc;
@@ -77,6 +79,11 @@ private:
 	GLint normalModelMatrixLoc;
 	GLint normalViewMatrixLoc;
 	GLint normalProjectionMatrixLoc;
+
+	GLint outlineModelMatrixLoc;
+	GLint outlineViewMatrixLoc;
+	GLint outlineProjectionMatrixLoc;
+	GLint outlineColorLoc;
 
 	GLint hasUVsLoc;
 

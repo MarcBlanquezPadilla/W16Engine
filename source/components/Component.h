@@ -13,7 +13,7 @@ class Component
 {
 public:
 
-    Component(GameObject* owner, bool enabled) : owner(owner), enabled(enabled) {}
+    Component(GameObject* owner, bool enabled) : owner(owner), enabled(enabled), selected(false) {}
 
     virtual ~Component() {}
 
@@ -32,4 +32,5 @@ public:
 public:
     GameObject* owner;
     bool enabled;
+    bool selected;
 };

@@ -69,6 +69,12 @@ bool Render::Awake()
 		return false;
 	}
 
+	if (!CreateOutlineShader())
+	{
+		LOG("Error creating outline shader");
+		return false;
+	}
+
 	//CREATE CHECKER TEXTURE
 	if (!CreateCheckerTexture())
 	{
@@ -86,11 +92,6 @@ bool Render::PreUpdate()
 	opaqueList.clear();
 	transparentList.clear();
 
-	for (GameObject* gameObject : Engine::GetInstance().scene->GetGameObjects())
-	{
-		BuildRenderListsRecursive(gameObject);
-	}
-
 	return ret;
 }
 
@@ -98,9 +99,17 @@ bool Render::PostUpdate()
 {
 	bool ret = true;
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	for (GameObject* gameObject : Engine::GetInstance().scene->GetGameObjects())
+	{
+		BuildRenderListsRecursive(gameObject);
+	}
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glClearStencil(0);
 
 	glUseProgram(shaderProgram);
+	glEnable(GL_STENCIL_TEST);
+	glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
@@ -111,6 +120,37 @@ bool Render::PostUpdate()
 	glDepthMask(GL_FALSE);
 	DrawRenderList(transparentList);
 
+	GameObject* selectedGO = Engine::GetInstance().scene->GetSelectedGameObject();
+	Mesh* selectedMesh = nullptr;
+	if (selectedGO)
+	{
+		selectedMesh = (Mesh*)selectedGO->GetComponent(ComponentType::Mesh);
+	}
+	if (selectedMesh)
+	{
+		Transform* selectedTransform = (Transform*)selectedGO->GetComponent(ComponentType::Transform);
+
+		glUseProgram(outlineShaderProgram);
+
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
+
+		glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetViewMatrix()));
+		glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetProjectionMatrix()));
+		glUniform4f(outlineColorLoc, 1.0f, 0.5f, 0.0f, 1.0f);
+
+		glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(selectedTransform->GetGlobalMatrix()));
+
+		glBindVertexArray(selectedMesh->meshData.VAO);
+		glDrawElements(GL_TRIANGLES, selectedMesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
+	}
+
+	glDisable(GL_STENCIL_TEST);
+	glStencilMask(0xFF); 
+	glStencilFunc(GL_ALWAYS, 0, 0xFF);
+	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
 	glDisable(GL_BLEND);
 
@@ -150,7 +190,9 @@ void Render::BuildRenderListsRecursive(GameObject* gameObject)
 					}
 
 					RenderObject renderObject = { mesh, texToBind, globalModelMatrix };
-					float distanceToCamera = glm::distance(transform->GetPosition(), Engine::GetInstance().camera->GetPosition());
+
+					glm::vec3 aabbCenter = (globalAABB.min + globalAABB.max) * 0.5f;
+					float distanceToCamera = glm::distance(aabbCenter, Engine::GetInstance().camera->GetPosition());
 
 					if (texture && texture->transparent)
 					{
@@ -176,6 +218,19 @@ void Render::DrawRenderList(const std::multimap<float, RenderObject>& map)
 	for (auto pair = map.rbegin(); pair != map.rend(); ++pair)
 	{
 		RenderObject renderObject = pair->second;
+
+		//STENCIL
+		if (renderObject.mesh->selected)
+		{
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			glStencilMask(0xFF);
+		}
+		else
+		{
+			glStencilFunc(GL_ALWAYS, 0, 0xFF);
+			glStencilMask(0x00);
+		}
+
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, renderObject.textToBind);
 
@@ -207,8 +262,11 @@ bool Render::CleanUp()
 {
 	bool ret = true;
 
-	ilShutDown();
+
 	glDeleteProgram(shaderProgram);
+	glDeleteProgram(normalShaderProgram);
+	glDeleteProgram(outlineShaderProgram);
+	ilShutDown();
 
 	return ret;
 }
@@ -247,6 +305,10 @@ void Render::UpdateProjectionMatix(glm::mat4 pm)
 	glUseProgram(normalShaderProgram);
 	glUniformMatrix4fv(normalProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
 
+	// UPDATE OUTLINER SHADER
+	glUseProgram(outlineShaderProgram);
+	glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
+
 	glUseProgram(shaderProgram);
 }
 
@@ -259,6 +321,10 @@ void Render::UpdateViewMatix(glm::mat4 vm)
 	//UPDATE NORMAL SHADER
 	glUseProgram(normalShaderProgram);
 	glUniformMatrix4fv(normalViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
+
+	// UPDATE OUTLINER SHADER
+	glUseProgram(outlineShaderProgram);
+	glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
 
 	glUseProgram(shaderProgram);
 }
@@ -381,6 +447,59 @@ bool Render::CreateNormalShader()
 	return true;
 }
 
+bool Render::CreateOutlineShader()
+{
+	unsigned int vShader = 0;
+	const char* vertexShaderSource = "#version 460 core\n"
+		"layout (location = 0) in vec3 position;\n"
+		"layout (location = 2) in vec3 aNormal;\n"
+		"uniform mat4 model; \n"
+		"uniform mat4 view; \n"
+		"uniform mat4 projection; \n"
+		"uniform float outlineAmount = 0.03;\n"
+		"void main()\n"
+		"{\n"
+		"    vec3 newPos = position + aNormal * outlineAmount;\n"
+		"    gl_Position = projection * view * model * vec4(newPos, 1.0f);\n"
+		"}\n";
+
+	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
+		return false;
+
+	unsigned int fShader = 0;
+
+	const char* fragmentShaderSource = "#version 460 core\n"
+		"out vec4 color;\n"
+		"uniform vec4 outlineColor;\n"
+		"void main() { color = outlineColor; }\n";
+
+	if (!CreateShaderFromSources(fShader, GL_FRAGMENT_SHADER, fragmentShaderSource, strlen(fragmentShaderSource)))
+		return false;
+
+	outlineShaderProgram = glCreateProgram();
+	glAttachShader(outlineShaderProgram, vShader);
+	glAttachShader(outlineShaderProgram, fShader);
+	glLinkProgram(outlineShaderProgram);
+
+	int status = 0;
+	glGetProgramiv(outlineShaderProgram, GL_LINK_STATUS, &status);
+	if (status == GL_FALSE)
+	{
+		LOG("Error linking outline shader!");
+		return false;
+	}
+
+	glDeleteShader(vShader);
+	glDeleteShader(fShader);
+
+	outlineModelMatrixLoc = glGetUniformLocation(outlineShaderProgram, "model");
+	outlineViewMatrixLoc = glGetUniformLocation(outlineShaderProgram, "view");
+	outlineProjectionMatrixLoc = glGetUniformLocation(outlineShaderProgram, "projection");
+	outlineColorLoc = glGetUniformLocation(outlineShaderProgram, "outlineColor");
+
+	return true;
+}
+
 bool Render::CreateCheckerTexture()
 {
 	GLubyte checkerImage[CHECKERS_HEIGHT][CHECKERS_WIDTH][4];
@@ -412,7 +531,9 @@ bool Render::CreateCheckerTexture()
 }
 
 bool Render::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
+
 {
+
 	//CREATE VAO
 	glGenVertexArrays(1, &meshData.VAO);
 	glBindVertexArray(meshData.VAO);
@@ -433,6 +554,10 @@ bool Render::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vert
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
 
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+
+
 	glBindVertexArray(0);
 
 	meshData.numIndices = indices.size();
@@ -441,6 +566,7 @@ bool Render::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vert
 		meshData.VAO, meshData.VBO, meshData.EBO, meshData.numIndices);
 
 	return true;
+
 }
 
 bool Render::UploadLinesToGPU(unsigned int& vao, unsigned int& vbo, const std::vector<glm::vec3>& lines)

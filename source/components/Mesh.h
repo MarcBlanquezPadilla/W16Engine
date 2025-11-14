@@ -64,8 +64,6 @@ public:
 
     bool LoadModel(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
 
-
-
 private:
     bool LoadToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
     bool LoadNormalsToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
@@ -78,6 +76,7 @@ public:
 
     bool hasUVs = false;
     bool drawNormals = false;
+    bool drawStencil = false;
 
     std::string libraryPath;
 };

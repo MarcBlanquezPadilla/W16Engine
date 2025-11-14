@@ -71,6 +71,13 @@ bool Scene::CleanUp()
 	return ret;
 }
 
+void Scene::SetSelectedGameObject(GameObject* gameObject)
+{
+	if (selectedGameObject) selectedGameObject->SetSelected(false);
+	selectedGameObject = gameObject;
+	selectedGameObject->SetSelected(true);
+}
+
 
 void Scene::AddGameObject(GameObject* gameObject)
 {
@@ -104,5 +111,5 @@ void Scene::AddGameObject(GameObject* gameObject)
 
 	gameObject->name = newName;
 	gameObjects.push_back(gameObject);
-	selectedGameObject = gameObject;
+	SetSelectedGameObject(gameObject);
 }

@@ -159,6 +159,86 @@ bool Loader::LoadModel(const std::string& filePath)
 	return true;
 }
 
+GameObject* Loader::ProcessNode(aiNode* node, const aiScene* scene, const std::string& modelDirectory)
+{
+	GameObject* nodeGameObject = new GameObject(true, node->mName.C_Str());
+
+	//APPLY NODE TRANSFORMS
+	aiVector3D position;
+	aiQuaternion rotation;
+	aiVector3D scaling;
+	node->mTransformation.Decompose(scaling, rotation, position);
+
+	nodeGameObject->transform->SetPosition(glm::vec3(position.x, position.y, position.z));
+	nodeGameObject->transform->SetQuaternionRotation(glm::quat(rotation.w, rotation.x, rotation.y, rotation.z));
+	nodeGameObject->transform->SetScale(glm::vec3(scaling.x, scaling.y, scaling.z));
+
+	//PROCESS MESHES
+	if (node->mNumMeshes == 1)
+	{
+		aiMesh* assimpMesh = scene->mMeshes[node->mMeshes[0]];
+
+		if (!AddMeshAndTextureFromAssimp(nodeGameObject, assimpMesh, scene, modelDirectory))
+		{
+			LOG("Error processing mesh for node %s. Node will be empty.", node->mName.C_Str());
+		}
+	}
+	else if (node->mNumMeshes > 0)
+	{
+		for (unsigned int i = 0; i < node->mNumMeshes; i++)
+		{
+			aiMesh* assimpMesh = scene->mMeshes[node->mMeshes[i]];
+			GameObject* meshGameObject = new GameObject(true, assimpMesh->mName.C_Str());
+
+			if (AddMeshAndTextureFromAssimp(meshGameObject, assimpMesh, scene, modelDirectory))
+			{
+				nodeGameObject->AddChild(meshGameObject);
+			}
+			else
+			{
+				LOG("Error processing mesh %s, skipping.", assimpMesh->mName.C_Str());
+				delete meshGameObject;
+			}
+		}
+	}
+
+	//RECURSIVE CHILDS CREATION
+	for (unsigned int i = 0; i < node->mNumChildren; i++)
+	{
+		GameObject* childNodeGO = ProcessNode(node->mChildren[i], scene, modelDirectory);
+		if (childNodeGO)
+		{
+			nodeGameObject->AddChild(childNodeGO);
+		}
+	}
+
+	return nodeGameObject;
+}
+
+bool Loader::AddMeshAndTextureFromAssimp(GameObject* target, aiMesh* assimpMesh, const aiScene* scene, const std::string& modelDirectory)
+{
+	//ADD MESH
+	Mesh* meshComp = (Mesh*)target->AddComponent(ComponentType::Mesh);
+	if (!meshComp || !LoadFromAssimpMesh(assimpMesh, meshComp))
+	{
+		LOG("Error loading mesh data for %s.", target->name.c_str());
+		return false;
+	}
+
+	//ADD TEXTURE
+	if (scene->HasMaterials())
+	{
+		aiMaterial* material = scene->mMaterials[assimpMesh->mMaterialIndex];
+		Texture* texComp = (Texture*)target->AddComponent(ComponentType::Texture);
+		if (texComp != nullptr)
+		{
+			LoadFromAssimpMaterial(material, modelDirectory, texComp);
+		}
+	}
+
+	return true; // Éxito
+}
+
 bool Loader::LoadFromAssimpMesh(aiMesh* assimpMesh, Mesh* mesh)
 {
 	std::vector<Vertex> vertices;
@@ -209,87 +289,6 @@ bool Loader::LoadFromAssimpMesh(aiMesh* assimpMesh, Mesh* mesh)
 
 	return true;
 }
-
-GameObject* Loader::ProcessNode(aiNode* node, const aiScene* scene, const std::string& modelDirectory)
-{
-	GameObject* nodeGameObject = new GameObject(true, node->mName.C_Str());
-
-	//APPLY NODE TRANSFORMS
-	aiVector3D position;
-	aiQuaternion rotation;
-	aiVector3D scaling;
-	node->mTransformation.Decompose(scaling, rotation, position);
-
-	nodeGameObject->transform->SetPosition(glm::vec3(position.x, position.y, position.z));
-	nodeGameObject->transform->SetQuaternionRotation(glm::quat(rotation.w, rotation.x, rotation.y, rotation.z));
-	nodeGameObject->transform->SetScale(glm::vec3(scaling.x, scaling.y, scaling.z));
-
-	//PROCESS MESHES
-	if (node->mNumMeshes == 1)
-	{
-		aiMesh* assimpMesh = scene->mMeshes[node->mMeshes[0]];
-
-		if (!ProcessMeshComponents(nodeGameObject, assimpMesh, scene, modelDirectory))
-		{
-			LOG("Error processing mesh for node %s. Node will be empty.", node->mName.C_Str());
-		}
-	}
-	else if (node->mNumMeshes > 0)
-	{
-		for (unsigned int i = 0; i < node->mNumMeshes; i++)
-		{
-			aiMesh* assimpMesh = scene->mMeshes[node->mMeshes[i]];
-			GameObject* meshGameObject = new GameObject(true, assimpMesh->mName.C_Str());
-
-			if (ProcessMeshComponents(meshGameObject, assimpMesh, scene, modelDirectory))
-			{
-				nodeGameObject->AddChild(meshGameObject);
-			}
-			else
-			{
-				LOG("Error processing mesh %s, skipping.", assimpMesh->mName.C_Str());
-				delete meshGameObject;
-			}
-		}
-	}
-
-	//RECURSIVE CHILDS CREATION
-	for (unsigned int i = 0; i < node->mNumChildren; i++)
-	{
-		GameObject* childNodeGO = ProcessNode(node->mChildren[i], scene, modelDirectory);
-		if (childNodeGO)
-		{
-			nodeGameObject->AddChild(childNodeGO);
-		}
-	}
-
-	return nodeGameObject;
-}
-
-bool Loader::ProcessMeshComponents(GameObject* target, aiMesh* assimpMesh, const aiScene* scene, const std::string& modelDirectory)
-{
-	//ADD MESH
-	Mesh* meshComp = (Mesh*)target->AddComponent(ComponentType::Mesh);
-	if (!meshComp || !LoadFromAssimpMesh(assimpMesh, meshComp))
-	{
-		LOG("Error loading mesh data for %s.", target->name.c_str());
-		return false;
-	}
-
-	//ADD TEXTURE
-	if (scene->HasMaterials())
-	{
-		aiMaterial* material = scene->mMaterials[assimpMesh->mMaterialIndex];
-		Texture* texComp = (Texture*)target->AddComponent(ComponentType::Texture);
-		if (texComp != nullptr)
-		{
-			LoadFromAssimpMaterial(material, modelDirectory, texComp);
-		}
-	}
-
-	return true; // Éxito
-}
-
 
 #pragma endregion
 

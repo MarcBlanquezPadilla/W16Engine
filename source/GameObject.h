@@ -1,12 +1,12 @@
 #pragma once
 #include "Module.h"
 #include "components/Component.h"
-#include "components/Transform.h"
 #include <map>
 #include <vector>
 #include <string>
 #include "pugixml.hpp"
 
+class Transform;
 
 class GameObject
 {
@@ -30,9 +30,12 @@ public:
 	void Save(pugi::xml_node gameObjectNode);
 	void Load(pugi::xml_node gameObjectNode);
 
+	void SetSelected(bool selected);
+
 public:
 	std::string name;
 	bool enabled;
+	bool selected;
 	
 	GameObject* parent;
 	std::vector<GameObject*> childs;
@@ -42,6 +45,5 @@ public:
 
 	uint32_t UUID;
 	uint32_t parentUUID;
-private:
 	
 };

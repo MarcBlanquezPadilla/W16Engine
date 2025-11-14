@@ -26,7 +26,7 @@ public:
 	std::vector<GameObject*>& GetGameObjects() { return gameObjects; }
 	GameObject* GetSelectedGameObject() { return selectedGameObject; }
 
-	void SetSelectedGameObject(GameObject* gameObject) { selectedGameObject = gameObject; }
+	void SetSelectedGameObject(GameObject* gameObject);
 
 	void AddGameObject(GameObject* gameObject);
 

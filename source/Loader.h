@@ -29,7 +29,7 @@ public:
 	bool LoadModel(const std::string& filePath);
 	bool LoadFromAssimpMesh(aiMesh* assimpMesh, Mesh* mesh);
 	GameObject* ProcessNode(aiNode* node, const aiScene* scene, const std::string& modelDirectory);
-	bool ProcessMeshComponents(GameObject* target, aiMesh* assimpMesh, const aiScene* scene, const std::string& modelDirectory);
+	bool AddMeshAndTextureFromAssimp(GameObject* target, aiMesh* assimpMesh, const aiScene* scene, const std::string& modelDirectory);
 
 	//TEXTURES
 	bool LoadTexture(const std::string& filePath);

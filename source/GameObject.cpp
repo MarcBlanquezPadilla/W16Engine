@@ -18,6 +18,7 @@ uint32_t GenerateUUID()
 
 GameObject::GameObject(bool _enabled, std::string _name) : enabled(_enabled), name(_name)
 {
+	selected = false;
 	UUID = GenerateUUID();
 	parentUUID = 0;
 	parent = nullptr;
@@ -233,5 +234,14 @@ void GameObject::Load(pugi::xml_node gameObjectNode)
 				LOG("Error: Could not create new GameObject while loading scene.");
 			}
 		}
+	}
+}
+
+void GameObject::SetSelected(bool _selected)
+{
+	selected = _selected;
+	for (auto component : components)
+	{
+		component.second->selected = _selected;
 	}
 }
