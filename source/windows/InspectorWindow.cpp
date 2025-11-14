@@ -6,7 +6,7 @@
 #include "../components/Transform.h"
 #include "../components/Mesh.h"
 #include "../components/Texture.h"
-#include "../Log.h"
+#include "../utils/Log.h"
 #include "../Editor.h"
 
 #include "imgui.h"

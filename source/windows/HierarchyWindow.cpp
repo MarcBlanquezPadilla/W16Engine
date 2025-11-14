@@ -5,7 +5,7 @@
 #include "../Global.h"
 #include "../GameObject.h"
 #include "imgui.h"
-#include "../Log.h"
+#include "../utils/Log.h"
 
 HierarchyWindow::HierarchyWindow(bool active) : UIWindow("Hierarchy", active)
 {

@@ -7,12 +7,13 @@
 #include "Window.h"
 #include "Engine.h"
 #include "Camera.h"
+#include "utils/Frustum.h"
 #include "Scene.h"
 #include "GameObject.h"
 #include "components/Mesh.h"
 #include "components/Transform.h"
 #include "components/Texture.h"
-#include "Log.h"
+#include "utils/Log.h"
 
 Render::Render(bool startEnabled) : Module(startEnabled)
 {
@@ -120,8 +121,6 @@ bool Render::PostUpdate()
 	return ret;
 }
 
-
-
 void Render::BuildRenderListsRecursive(GameObject* gameObject)
 {
 	if (gameObject && gameObject->enabled)
@@ -135,32 +134,34 @@ void Render::BuildRenderListsRecursive(GameObject* gameObject)
 
 			if (mesh && mesh->enabled && mesh->meshData.VAO != 0)
 			{
-				Texture* texture = (Texture*)gameObject->GetComponent(ComponentType::Texture);
-				unsigned int texToBind = checkerTextureID;
+				const AABB& globalAABB = mesh->aabb.GetGlobalAABB(transform->GetGlobalMatrix());
 
-				if (texture)
+				if (Engine::GetInstance().camera->frustum->InFrustum(globalAABB))
 				{
-					if (texture->GetTextureID() != 0 && !texture->use_checker)
+					Texture* texture = (Texture*)gameObject->GetComponent(ComponentType::Texture);
+					unsigned int texToBind = checkerTextureID;
+
+					if (texture)
 					{
-						texToBind = texture->GetTextureID();
+						if (texture->GetTextureID() != 0 && !texture->use_checker)
+						{
+							texToBind = texture->GetTextureID();
+						}
+					}
+
+					RenderObject renderObject = { mesh, texToBind, globalModelMatrix };
+					float distanceToCamera = glm::distance(transform->GetPosition(), Engine::GetInstance().camera->GetPosition());
+
+					if (texture && texture->transparent)
+					{
+						transparentList.emplace(distanceToCamera, renderObject);
+					}
+					else
+					{
+						opaqueList.emplace(distanceToCamera, renderObject);
 					}
 				}
-
-				RenderObject renderObject = { mesh, texToBind, globalModelMatrix };
-				float distanceToCamera = glm::distance(transform->GetPosition(), Engine::GetInstance().camera->GetPosition());
-
-				if (texture && texture->transparent)
-				{
-					transparentList.emplace(distanceToCamera, renderObject);
-				}
-				else
-				{
-					opaqueList.emplace(distanceToCamera, renderObject);
-				}
-
-				
 			}
-
 		}
 		for (GameObject* go : gameObject->childs)
 		{

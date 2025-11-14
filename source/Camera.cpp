@@ -1,6 +1,6 @@
 #include "Camera.h"
 #include <SDL3/sdl.h>
-#include "Log.h"
+#include "utils/Log.h"
 #include "glm/glm.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include "Global.h"
@@ -12,6 +12,7 @@
 #include "GameObject.h"
 #include "components/Component.h"
 #include "components/Transform.h"
+#include "utils/Frustum.h"
 
 
 Camera::Camera(bool startEnabled) : Module(startEnabled)
@@ -28,6 +29,8 @@ bool Camera::Awake()
 {
 	bool ret = true;
 	
+	frustum = new Frustum();
+
 	position = glm::vec3(0.0f, 0.0f, 10.0f);
 	forward = glm::vec3(0.0f, 0.0f, -1.0f);
 	up = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -232,6 +235,9 @@ bool Camera::PreUpdate()
 		windowChanged = false;
 	}
 
+	glm::mat4 viewProj = GetProjectionMatrix() * GetViewMatrix();
+	frustum->Update(viewProj);
+
 	return ret;
 }
 
@@ -268,7 +274,8 @@ bool Camera::CleanUp()
 {
 	bool ret = true;
 
-	
+	delete frustum;
+	frustum = nullptr;
 
 	return ret;
 }

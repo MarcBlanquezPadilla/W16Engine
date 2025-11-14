@@ -16,10 +16,6 @@ add_executable(W16Engine
 	source/application.cpp 
 	source/Engine.cpp 
 	source/Engine.h 
-	source/Log.cpp 
-	source/Log.h
-	source/Timer.cpp
-	source/Timer.h
 	source/Module.h
 	source/Input.cpp
 	source/Input.h
@@ -57,6 +53,15 @@ add_executable(W16Engine
 	source/windows/HierarchyWindow.h
 	source/windows/InspectorWindow.cpp
 	source/windows/InspectorWindow.h
+	source/utils/Log.cpp 
+	source/utils/Log.h
+	source/utils/Timer.cpp
+	source/utils/Timer.h
+	source/utils/AABB.h
+	source/utils/Frustum.h
+	source/utils/Frustum.cpp
+	source/geometry/Plane.h
+	source/geometry/Plane.cpp
 )
 
 target_link_libraries(W16Engine PRIVATE 

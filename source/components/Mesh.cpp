@@ -1,5 +1,5 @@
 #include "Mesh.h"
-#include "../Log.h"
+#include "../utils/Log.h"
 #include "Component.h"
 #include "../GameObject.h"
 #include <vector>

@@ -1,6 +1,6 @@
 #include "ConsoleWindow.h"
 #include "imgui.h"
-#include "../Log.h"
+#include "../utils/Log.h"
 
 ConsoleWindow::ConsoleWindow(bool active) : UIWindow("Console", active)
 {

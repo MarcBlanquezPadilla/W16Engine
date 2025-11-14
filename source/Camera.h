@@ -2,6 +2,11 @@
 #include "Module.h"
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <array>
+#include "Utils/AABB.h"
+
+class Frustum;
+
 class Camera : public Module
 {
 public:
@@ -29,6 +34,8 @@ private:
 public: 
 	bool windowChanged;
 	bool viewChanged;
+
+	Frustum* frustum;
 
 private:
 	glm::mat4 projectionMatrix;
@@ -62,4 +69,5 @@ private:
 	bool shouldBeRelative;
 	bool mouseCaptured;
 	bool lockCamera;
+
 };

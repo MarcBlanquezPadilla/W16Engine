@@ -1,6 +1,6 @@
 #include "Scene.h"
 #include "GameObject.h"
-#include "Log.h"
+#include "utils/Log.h"
 #include <list>
 
 Scene::Scene(bool startEnabled) : Module(startEnabled)

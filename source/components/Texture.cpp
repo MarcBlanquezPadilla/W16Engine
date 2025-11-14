@@ -1,5 +1,5 @@
 #include "Texture.h"
-#include "../Log.h"
+#include "../utils/Log.h"
 #include "Component.h"
 #include <vector>
 #include <assimp/scene.h>
