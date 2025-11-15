@@ -128,6 +128,7 @@ bool Render::PostUpdate()
 	}
 	if (selectedMesh)
 	{
+
 		Transform* selectedTransform = (Transform*)selectedGO->GetComponent(ComponentType::Transform);
 
 		glUseProgram(outlineShaderProgram);
@@ -136,15 +137,16 @@ bool Render::PostUpdate()
 		glStencilMask(0x00);
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
+		glDisable(GL_CULL_FACE);
 
 		glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetViewMatrix()));
 		glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetProjectionMatrix()));
-		glUniform4f(outlineColorLoc, 1.0f, 0.5f, 0.0f, 1.0f);
+		glUniform4f(outlineColorLoc, 0.0f, 1.0f, 1.0f, 1.0f);
 
 		glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(selectedTransform->GetGlobalMatrix()));
 
-		glBindVertexArray(selectedMesh->meshData.VAO);
-		glDrawElements(GL_TRIANGLES, selectedMesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(selectedMesh->stencilData.VAO);
+		glDrawElements(GL_TRIANGLES, selectedMesh->stencilData.numVertices, GL_UNSIGNED_INT, 0);
 	}
 
 	glDisable(GL_STENCIL_TEST);
@@ -159,6 +161,51 @@ bool Render::PostUpdate()
 	glUseProgram(0);
 
 	return ret;
+}
+
+void Render::DrawRenderList(const std::multimap<float, RenderObject>& map)
+{
+	for (auto pair = map.rbegin(); pair != map.rend(); ++pair)
+	{
+		RenderObject renderObject = pair->second;
+
+		//STENCIL
+		if (renderObject.mesh->selected)
+		{
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			glStencilMask(0xFF);
+		}
+		else
+		{
+			glStencilFunc(GL_ALWAYS, 0, 0xFF);
+			glStencilMask(0x00);
+		}
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, renderObject.textToBind);
+
+		//DRAW MESH
+		glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
+		glUniform1i(hasUVsLoc, renderObject.mesh->hasUVs);
+
+		glBindVertexArray(renderObject.mesh->meshData.VAO);
+		glDrawElements(GL_TRIANGLES, renderObject.mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
+
+
+		//DRAW NORMALS
+		if (renderObject.mesh->drawNormals && renderObject.mesh->normalData.VAO != 0)
+		{
+			glUseProgram(normalShaderProgram);
+
+			glUniformMatrix4fv(normalModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
+
+			glBindVertexArray(renderObject.mesh->normalData.VAO);
+
+			glDrawArrays(GL_LINES, 0, renderObject.mesh->normalData.numVertices);
+
+			glUseProgram(shaderProgram);
+		}
+	}
 }
 
 void Render::BuildRenderListsRecursive(GameObject* gameObject)
@@ -213,50 +260,7 @@ void Render::BuildRenderListsRecursive(GameObject* gameObject)
 
 }
 
-void Render::DrawRenderList(const std::multimap<float, RenderObject>& map)
-{
-	for (auto pair = map.rbegin(); pair != map.rend(); ++pair)
-	{
-		RenderObject renderObject = pair->second;
 
-		//STENCIL
-		if (renderObject.mesh->selected)
-		{
-			glStencilFunc(GL_ALWAYS, 1, 0xFF);
-			glStencilMask(0xFF);
-		}
-		else
-		{
-			glStencilFunc(GL_ALWAYS, 0, 0xFF);
-			glStencilMask(0x00);
-		}
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, renderObject.textToBind);
-
-		//DRAW MESH
-		glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
-		glUniform1i(hasUVsLoc, renderObject.mesh->hasUVs);
-
-		glBindVertexArray(renderObject.mesh->meshData.VAO);
-		glDrawElements(GL_TRIANGLES, renderObject.mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
-
-
-		//DRAW NORMALS
-		if (renderObject.mesh->drawNormals && renderObject.mesh->normalData.VAO != 0)
-		{
-			glUseProgram(normalShaderProgram);
-
-			glUniformMatrix4fv(normalModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
-
-			glBindVertexArray(renderObject.mesh->normalData.VAO);
-
-			glDrawArrays(GL_LINES, 0, renderObject.mesh->normalData.numVertices);
-
-			glUseProgram(shaderProgram);
-		}
-	}
-}
 
 bool Render::CleanUp()
 {
@@ -453,14 +457,23 @@ bool Render::CreateOutlineShader()
 	const char* vertexShaderSource = "#version 460 core\n"
 		"layout (location = 0) in vec3 position;\n"
 		"layout (location = 2) in vec3 aNormal;\n"
-		"uniform mat4 model; \n"
-		"uniform mat4 view; \n"
-		"uniform mat4 projection; \n"
-		"uniform float outlineAmount = 0.03;\n"
+		"uniform mat4 model;\n"
+		"uniform mat4 view;\n"
+		"uniform mat4 projection;\n"
+		"uniform float u_referenceDistance = 10.0;\n"
+		"uniform float u_referenceThickness = 0.05;\n"
 		"void main()\n"
 		"{\n"
-		"    vec3 newPos = position + aNormal * outlineAmount;\n"
-		"    gl_Position = projection * view * model * vec4(newPos, 1.0f);\n"
+		"   float scaleX = length(model[0].xyz);\n"
+		"   float scaleY = length(model[1].xyz);\n"
+		"   float scaleZ = length(model[2].xyz);\n"
+		"   float avgScale = max(scaleX, max(scaleY, scaleZ));\n"
+		"   avgScale = max(avgScale, 0.001);\n"
+		"   vec4 viewPos = view * model * vec4(position, 1.0f);\n"
+		"   float distance = abs(viewPos.z);\n"
+		"   float dynamicOutlineAmount = u_referenceThickness * (distance / u_referenceDistance);\n"
+		"   vec3 newPos = position + (aNormal * dynamicOutlineAmount / avgScale);\n"
+		"   gl_Position = projection * view * model * vec4(newPos, 1.0f);\n"
 		"}\n";
 
 	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
@@ -567,6 +580,29 @@ bool Render::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vert
 
 	return true;
 
+}
+
+bool Render::UploadSmoothedMeshToGPU(unsigned int& vao, unsigned int& vbo, unsigned int& sharedEbo ,const std::vector<Vertex>& vertices)
+{
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sharedEbo);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	LOG("Outline smoothed mesh upload to GPU. VAO: %u, VBO: % u", vao, vbo);
+	return true;
 }
 
 bool Render::UploadLinesToGPU(unsigned int& vao, unsigned int& vbo, const std::vector<glm::vec3>& lines)

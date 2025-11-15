@@ -8,6 +8,15 @@
 #include "../Render.h"
 #include <fstream>
 #include <cmath>
+#include <unordered_map>
+
+struct Vec3Comparator {
+    bool operator()(const glm::vec3& a, const glm::vec3& b) const {
+        if (a.x != b.x) return a.x < b.x;
+        if (a.y != b.y) return a.y < b.y;
+        return a.z < b.z;
+    }
+};
 
 Mesh::Mesh(GameObject* owner, bool enabled) : Component(owner, enabled)
 {
@@ -54,6 +63,11 @@ bool Mesh::LoadModel(std::vector<Vertex> vertices, std::vector<unsigned int> ind
     }
 
     if (!LoadNormalsToGpu(vertices, indices))
+    {
+        LOG("Error: Failed to upload normals to GPU.");
+    }
+
+    if (!LoadSmothedNormalsToGpu(vertices, indices))
     {
         LOG("Error: Failed to upload normals to GPU.");
     }
@@ -107,6 +121,43 @@ bool Mesh::LoadNormalsToGpu(std::vector<Vertex> vertices, std::vector<unsigned i
             normal_lines
         );
         this->normalData.numVertices = normal_lines.size();
+    }
+    return true;
+}
+
+bool Mesh::LoadSmothedNormalsToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
+{
+    std::vector<Vertex> smothedVertices;
+
+    std::map<glm::vec3, glm::vec3, Vec3Comparator> accumulatedNormals;
+    for (const Vertex& v : vertices)
+    {
+        accumulatedNormals[v.position] += v.normal;
+    }
+    for (auto& pair : accumulatedNormals)
+    {
+        pair.second = glm::normalize(pair.second);
+    }
+
+    smothedVertices.reserve(vertices.size());
+    for (const Vertex& v : vertices)
+    {
+        smothedVertices.push_back({
+            v.position,
+            accumulatedNormals[v.position],
+            v.texCoords
+            });
+    }
+
+    if (!smothedVertices.empty())
+    {
+        Engine::GetInstance().render->UploadSmoothedMeshToGPU(
+            stencilData.VAO,
+            stencilData.VBO,
+            meshData.EBO,
+            smothedVertices
+        );
+        stencilData.numVertices = smothedVertices.size();
     }
     return true;
 }

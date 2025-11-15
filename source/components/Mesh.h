@@ -41,6 +41,13 @@ struct NormalData
     int numVertices = 0; 
 };
 
+struct StencilData
+{
+    unsigned int VAO = 0;
+    unsigned int VBO = 0;
+    int numVertices = 0;
+};
+
 
 class Mesh : public Component
 {
@@ -67,11 +74,13 @@ public:
 private:
     bool LoadToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
     bool LoadNormalsToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
+    bool LoadSmothedNormalsToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
 
 
 public:
     MeshData meshData;
     NormalData normalData;
+    StencilData stencilData;
     AABB aabb;
 
     bool hasUVs = false;
