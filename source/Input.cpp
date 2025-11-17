@@ -6,7 +6,6 @@
 #include "Module.h"
 #include "Scene.h"
 #include "Render.h"
-#include "Editor.h"
 #include "Loader.h"
 
 
@@ -106,8 +105,11 @@ bool Input::PreUpdate()
 
 	while (SDL_PollEvent(&event) != 0)
 	{
-		
-		Engine::GetInstance().editor->HandleInput(&event);
+		for (const auto& listener : listeners)
+		{
+			listener(&event);
+		}
+
 		switch (event.type)
 		{
 		case SDL_EVENT_QUIT:
@@ -170,8 +172,6 @@ bool Input::PreUpdate()
 			break;
 
 		}
-
-		
 	};
 
 	if (controller != nullptr)

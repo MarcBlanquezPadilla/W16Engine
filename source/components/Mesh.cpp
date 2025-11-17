@@ -162,7 +162,7 @@ bool Mesh::LoadSmothedNormalsToGpu(std::vector<Vertex> vertices, std::vector<uns
             meshData.EBO,
             smothedVertices
         );
-        stencilData.numVertices = smothedVertices.size();
+        stencilData.numVertices = indices.size();
     }
     return true;
 }

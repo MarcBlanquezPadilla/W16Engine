@@ -4,6 +4,8 @@
 #include "SDL3/SDL.h"
 #include "SDL3/SDL_rect.h"
 #include "Vector2D.h"
+#include <vector>
+#include <functional>
 
 #define NUM_MOUSE_BUTTONS 5
 #define MAX_GAMEPAD_BUTTONS SDL_GAMEPAD_BUTTON_COUNT
@@ -59,6 +61,13 @@ public:
 	
 	float GetMouseWheelY();
 
+	using InputListener = std::function<void(SDL_Event*)>;
+
+	void SubscribeToEvent(InputListener listener)
+	{
+		listeners.push_back(listener);
+	}
+
 
 public:
 
@@ -67,7 +76,6 @@ public:
 	SDL_Gamepad* controller = nullptr;
 
 	KeyState GetGamepadButton(SDL_GamepadButton button) const;
-
 
 private:
 
@@ -79,4 +87,6 @@ private:
 	int mouseX;
 	int mouseY;
 	float mouseWheelY;
+
+	std::vector<InputListener> listeners;
 };

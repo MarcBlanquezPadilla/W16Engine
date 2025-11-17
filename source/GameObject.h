@@ -32,6 +32,7 @@ public:
 	void Load(pugi::xml_node gameObjectNode);
 
 	void SetSelected(bool selected);
+	bool GetEnabled();
 
 public:
 	std::string name;

@@ -29,12 +29,14 @@ add_executable(W16Engine
 	source/Camera.h
 	source/Scene.cpp
 	source/Scene.h
-	source/Editor.cpp
-	source/Editor.h
 	source/GameObject.cpp
 	source/GameObject.h
 	source/Loader.cpp
 	source/Loader.h
+	source/Editor.cpp
+	source/Editor.h
+	source/Interface.cpp
+	source/Interface.h
 	source/components/Component.h
 	source/components/Mesh.cpp
 	source/components/Mesh.h

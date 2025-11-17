@@ -91,15 +91,15 @@ bool Loader::Start()
 {
 	bool ret = true;
 
-	//std::string modelPath = "Assets/BakerHouse.fbx";
+	std::string modelPath = "Assets/BakerHouse.fbx";
 
-	//LOG("Loading initial model: %s", modelPath.c_str());
+	LOG("Loading initial model: %s", modelPath.c_str());
 
-	//if (!LoadModel(modelPath))
-	//{
-	//	LOG("ERROR: Failed to load the initial model. Check if the file exists in the build directory.");
-	//	ret = false;
-	//}
+	if (!LoadModel(modelPath))
+	{
+		LOG("ERROR: Failed to load the initial model. Check if the file exists in the build directory.");
+		ret = false;
+	}
 
 	return ret;
 }
@@ -440,13 +440,11 @@ void Loader::CreateCube()
 
 void Loader::CreateSphere()
 {
-	GameObject* gameObject = new GameObject(true, "Cube");
+	GameObject* gameObject = new GameObject(true, "Sphere");
 	Mesh* mesh = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
-
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 
-	//SPHERE CONSTRUCTION
 	const int sectors = 36;
 	const int stacks = 18;
 	const float radius = 0.5f;
@@ -454,29 +452,37 @@ void Loader::CreateSphere()
 	for (int i = 0; i <= stacks; ++i) {
 		float V = (float)i / (float)stacks;
 		float phi = V * glm::pi<float>();
+
 		for (int j = 0; j <= sectors; ++j) {
 			float U = (float)j / (float)sectors;
-			float theta = U * (glm::pi<float>() * 2);
+			float theta = U * (glm::pi<float>() * 2.0f);
+
 			float x = cos(theta) * sin(phi);
 			float y = cos(phi);
 			float z = sin(theta) * sin(phi);
+
+			glm::vec3 normal = glm::normalize(glm::vec3(x, y, z));
+
 			vertices.push_back({
 				{x * radius, y * radius, z * radius},
-				{x, y, z},
+				normal,
 				{U, V}
 				});
 		}
 	}
+
 	for (int i = 0; i < stacks; ++i) {
 		for (int j = 0; j < sectors; ++j) {
 			int first = (i * (sectors + 1)) + j;
 			int second = first + sectors + 1;
+
 			indices.push_back(first);
-			indices.push_back(first + 1);
 			indices.push_back(second);
 			indices.push_back(first + 1);
+
+			indices.push_back(first + 1);
+			indices.push_back(second);
 			indices.push_back(second + 1);
-			indices.push_back(second);
 		}
 	}
 
@@ -490,7 +496,7 @@ void Loader::CreateSphere()
 
 void Loader::CreatePyramid()
 {
-	GameObject* gameObject = new GameObject(true, "Cube");
+	GameObject* gameObject = new GameObject(true, "Pyramid");
 	Mesh* mesh = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
 
 	std::vector<Vertex> vertices;

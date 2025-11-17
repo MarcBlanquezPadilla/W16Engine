@@ -8,14 +8,7 @@
 #include "ImGuizmo.h"
 
 union SDL_Event;
-class UIWindow;
-
-enum Menu
-{
-	File,
-	View,
-	Help
-};
+class Interface;
 
 class Editor : public Module
 {
@@ -33,22 +26,22 @@ public:
 
 	bool CleanUp();
 
-	void HandleInput(SDL_Event* event);
-	void SetupDockspace(ImGuiID dockspace_id);
-
 	void TestMouseRay(int mouseX, int mouseY);
+
+	void HandleInput(SDL_Event* event);
 
 	//CAMBIAR A WINDOW SCENE
 	ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;
 
 private:
-	ImGuiIO* io = nullptr;
-	std::map<Menu, std::vector<UIWindow*>> windows;
+
+	Interface* userInterface;
 
 	glm::vec3 startLastRay;
 	glm::vec3 endLastRay;
 
 	bool debugRay;
 	bool debugAABB;
+	bool debugMesh;
     bool setDefaultUI = false;
 };

@@ -79,6 +79,7 @@ private:
 
 	void DrawRenderList(const std::multimap<float, RenderObject>& map);
 	void DrawLinesList(std::vector<RenderLine> list);
+	void DrawStencil();
 	void BuildRenderListsRecursive(GameObject* gameObject);
 
 private:
@@ -102,6 +103,7 @@ private:
 	GLint outlineViewMatrixLoc;
 	GLint outlineProjectionMatrixLoc;
 	GLint outlineColorLoc;
+	Mesh* selectedMesh;
 
 	//LINES DRAW
 	unsigned int lineShaderProgram;

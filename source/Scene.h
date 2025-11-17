@@ -21,8 +21,6 @@ public:
 
 	bool CleanUp();
 
-
-
 	std::vector<GameObject*> GetGameObjects() { return gameObjects; }
 	std::vector<GameObject*> GetAllGameObjects();
 	void CollectGameObjectsRecursive(GameObject* go, std::vector<GameObject*>& list);

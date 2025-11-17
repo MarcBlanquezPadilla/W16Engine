@@ -245,3 +245,16 @@ void GameObject::SetSelected(bool _selected)
 		component.second->selected = _selected;
 	}
 }
+
+bool GameObject::GetEnabled()
+{
+	bool ret;
+	if (parent != nullptr) 
+	{
+		ret = parent->GetEnabled();
+		if (ret) ret = enabled;
+	}
+	else ret = enabled;
+
+	return ret;
+}

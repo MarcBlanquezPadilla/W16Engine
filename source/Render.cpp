@@ -100,6 +100,7 @@ bool Render::PreUpdate()
 	opaqueList.clear();
 	transparentList.clear();
 	linesList.clear();
+	selectedMesh = nullptr;
 
 	return ret;
 }
@@ -135,34 +136,10 @@ bool Render::PostUpdate()
 	glEnable(GL_BLEND);
 	DrawLinesList(linesList);
 
-	GameObject* selectedGO = Engine::GetInstance().scene->GetSelectedGameObject();
-	Mesh* selectedMesh = nullptr;
-	if (selectedGO)
-	{
-		selectedMesh = (Mesh*)selectedGO->GetComponent(ComponentType::Mesh);
-	}
-	if (selectedMesh)
-	{
-
-		Transform* selectedTransform = (Transform*)selectedGO->GetComponent(ComponentType::Transform);
-
-		glUseProgram(outlineShaderProgram);
-
-		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		glStencilMask(0x00);
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
-		glDisable(GL_CULL_FACE);
-
-		glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetViewMatrix()));
-		glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetProjectionMatrix()));
-		glUniform4f(outlineColorLoc, 0.0f, 1.0f, 1.0f, 1.0f);
-
-		glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(selectedTransform->GetGlobalMatrix()));
-
-		glBindVertexArray(selectedMesh->stencilData.VAO);
-		glDrawElements(GL_TRIANGLES, selectedMesh->stencilData.numVertices, GL_UNSIGNED_INT, 0);
-	}
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+	glDisable(GL_CULL_FACE);
+	DrawStencil();
 
 	glDisable(GL_STENCIL_TEST);
 	glStencilMask(0xFF); 
@@ -253,6 +230,36 @@ void Render::DrawLinesList(std::vector<RenderLine> list)
 
 		glUseProgram(0);
 	}
+}
+
+void Render::DrawStencil()
+{
+	GameObject* selectedGO = Engine::GetInstance().scene->GetSelectedGameObject();
+
+	if (!selectedGO || !selectedGO->GetEnabled()) return;
+
+	Mesh* selectedMesh = (Mesh*)selectedGO->GetComponent(ComponentType::Mesh);
+
+	if (!selectedMesh || selectedMesh->stencilData.VAO == 0) return;
+
+	Transform* selectedTransform = (Transform*)selectedGO->GetComponent(ComponentType::Transform);
+	if (!selectedTransform) return;
+
+	glUseProgram(outlineShaderProgram);
+
+	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+	glStencilMask(0x00);
+
+	glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE,glm::value_ptr(Engine::GetInstance().camera->GetViewMatrix()));
+	glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE,glm::value_ptr(Engine::GetInstance().camera->GetProjectionMatrix()));
+	glUniform4f(outlineColorLoc, 0.0f, 1.0f, 1.0f, 1.0f);
+	glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE,glm::value_ptr(selectedTransform->GetGlobalMatrix()));
+
+	glBindVertexArray(selectedMesh->stencilData.VAO);
+	glDrawElements(GL_TRIANGLES, selectedMesh->stencilData.numVertices, GL_UNSIGNED_INT, 0);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
 }
 
 void Render::BuildRenderListsRecursive(GameObject* gameObject)
@@ -513,27 +520,37 @@ bool Render::CreateOutlineShader()
 		"uniform mat4 model;\n"
 		"uniform mat4 view;\n"
 		"uniform mat4 projection;\n"
-		"uniform float u_referenceDistance = 10.0;\n"
-		"uniform float u_referenceThickness = 0.05;\n"
+		"uniform float u_outlineThickness = 0.03;\n"
 		"void main()\n"
 		"{\n"
-		"   float scaleX = length(model[0].xyz);\n"
-		"   float scaleY = length(model[1].xyz);\n"
-		"   float scaleZ = length(model[2].xyz);\n"
-		"   float avgScale = max(scaleX, max(scaleY, scaleZ));\n"
-		"   avgScale = max(avgScale, 0.001);\n"
-		"   vec4 viewPos = view * model * vec4(position, 1.0f);\n"
-		"   float distance = abs(viewPos.z);\n"
-		"   float dynamicOutlineAmount = u_referenceThickness * (distance / u_referenceDistance);\n"
-		"   vec3 newPos = position + (aNormal * dynamicOutlineAmount / avgScale);\n"
-		"   gl_Position = projection * view * model * vec4(newPos, 1.0f);\n"
+		// Extraer la escala
+		"   vec3 scale = vec3(\n"
+		"       length(model[0].xyz),\n"
+		"       length(model[1].xyz),\n"
+		"       length(model[2].xyz)\n"
+		"   );\n"
+		// Crear matriz sin escala
+		"   mat4 modelNoScale = model;\n"
+		"   modelNoScale[0].xyz /= scale.x;\n"
+		"   modelNoScale[1].xyz /= scale.y;\n"
+		"   modelNoScale[2].xyz /= scale.z;\n"
+		// Transformar normal sin escala
+		"   vec3 worldNormal = normalize(mat3(modelNoScale) * aNormal);\n"
+		// Calcular posición base
+		"   vec4 worldPos = model * vec4(position, 1.0);\n"
+		// Calcular distancia para outline dinámico
+		"   vec4 viewPos = view * worldPos;\n"
+		"   float distance = length(viewPos.xyz);\n"
+		"   float dynamicThickness = u_outlineThickness * (distance * 0.1);\n"
+		// Desplazar en espacio mundo
+		"   worldPos.xyz += worldNormal * dynamicThickness;\n"
+		"   gl_Position = projection * view * worldPos;\n"
 		"}\n";
 
 	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
 		return false;
 
 	unsigned int fShader = 0;
-
 	const char* fragmentShaderSource = "#version 460 core\n"
 		"out vec4 color;\n"
 		"uniform vec4 outlineColor;\n"

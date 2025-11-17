@@ -25,16 +25,17 @@ Engine::Engine() {
     render = new Render(true);
     camera = new Camera(true);
     scene = new Scene(true);
-    editor = new Editor(true);
     loader = new Loader(true);
+    editor = new Editor(true);
     
     AddModule(window);
     AddModule(input);
     AddModule(render);
     AddModule(camera);
     AddModule(scene);
-    AddModule(editor);
     AddModule(loader);
+    AddModule(editor);
+
 }
 
 
