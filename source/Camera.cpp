@@ -13,6 +13,7 @@
 #include "components/Component.h"
 #include "components/Transform.h"
 #include "utils/Frustum.h"
+#include "utils/Ray.h"
 
 
 Camera::Camera(bool startEnabled) : Module(startEnabled)
@@ -269,6 +270,28 @@ void Camera::CalcMouseVectors()
 	up = glm::normalize(glm::cross(right, forward));
 }
 
+Ray Camera::GetRayFromMouse(int mouseX, int mouseY)
+{
+	int width = Engine::GetInstance().window->width;
+	int height = Engine::GetInstance().window->height;
+
+	float x = (2.0f * mouseX) / width - 1.0f;
+	float y = 1.0f - (2.0f * mouseY) / height;
+
+	glm::vec4 ray_clip = glm::vec4(x, y, -1.0, 1.0);
+
+	glm::vec4 ray_eye = glm::inverse(projectionMatrix) * ray_clip;
+	ray_eye = glm::vec4(ray_eye.x, ray_eye.y, -1.0, 0.0);
+
+	glm::vec3 ray_wor = glm::vec3(glm::inverse(viewMatrix) * ray_eye);
+	ray_wor = glm::normalize(ray_wor);
+
+	Ray ray;
+	ray.origin = position;
+	ray.direction = glm::normalize(ray_wor);
+
+	return ray;
+}
 
 bool Camera::CleanUp()
 {

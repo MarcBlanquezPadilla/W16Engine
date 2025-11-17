@@ -22,6 +22,13 @@ struct RenderObject
 	glm::mat4 globalModelMatrix;
 };
 
+struct RenderLine
+{
+	glm::vec3 startPoint;
+	glm::vec3 endPoint;
+	glm::vec4 color;
+};
+
 class Render : public Module
 {
 public:
@@ -52,8 +59,9 @@ public:
 	unsigned int UploadTextureToGPU(unsigned char* data, int width, int height);
 	void DeleteTextureFromGPU(unsigned int textureID);
 
-	void BuildRenderListsRecursive(GameObject* gameObject);
-	void DrawRenderList(const std::multimap<float,RenderObject>& map);
+
+
+	void DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color);
 
 	void ChangeWindowSize(int x, int y);
 
@@ -67,6 +75,11 @@ private:
 	bool CreateCheckerTexture();
 	bool CreateNormalShader();
 	bool CreateOutlineShader();
+	bool CreateLineShader();
+
+	void DrawRenderList(const std::multimap<float, RenderObject>& map);
+	void DrawLinesList(std::vector<RenderLine> list);
+	void BuildRenderListsRecursive(GameObject* gameObject);
 
 private:
 	unsigned int shaderProgram;
@@ -74,18 +87,30 @@ private:
 	unsigned int outlineShaderProgram;
 	unsigned int checkerTextureID;
 
+	//MODEL DRAW
 	GLint modelMatrixLoc;
 	GLint viewMatrixLoc;
 	GLint projectionMatrixLoc;
 
+	//NORMAL DRAW
 	GLint normalModelMatrixLoc;
 	GLint normalViewMatrixLoc;
 	GLint normalProjectionMatrixLoc;
 
+	//STENCIL DRAW
 	GLint outlineModelMatrixLoc;
 	GLint outlineViewMatrixLoc;
 	GLint outlineProjectionMatrixLoc;
 	GLint outlineColorLoc;
+
+	//LINES DRAW
+	unsigned int lineShaderProgram;
+	GLint lineModelMatrixLoc;
+	GLint lineViewMatrixLoc;
+	GLint lineProjectionMatrixLoc;
+	GLint lineColorLoc;
+	unsigned int lineVAO = 0;
+	unsigned int lineVBO = 0;
 
 	GLint hasUVsLoc;
 
@@ -96,4 +121,5 @@ private:
 
 	std::multimap<float,RenderObject> opaqueList;
 	std::multimap<float,RenderObject> transparentList;
+	std::vector<RenderLine> linesList;
 };

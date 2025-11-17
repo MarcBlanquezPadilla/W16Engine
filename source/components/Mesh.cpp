@@ -1,5 +1,6 @@
 #include "Mesh.h"
 #include "../utils/Log.h"
+#include "../utils/AABB.h"
 #include "Component.h"
 #include "../GameObject.h"
 #include <vector>
@@ -20,7 +21,7 @@ struct Vec3Comparator {
 
 Mesh::Mesh(GameObject* owner, bool enabled) : Component(owner, enabled)
 {
-
+    aabb = nullptr;
 }
 
 Mesh::~Mesh()
@@ -42,18 +43,22 @@ bool Mesh::LoadModel(std::vector<Vertex> vertices, std::vector<unsigned int> ind
 
     meshData.numVertices = vertices.size();
     meshData.numIndices = indices.size();
+    this->vertices = vertices;
+    this->indices = indices;
 
-    aabb.min = {INFINITY, INFINITY, INFINITY};
-    aabb.max = {-INFINITY, -INFINITY, -INFINITY};
+    aabb = new AABB();
+
+    aabb->min = {INFINITY, INFINITY, INFINITY};
+    aabb->max = {-INFINITY, -INFINITY, -INFINITY};
 
     for (const Vertex& vertex : vertices)
     {
-        aabb.min.x = fmin(aabb.min.x, vertex.position.x);
-        aabb.min.y = fmin(aabb.min.y, vertex.position.y);
-        aabb.min.z = fmin(aabb.min.z, vertex.position.z);
-        aabb.max.x = fmax(aabb.max.x, vertex.position.x);
-        aabb.max.y = fmax(aabb.max.y, vertex.position.y);
-        aabb.max.z = fmax(aabb.max.z, vertex.position.z);
+        aabb->min.x = fmin(aabb->min.x, vertex.position.x);
+        aabb->min.y = fmin(aabb->min.y, vertex.position.y);
+        aabb->min.z = fmin(aabb->min.z, vertex.position.z);
+        aabb->max.x = fmax(aabb->max.x, vertex.position.x);
+        aabb->max.y = fmax(aabb->max.y, vertex.position.y);
+        aabb->max.z = fmax(aabb->max.z, vertex.position.z);
     }
 
     if (!LoadToGpu(vertices, indices))
@@ -242,4 +247,15 @@ void Mesh::Save(pugi::xml_node componentNode)
 void Mesh::Load(pugi::xml_node componentNode)
 {
     LoadFromLibrary(componentNode.attribute("path").as_string());
+}
+
+
+std::vector<Vertex> Mesh::GetVertices()
+{
+    return vertices;
+}
+
+std::vector<unsigned int> Mesh::GetIndices()
+{
+    return indices;
 }

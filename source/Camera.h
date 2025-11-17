@@ -3,9 +3,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <array>
-#include "Utils/AABB.h"
 
+class AABB;
 class Frustum;
+struct Ray;
 
 class Camera : public Module
 {
@@ -23,8 +24,9 @@ public:
 
 	glm::mat4 GetViewMatrix() const { return viewMatrix; }
 	glm::mat4 GetProjectionMatrix() const { return projectionMatrix; }
-
 	glm::vec3 GetPosition() const { return position; }
+
+	Ray GetRayFromMouse(int mouseX, int mouseY);
 
 	void LockCamera(bool _lockCamera) { lockCamera = _lockCamera; }
 

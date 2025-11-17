@@ -26,6 +26,7 @@ public:
 	Component* GetComponent(ComponentType type);
 
 	void AddChild(GameObject* gameObject);
+	std::vector<GameObject*> GetChilds() { return childs;}
 
 	void Save(pugi::xml_node gameObjectNode);
 	void Load(pugi::xml_node gameObjectNode);

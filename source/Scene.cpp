@@ -113,3 +113,25 @@ void Scene::AddGameObject(GameObject* gameObject)
 	gameObjects.push_back(gameObject);
 	SetSelectedGameObject(gameObject);
 }
+
+void Scene::CollectGameObjectsRecursive(GameObject* go, std::vector<GameObject*>& list)
+{
+	list.push_back(go);
+
+	for (GameObject* child : go->childs)
+	{
+		CollectGameObjectsRecursive(child, list);
+	}
+}
+
+std::vector<GameObject*> Scene::GetAllGameObjects()
+{
+	std::vector<GameObject*> allGameObjects;
+
+	for (GameObject* go : gameObjects)
+	{
+		CollectGameObjectsRecursive(go, allGameObjects);
+	}
+
+	return allGameObjects;
+}

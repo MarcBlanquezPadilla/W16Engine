@@ -10,6 +10,7 @@
 #include "Scene.h"
 #include "GameObject.h"
 #include "components/Transform.h"
+#include "components/Mesh.h"
 
 #include "windows/UIWindow.h"
 #include "windows/ConfigWindow.h"
@@ -18,6 +19,8 @@
 #include "windows/HierarchyWindow.h"
 #include "windows/InspectorWindow.h"
 
+#include "utils/Ray.h"
+#include "utils/AABB.h"
 
 #include <SDL3/SDL_events.h>
 #include "imgui.h"
@@ -26,7 +29,9 @@
 #include "imgui_internal.h"
 #include "ImGuizmo.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtc/type_ptr.hpp"
+#include <glm/gtx/intersect.hpp>
 #include <cmath>
 
 
@@ -82,6 +87,9 @@ bool Editor::Awake()
 
 	setDefaultUI = true;
 
+	startLastRay = { 0,0,0 };
+	endLastRay = { 0,0,0 };
+
 	return ret;
 }
 
@@ -104,7 +112,8 @@ bool Editor::Update(float dt)
 		SetupDockspace(dockspace_id);
 		setDefaultUI = false;
 	}
-
+	
+	//GUIZMO
 	GameObject* selectedGameObject = Engine::GetInstance().scene->GetSelectedGameObject();
 	Camera* camera = Engine::GetInstance().camera;
 
@@ -151,6 +160,20 @@ bool Editor::Update(float dt)
 				transform->SetEulerRotation(newEulerRot);
 				transform->SetScale(newScale);
 			}
+		}
+	}
+
+	//MOUSE PICKING
+	if (Engine::GetInstance().input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_DOWN)
+	{
+		if (!ImGui::GetIO().WantCaptureMouse && !ImGuizmo::IsOver())
+		{
+			int mouseX, mouseY;
+			// Necesitas la posición absoluta del ratón en la ventana
+			// SDL_GetMouseState(&mouseX, &mouseY); (En Input.cpp puedes hacer un getter para esto)
+			Vector2D mousePos = Engine::GetInstance().input->GetMousePosition();
+
+			TestMouseRay(mousePos.getX(), mousePos.getY());
 		}
 	}
 
@@ -302,4 +325,84 @@ void Editor::SetupDockspace(unsigned int dockspace_id)
 	ImGui::DockBuilderDockWindow("Inspector", dock_right_id);
 	ImGui::DockBuilderDockWindow("Console", dock_bottom_id);
 	ImGui::DockBuilderFinish(dockspace_id);
+}
+
+void Editor::TestMouseRay(int mouseX, int mouseY)
+{
+	Ray ray = Engine::GetInstance().camera->GetRayFromMouse(mouseX, mouseY);
+
+	startLastRay = ray.origin;
+	endLastRay = ray.origin + (ray.direction * 100.0f);
+
+	std::vector<GameObject*> gameObjects = Engine::GetInstance().scene->GetAllGameObjects();
+	std::map<float, GameObject*> candidates;
+
+	for (GameObject* go : gameObjects)
+	{
+		if (!go->enabled) continue;
+
+		Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
+		Transform* transform = (Transform*)go->GetComponent(ComponentType::Transform);
+
+		if (mesh && transform)
+		{
+			AABB globalAABB = mesh->aabb->GetGlobalAABB(transform->GetGlobalMatrix());
+			float distance;
+			if (ray.RayIntersectsAABB(globalAABB, distance))
+			{
+				candidates[distance] = go;
+			}
+		}
+	}
+
+	GameObject* closestHit = nullptr;
+	float minDistance = FLT_MAX;
+
+	for (auto const& pair : candidates)
+	{
+		GameObject* go = pair.second;
+		Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
+		Transform* transform = (Transform*)go->GetComponent(ComponentType::Transform);
+
+		glm::mat4 modelMatrix = transform->GetGlobalMatrix();
+		glm::mat4 inverseModel = glm::inverse(modelMatrix);
+
+		Ray localRay;
+		localRay.origin = glm::vec3(inverseModel * glm::vec4(ray.origin, 1.0f));
+		localRay.direction = glm::normalize(glm::vec3(inverseModel * glm::vec4(ray.direction, 0.0f)));
+
+		const auto& vertices = mesh->GetVertices();
+		const auto& indices = mesh->GetIndices();
+
+		for (size_t i = 0; i < indices.size(); i += 3)
+		{
+			glm::vec3 v0 = vertices[indices[i]].position;
+			glm::vec3 v1 = vertices[indices[i + 1]].position;
+			glm::vec3 v2 = vertices[indices[i + 2]].position;
+
+			glm::vec2 baryPosition;
+			float distance;
+
+			if (glm::intersectRayTriangle(localRay.origin, localRay.direction, v0, v1, v2, baryPosition, distance))
+			{
+				glm::vec3 localHitPoint = localRay.origin + localRay.direction * distance;
+				glm::vec3 worldHitPoint = glm::vec3(modelMatrix * glm::vec4(localHitPoint, 1.0f));
+				float worldDistance = glm::distance(ray.origin, worldHitPoint);
+
+				if (worldDistance < minDistance)
+				{
+					minDistance = worldDistance;
+					closestHit = go;
+				}
+			}
+		}
+
+		if (closestHit == go) {
+			break;
+		}
+	}
+
+	if (closestHit) {
+		Engine::GetInstance().scene->SetSelectedGameObject(closestHit);
+	}
 }

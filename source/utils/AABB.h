@@ -2,8 +2,9 @@
 #include "glm/glm.hpp"
 #include <array>
 
-struct AABB
+class AABB
 {
+public:
     glm::vec3 min;
     glm::vec3 max;
 

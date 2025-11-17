@@ -69,7 +69,15 @@ bool Render::Awake()
 		return false;
 	}
 
+	//CREATE STENCIL SHADER
 	if (!CreateOutlineShader())
+	{
+		LOG("Error creating outline shader");
+		return false;
+	}
+	
+	//CREATE LINE SHADER
+	if (!CreateLineShader())
 	{
 		LOG("Error creating outline shader");
 		return false;
@@ -91,6 +99,7 @@ bool Render::PreUpdate()
 
 	opaqueList.clear();
 	transparentList.clear();
+	linesList.clear();
 
 	return ret;
 }
@@ -119,6 +128,12 @@ bool Render::PostUpdate()
 	glEnable(GL_BLEND);
 	glDepthMask(GL_FALSE);
 	DrawRenderList(transparentList);
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_TRUE);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	DrawLinesList(linesList);
 
 	GameObject* selectedGO = Engine::GetInstance().scene->GetSelectedGameObject();
 	Mesh* selectedMesh = nullptr;
@@ -208,6 +223,38 @@ void Render::DrawRenderList(const std::multimap<float, RenderObject>& map)
 	}
 }
 
+void Render::DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color)
+{
+	RenderLine line = { start, end, color };
+	linesList.push_back(line);
+}
+
+void Render::DrawLinesList(std::vector<RenderLine> list)
+{
+	for (RenderLine line : list)
+	{
+		glUseProgram(lineShaderProgram);
+
+		glm::mat4 model = glm::mat4(1.0f);
+		glUniformMatrix4fv(lineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(lineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetViewMatrix()));
+		glUniformMatrix4fv(lineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetProjectionMatrix()));
+
+		glUniform4fv(lineColorLoc, 1, glm::value_ptr(line.color));
+
+		glm::vec3 vertices[2] = { line.startPoint, line.endPoint };
+		glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glBindVertexArray(lineVAO);
+		glDrawArrays(GL_LINES, 0, 2);
+		glBindVertexArray(0);
+
+		glUseProgram(0);
+	}
+}
+
 void Render::BuildRenderListsRecursive(GameObject* gameObject)
 {
 	if (gameObject && gameObject->enabled)
@@ -221,7 +268,7 @@ void Render::BuildRenderListsRecursive(GameObject* gameObject)
 
 			if (mesh && mesh->enabled && mesh->meshData.VAO != 0)
 			{
-				const AABB& globalAABB = mesh->aabb.GetGlobalAABB(transform->GetGlobalMatrix());
+				const AABB& globalAABB = mesh->aabb->GetGlobalAABB(transform->GetGlobalMatrix());
 
 				if (Engine::GetInstance().camera->frustum->InFrustum(globalAABB))
 				{
@@ -313,6 +360,9 @@ void Render::UpdateProjectionMatix(glm::mat4 pm)
 	glUseProgram(outlineShaderProgram);
 	glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
 
+	glUseProgram(lineShaderProgram);
+	glUniformMatrix4fv(lineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
+
 	glUseProgram(shaderProgram);
 }
 
@@ -329,6 +379,9 @@ void Render::UpdateViewMatix(glm::mat4 vm)
 	// UPDATE OUTLINER SHADER
 	glUseProgram(outlineShaderProgram);
 	glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
+
+	glUseProgram(lineShaderProgram);
+	glUniformMatrix4fv(lineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
 
 	glUseProgram(shaderProgram);
 }
@@ -509,6 +562,57 @@ bool Render::CreateOutlineShader()
 	outlineViewMatrixLoc = glGetUniformLocation(outlineShaderProgram, "view");
 	outlineProjectionMatrixLoc = glGetUniformLocation(outlineShaderProgram, "projection");
 	outlineColorLoc = glGetUniformLocation(outlineShaderProgram, "outlineColor");
+
+	return true;
+}
+
+bool Render::CreateLineShader()
+{
+	const char* vsSource = "#version 460 core\n"
+		"layout (location = 0) in vec3 position;\n"
+		"uniform mat4 view;\n"
+		"uniform mat4 projection;\n"
+		"uniform mat4 model;\n"
+		"void main()\n"
+		"{\n"
+		"   gl_Position = projection * view * model * vec4(position, 1.0f);\n"
+		"}\n";
+
+	const char* fsSource = "#version 460 core\n"
+		"out vec4 color;\n"
+		"uniform vec4 lineColor;\n"
+		"void main() { color = lineColor; }\n";
+
+	unsigned int vShader = 0, fShader = 0;
+	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vsSource, strlen(vsSource))) return false;
+	if (!CreateShaderFromSources(fShader, GL_FRAGMENT_SHADER, fsSource, strlen(fsSource))) return false;
+
+	lineShaderProgram = glCreateProgram();
+	glAttachShader(lineShaderProgram, vShader);
+	glAttachShader(lineShaderProgram, fShader);
+	glLinkProgram(lineShaderProgram);
+
+	glDeleteShader(vShader);
+	glDeleteShader(fShader);
+
+	lineModelMatrixLoc = glGetUniformLocation(lineShaderProgram, "model");
+	lineViewMatrixLoc = glGetUniformLocation(lineShaderProgram, "view");
+	lineProjectionMatrixLoc = glGetUniformLocation(lineShaderProgram, "projection");
+	lineColorLoc = glGetUniformLocation(lineShaderProgram, "lineColor");
+
+	glGenVertexArrays(1, &lineVAO);
+	glGenBuffers(1, &lineVBO);
+
+	glBindVertexArray(lineVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
+
+	glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	return true;
 }

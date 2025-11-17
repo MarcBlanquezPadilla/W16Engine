@@ -4,8 +4,8 @@
 #include <vector>
 #include <array>
 #include <cmath>
-#include "../Utils/AABB.h"
 
+class AABB;
 class GameObject;
 
 struct aiMesh;
@@ -71,6 +71,9 @@ public:
 
     bool LoadModel(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
 
+    std::vector<Vertex> GetVertices();
+    std::vector<unsigned int> GetIndices();
+
 private:
     bool LoadToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
     bool LoadNormalsToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
@@ -81,11 +84,15 @@ public:
     MeshData meshData;
     NormalData normalData;
     StencilData stencilData;
-    AABB aabb;
+    AABB* aabb;
 
     bool hasUVs = false;
     bool drawNormals = false;
     bool drawStencil = false;
 
     std::string libraryPath;
+
+private:
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
 };

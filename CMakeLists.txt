@@ -58,6 +58,8 @@ add_executable(W16Engine
 	source/utils/Timer.cpp
 	source/utils/Timer.h
 	source/utils/AABB.h
+	source/utils/Ray.h
+	source/utils/Ray.cpp
 	source/utils/Frustum.h
 	source/utils/Frustum.cpp
 	source/geometry/Plane.h

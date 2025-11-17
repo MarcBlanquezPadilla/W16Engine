@@ -23,7 +23,10 @@ public:
 
 
 
-	std::vector<GameObject*>& GetGameObjects() { return gameObjects; }
+	std::vector<GameObject*> GetGameObjects() { return gameObjects; }
+	std::vector<GameObject*> GetAllGameObjects();
+	void CollectGameObjectsRecursive(GameObject* go, std::vector<GameObject*>& list);
+
 	GameObject* GetSelectedGameObject() { return selectedGameObject; }
 
 	void SetSelectedGameObject(GameObject* gameObject);
