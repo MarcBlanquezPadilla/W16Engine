@@ -1,10 +1,12 @@
 #include "GameObject.h"
 #include "Engine.h"
+#include "EventSystem.h"
 #include "components/Component.h"
 #include "components/Mesh.h"
 #include "components/Transform.h"
 #include "components/Texture.h"
 #include "utils/Log.h"
+#include "utils/AABB.h"
 
 #include <random>
 
@@ -237,6 +239,27 @@ void GameObject::Load(pugi::xml_node gameObjectNode)
 	}
 }
 
+bool GameObject::TryGetGlobalMatrix(glm::mat4& globalMatrix)
+{
+	if (transform)
+	{
+		globalMatrix = transform->GetGlobalMatrix();
+		return true;
+	}
+	else return false;
+
+}
+bool GameObject::TryGetGlobalAABB(AABB& globalAABB)
+{
+	Mesh* mesh = (Mesh*)GetComponent(ComponentType::Mesh);
+	if (mesh && transform)
+	{
+		globalAABB = mesh->aabb->GetGlobalAABB(transform->GetGlobalMatrix());
+		return true;
+	}
+	else return false;
+}
+
 void GameObject::SetSelected(bool _selected)
 {
 	selected = _selected;
@@ -246,10 +269,21 @@ void GameObject::SetSelected(bool _selected)
 	}
 }
 
+void GameObject::SetStatic(bool _static)
+{
+	isStatic = _static;
+	Engine::GetInstance().events->PublishImmediate(GameObjectEvent(Event::Type::StaticChanged, this));
+}
+
+void GameObject::SetEnabled(bool _enabled)
+{
+	enabled = _enabled;
+}
+
 bool GameObject::GetEnabled()
 {
 	bool ret;
-	if (parent != nullptr) 
+	if (parent != nullptr)
 	{
 		ret = parent->GetEnabled();
 		if (ret) ret = enabled;
@@ -257,4 +291,14 @@ bool GameObject::GetEnabled()
 	else ret = enabled;
 
 	return ret;
+}
+
+bool GameObject::GetSelected()
+{
+	return selected;
+}
+
+bool GameObject::GetStatic()
+{
+	return isStatic;
 }

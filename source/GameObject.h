@@ -5,8 +5,10 @@
 #include <vector>
 #include <string>
 #include "pugixml.hpp"
+#include "glm/glm.hpp"
 
 class Transform;
+class AABB;
 
 class GameObject
 {
@@ -31,13 +33,21 @@ public:
 	void Save(pugi::xml_node gameObjectNode);
 	void Load(pugi::xml_node gameObjectNode);
 
+	//GETTERS & SETTERS
 	void SetSelected(bool selected);
+	bool GetSelected();
+	void SetStatic(bool s);
+	bool GetStatic();
+	void SetEnabled(bool enabled);
 	bool GetEnabled();
+
+	//COMPONENTS
+	bool TryGetGlobalMatrix(glm::mat4& globalMatrix);
+	bool TryGetGlobalAABB(AABB& globalAABB);
 
 public:
 	std::string name;
-	bool enabled;
-	bool selected;
+
 	
 	GameObject* parent;
 	std::vector<GameObject*> childs;
@@ -47,5 +57,9 @@ public:
 
 	uint32_t UUID;
 	uint32_t parentUUID;
-	
+
+private:
+	bool enabled;
+	bool isStatic;
+	bool selected;
 };

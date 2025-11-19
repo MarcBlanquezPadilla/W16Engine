@@ -27,6 +27,8 @@ public:
     void SetPosition(glm::vec3 _position);
     void SetScale(glm::vec3 _position);
 
+    void OnTransformChanged();
+
     glm::vec3 GetPosition();
     glm::vec3 GetEulerRotation();
     glm::quat GetQuaterionRotation();

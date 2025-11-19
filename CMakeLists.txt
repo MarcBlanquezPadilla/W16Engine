@@ -37,6 +37,10 @@ add_executable(W16Engine
 	source/Editor.h
 	source/Interface.cpp
 	source/Interface.h
+	source/Event.h
+	source/EventListener.h
+	source/EventSystem.cpp
+	source/EventSystem.h
 	source/components/Component.h
 	source/components/Mesh.cpp
 	source/components/Mesh.h
@@ -64,6 +68,8 @@ add_executable(W16Engine
 	source/utils/Ray.cpp
 	source/utils/Frustum.h
 	source/utils/Frustum.cpp
+	source/utils/Tree.cpp
+	source/utils/Tree.h
 	source/geometry/Plane.h
 	source/geometry/Plane.cpp
 )

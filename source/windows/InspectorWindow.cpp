@@ -38,10 +38,21 @@ void InspectorWindow::Draw()
 
     if (gameObject != nullptr)
     {
-        char name_buffer[64];
-        sprintf_s(name_buffer, "%s", gameObject->name.c_str());
-        ImGui::Checkbox(name_buffer, &gameObject->enabled);
+        ImGui::Text(gameObject->name.c_str());
+        bool isEnabled = gameObject->GetEnabled();
+        if (ImGui::Checkbox("Enabled", &isEnabled))
+        {
+            gameObject->SetEnabled(isEnabled);
+        }
+        
+        bool isStatic = gameObject->GetStatic();
+        if (ImGui::Checkbox("Static", &isStatic))
+        {
+            gameObject->SetStatic(isStatic);
+        }
+
         ImGui::Separator();
+
         for each(auto const& pair in gameObject->components)
         {
             switch (pair.first)

@@ -11,7 +11,6 @@
 #include "Scene.h"
 #include "GameObject.h"
 #include "components/Mesh.h"
-#include "components/Transform.h"
 #include "components/Texture.h"
 #include "utils/Log.h"
 
@@ -236,14 +235,12 @@ void Render::DrawStencil()
 {
 	GameObject* selectedGO = Engine::GetInstance().scene->GetSelectedGameObject();
 
-	if (!selectedGO || !selectedGO->GetEnabled()) return;
+	if (!selectedGO) return;
 
-	Mesh* selectedMesh = (Mesh*)selectedGO->GetComponent(ComponentType::Mesh);
+	selectedMesh = (Mesh*)selectedGO->GetComponent(ComponentType::Mesh);
+	glm::mat4 globalMatrix;
 
-	if (!selectedMesh || selectedMesh->stencilData.VAO == 0) return;
-
-	Transform* selectedTransform = (Transform*)selectedGO->GetComponent(ComponentType::Transform);
-	if (!selectedTransform) return;
+	if (!selectedMesh || !selectedGO->TryGetGlobalMatrix(globalMatrix)) return;
 
 	glUseProgram(outlineShaderProgram);
 
@@ -253,7 +250,7 @@ void Render::DrawStencil()
 	glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE,glm::value_ptr(Engine::GetInstance().camera->GetViewMatrix()));
 	glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE,glm::value_ptr(Engine::GetInstance().camera->GetProjectionMatrix()));
 	glUniform4f(outlineColorLoc, 0.0f, 1.0f, 1.0f, 1.0f);
-	glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE,glm::value_ptr(selectedTransform->GetGlobalMatrix()));
+	glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE,glm::value_ptr(globalMatrix));
 
 	glBindVertexArray(selectedMesh->stencilData.VAO);
 	glDrawElements(GL_TRIANGLES, selectedMesh->stencilData.numVertices, GL_UNSIGNED_INT, 0);
@@ -264,18 +261,16 @@ void Render::DrawStencil()
 
 void Render::BuildRenderListsRecursive(GameObject* gameObject)
 {
-	if (gameObject && gameObject->enabled)
+	glm::mat4 globalModelMatrix;
+	if (gameObject && gameObject->GetEnabled())
 	{
-		Transform* transform = (Transform*)gameObject->GetComponent(ComponentType::Transform);
-
-		if (transform)
+		if (gameObject->TryGetGlobalMatrix(globalModelMatrix))
 		{
-			glm::mat4 globalModelMatrix = transform->GetGlobalMatrix();
 			Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
 
 			if (mesh && mesh->enabled && mesh->meshData.VAO != 0)
 			{
-				const AABB& globalAABB = mesh->aabb->GetGlobalAABB(transform->GetGlobalMatrix());
+				const AABB& globalAABB = mesh->aabb->GetGlobalAABB(globalModelMatrix);
 
 				if (Engine::GetInstance().camera->frustum->InFrustum(globalAABB))
 				{
@@ -311,7 +306,6 @@ void Render::BuildRenderListsRecursive(GameObject* gameObject)
 			BuildRenderListsRecursive(go);
 		}
 	}
-
 }
 
 

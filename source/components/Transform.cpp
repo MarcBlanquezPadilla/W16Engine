@@ -1,7 +1,11 @@
 #include "Transform.h"
-#include "../utils/Log.h"
 #include "Component.h"
+
+#include "../EventSystem.h"
+#include "../Engine.h"
+#include "../utils/Log.h"
 #include "../GameObject.h"
+
 #include <vector>
 #include <assimp/scene.h>
 
@@ -165,33 +169,39 @@ glm::vec3 Transform::GetScale()
 
 void Transform::SetPosition(glm::vec3 _position)
 {
-    InvalidateGlobalMatrix();
     dirtyLocalMatrix = true;
     position = _position;
+    OnTransformChanged();
 }
 
 void Transform::SetEulerRotation(glm::vec3 _rotation)
 {
-    InvalidateGlobalMatrix();
     dirtyLocalMatrix = true;
     eulerRotation = _rotation;
 
     glm::vec3 rotationRadians = glm::radians(_rotation);
     rotation = glm::quat(rotationRadians);
+    OnTransformChanged();
 }
 
 void Transform::SetQuaternionRotation(glm::quat _rotationQuat)
 {
-    InvalidateGlobalMatrix();
     dirtyLocalMatrix = true;
     rotation = _rotationQuat;
+    OnTransformChanged();
 }
 
 void Transform::SetScale(glm::vec3 _scale)
 {
-    InvalidateGlobalMatrix();
     dirtyLocalMatrix = true;
     scale = _scale;
+    OnTransformChanged();
+}
+
+void Transform::OnTransformChanged()
+{
+    InvalidateGlobalMatrix();
+    Engine::GetInstance().events->PublishImmediate(TransformChangedEvent(owner, GetPosition(), GetEulerRotation(), GetScale()));
 }
 
 

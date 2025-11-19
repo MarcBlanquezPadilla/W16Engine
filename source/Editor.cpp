@@ -2,9 +2,9 @@
 #include "Engine.h"
 #include "Render.h"
 #include "Interface.h"
+
 #include "Input.h"
 #include "Camera.h"
-
 #include "Scene.h"
 #include "GameObject.h"
 #include "components/Transform.h"
@@ -12,6 +12,7 @@
 
 #include "utils/Ray.h"
 #include "utils/AABB.h"
+#include "utils/Tree.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtc/type_ptr.hpp"
@@ -183,8 +184,6 @@ bool Editor::CleanUp()
 	return true;
 }
 
-
-
 void Editor::TestMouseRay(int mouseX, int mouseY)
 {
 	Ray ray = Engine::GetInstance().camera->GetRayFromMouse(mouseX, mouseY);
@@ -192,33 +191,16 @@ void Editor::TestMouseRay(int mouseX, int mouseY)
 	startLastRay = ray.origin;
 	endLastRay = ray.origin + (ray.direction * 100.0f);
 
-	std::vector<GameObject*> gameObjects = Engine::GetInstance().scene->GetAllGameObjects();
-	std::map<float, GameObject*> candidates;
+	std::vector <GameObject*> candidates;
 
-	for (GameObject* go : gameObjects)
-	{
-		if (!go->enabled) continue;
-
-		Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
-		Transform* transform = (Transform*)go->GetComponent(ComponentType::Transform);
-
-		if (mesh && transform)
-		{
-			AABB globalAABB = mesh->aabb->GetGlobalAABB(transform->GetGlobalMatrix());
-			float distance;
-			if (ray.RayIntersectsAABB(globalAABB, distance))
-			{
-				candidates[distance] = go;
-			}
-		}
-	}
+	Engine::GetInstance().scene->QueryRay(ray, candidates);
 
 	GameObject* closestHit = nullptr;
 	float minDistance = FLT_MAX;
 
-	for (auto const& pair : candidates)
+	for (GameObject* gameObject : candidates)
 	{
-		GameObject* go = pair.second;
+		GameObject* go = gameObject;
 		Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
 		Transform* transform = (Transform*)go->GetComponent(ComponentType::Transform);
 
@@ -256,7 +238,7 @@ void Editor::TestMouseRay(int mouseX, int mouseY)
 		}
 
 		if (closestHit == go) {
-			break;
+			Engine::GetInstance().scene->SetSelectedGameObject(closestHit);
 		}
 	}
 
