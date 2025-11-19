@@ -1,5 +1,6 @@
 #pragma once
 #include "Module.h"
+#include "EventListener.h"
 #include <vector>
 #include <map>
 
@@ -10,7 +11,7 @@
 union SDL_Event;
 class Interface;
 
-class Editor : public Module
+class Editor : public Module, public EventListener
 {
 public:
 
@@ -29,6 +30,9 @@ public:
 	void TestMouseRay(int mouseX, int mouseY);
 
 	void HandleInput(SDL_Event* event);
+
+	//EVENTS
+	void OnEvent(const Event& event) override;
 
 	//CAMBIAR A WINDOW SCENE
 	ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;

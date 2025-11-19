@@ -3,6 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <SDL3/sdl.h>
 
+#include "EventSystem.h"
 #include "Render.h"
 #include "Window.h"
 #include "Engine.h"
@@ -88,6 +89,8 @@ bool Render::Awake()
 		LOG("Error creating checker texture");
 		return false;
 	}
+
+	Engine::GetInstance().events->Subscribe(Event::Type::WindowResize, this);
 	
 	return ret;
 }
@@ -517,26 +520,20 @@ bool Render::CreateOutlineShader()
 		"uniform float u_outlineThickness = 0.03;\n"
 		"void main()\n"
 		"{\n"
-		// Extraer la escala
 		"   vec3 scale = vec3(\n"
 		"       length(model[0].xyz),\n"
 		"       length(model[1].xyz),\n"
 		"       length(model[2].xyz)\n"
 		"   );\n"
-		// Crear matriz sin escala
 		"   mat4 modelNoScale = model;\n"
 		"   modelNoScale[0].xyz /= scale.x;\n"
 		"   modelNoScale[1].xyz /= scale.y;\n"
 		"   modelNoScale[2].xyz /= scale.z;\n"
-		// Transformar normal sin escala
 		"   vec3 worldNormal = normalize(mat3(modelNoScale) * aNormal);\n"
-		// Calcular posición base
 		"   vec4 worldPos = model * vec4(position, 1.0);\n"
-		// Calcular distancia para outline dinámico
 		"   vec4 viewPos = view * worldPos;\n"
 		"   float distance = length(viewPos.xyz);\n"
 		"   float dynamicThickness = u_outlineThickness * (distance * 0.1);\n"
-		// Desplazar en espacio mundo
 		"   worldPos.xyz += worldNormal * dynamicThickness;\n"
 		"   gl_Position = projection * view * worldPos;\n"
 		"}\n";
@@ -661,7 +658,6 @@ bool Render::CreateCheckerTexture()
 bool Render::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
 
 {
-
 	//CREATE VAO
 	glGenVertexArrays(1, &meshData.VAO);
 	glBindVertexArray(meshData.VAO);
@@ -785,4 +781,21 @@ void Render::DeleteTextureFromGPU(unsigned int textureID)
 void Render::ChangeWindowSize(int x, int y)
 {
 	glViewport(0, 0, x, y);
+}
+
+void Render::OnEvent(const Event& event)
+{
+	switch (event.type)
+	{
+	case Event::Type::WindowResize:
+	{
+		{
+			ChangeWindowSize(event.data.point.x, event.data.point.y);
+		}
+		break;
+	}
+
+	default:
+		break;
+	}
 }

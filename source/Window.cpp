@@ -1,5 +1,6 @@
 #include "Window.h"
 #include "Engine.h"
+#include "EventSystem.h"
 #include "utils/Log.h"
 #include "Global.h"
 #include "Input.h"
@@ -102,6 +103,9 @@ bool Window::Awake()
 		cpu_brand = "Error al abrir el registro";
 	}
 
+	//EVENTS
+	Engine::GetInstance().events->Subscribe(Event::Type::WindowResize, this);
+
 	return ret;
 }
 
@@ -153,4 +157,22 @@ std::string Window::GetRAM()
 std::string Window::GetCPU()
 {
 	return cpu_brand;
+}
+
+void Window::OnEvent(const Event& event)
+{
+	switch (event.type)
+	{
+	case Event::Type::WindowResize:
+	{
+		{
+			width = event.data.point.x;
+			height = event.data.point.y;
+		}
+		break;
+	}
+
+	default:
+		break;
+	}
 }

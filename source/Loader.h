@@ -1,5 +1,6 @@
 #pragma once
 #include "Module.h"
+#include "EventListener.h"
 #include <string>
 
 class Mesh;
@@ -10,7 +11,7 @@ struct aiMaterial;
 struct aiScene;
 struct aiNode;
 
-class Loader : public Module
+class Loader : public Module, public EventListener
 {
 public:
 
@@ -38,8 +39,12 @@ public:
 	//BASICS
 	void CreateBasic(int basic);
 
+	//LOAD & SAVE
 	bool SaveScene();
 	bool LoadScene();
+
+	//EVENTS
+	void OnEvent(const Event& event) override;
 
 private:
 	void CreateCube();

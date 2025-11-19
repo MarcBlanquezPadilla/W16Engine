@@ -1,12 +1,9 @@
-#include "Engine.h"
 #include "Input.h"
-#include "Window.h"
-#include "Camera.h"
+#include "Engine.h"
+#include "Global.h"
+#include "EventSystem.h"
+
 #include "utils/Log.h"
-#include "Module.h"
-#include "Scene.h"
-#include "Render.h"
-#include "Loader.h"
 
 
 #define MAX_KEYS 300
@@ -62,12 +59,13 @@ bool Input::Awake()
 		SDL_free(joysticks);
 	}
 
+	scale = WINDOW_SCALE;
+
 	return ret;
 }
 
 bool Input::Start()
 {
-	SDL_StopTextInput(Engine::GetInstance().GetInstance().window->window);
 	return true;
 }
 
@@ -105,10 +103,7 @@ bool Input::PreUpdate()
 
 	while (SDL_PollEvent(&event) != 0)
 	{
-		for (const auto& listener : listeners)
-		{
-			listener(&event);
-		}
+		Engine::GetInstance().events->PublishImmediate(Event(Event::Type::EventSDL, &event));
 
 		switch (event.type)
 		{
@@ -130,10 +125,7 @@ bool Input::PreUpdate()
 			windowEvents[WE_SHOW] = true;
 			break;
 		case SDL_EVENT_WINDOW_RESIZED:
-			Engine::GetInstance().window->width = event.window.data1;
-			Engine::GetInstance().window->height = event.window.data2;
-			Engine::GetInstance().camera->windowChanged = true;
-			Engine::GetInstance().render->ChangeWindowSize(event.window.data1, event.window.data2);
+			Engine::GetInstance().events->PublishImmediate(Event(Event::Type::WindowResize, event.window.data1, event.window.data2));
 			windowEvents[WE_SHOW] = true;
 			break;
 
@@ -147,7 +139,6 @@ bool Input::PreUpdate()
 
 		case SDL_EVENT_MOUSE_MOTION:
 			{
-			int scale = Engine::GetInstance().window->GetScale();
 			mouseMotionX = event.motion.xrel / scale;
 			mouseMotionY = event.motion.yrel / scale;
 			mouseX = event.motion.x / scale;
@@ -167,7 +158,7 @@ bool Input::PreUpdate()
 			std::string filePathStr(filePath);
 			std::string extension = filePathStr.substr(filePathStr.find_last_of(".") + 1);
 
-			Engine::GetInstance().loader->HandleAssetDrop(filePathStr);
+			Engine::GetInstance().events->PublishImmediate(Event(Event::Type::FileDropped, filePath));
 			}
 			break;
 

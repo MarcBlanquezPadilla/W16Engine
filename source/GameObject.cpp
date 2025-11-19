@@ -272,7 +272,7 @@ void GameObject::SetSelected(bool _selected)
 void GameObject::SetStatic(bool _static)
 {
 	isStatic = _static;
-	Engine::GetInstance().events->PublishImmediate(GameObjectEvent(Event::Type::StaticChanged, this));
+	Engine::GetInstance().events->PublishImmediate(Event(Event::Type::StaticChanged, this));
 }
 
 void GameObject::SetEnabled(bool _enabled)

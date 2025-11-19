@@ -2,10 +2,10 @@
 
 class Event;
 
-class IEventListener
+class EventListener
 {
 public:
-    virtual ~IEventListener() = default;
+    virtual ~EventListener() = default;
 
     virtual void OnEvent(const Event& event) = 0;
 };

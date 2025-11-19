@@ -1,5 +1,6 @@
 #pragma once
 #include "Module.h"
+#include "EventListener.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include "glad/glad.h"
 #include <glm/glm.hpp>
@@ -29,7 +30,7 @@ struct RenderLine
 	glm::vec4 color;
 };
 
-class Render : public Module
+class Render : public Module, public EventListener
 {
 public:
 
@@ -59,24 +60,29 @@ public:
 	unsigned int UploadTextureToGPU(unsigned char* data, int width, int height);
 	void DeleteTextureFromGPU(unsigned int textureID);
 
-
-
 	void DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color);
 
 	void ChangeWindowSize(int x, int y);
 
+	//INFORMATION
 	std::string GetGLVersion() { return glVersion; }
 	std::string GetGLSLVersion() { return glslVersion; }
 	std::string GetGPU() { return gpu; }
 
+	//EVENTS
+	void OnEvent(const Event& event) override;
+
 
 private:
+
+	//CREATE SHADERS FUNCTIONS
 	bool CreateDefaultShader();
 	bool CreateCheckerTexture();
 	bool CreateNormalShader();
 	bool CreateOutlineShader();
 	bool CreateLineShader();
 
+	//DRAW FUNCTIONS
 	void DrawRenderList(const std::multimap<float, RenderObject>& map);
 	void DrawLinesList(std::vector<RenderLine> list);
 	void DrawStencil();

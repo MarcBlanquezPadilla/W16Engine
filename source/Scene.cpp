@@ -239,29 +239,21 @@ void Scene::OnEvent(const Event& event)
 	case Event::Type::TransformChanged:
 	{
 		{
-			const TransformChangedEvent& transformChangedEvent = (const TransformChangedEvent&)event;
-			if (transformChangedEvent.gameObject->GetStatic()) MarkStaticTreeDirty();
+			GameObject* gameObject = event.data.gameObject.gameObject;
+			if(!gameObject) return;
+			if (gameObject->GetStatic()) 
+				MarkStaticTreeDirty();
 			else MarkDinamicTreeDirty();
 		}
 		break;
 	}
-
 	case Event::Type::StaticChanged:
 	{
 		{
-			const StaticChangedEvent& staticChangedEvent = (const StaticChangedEvent&)event;
+			GameObject* gameObject = event.data.gameObject.gameObject;
+			if (!gameObject) return;
 			MarkDinamicTreeDirty();
 			MarkStaticTreeDirty();
-		}
-		break;
-	}
-
-	case Event::Type::GameObjectCreated:
-	{
-		{
-			const GameObjectEvent& gameObjectEvent = (const GameObjectEvent&)event;
-			if (gameObjectEvent.gameObject->GetStatic()) MarkStaticTreeDirty();
-			else MarkDinamicTreeDirty();
 		}
 		break;
 	}

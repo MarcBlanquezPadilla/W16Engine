@@ -201,7 +201,7 @@ void Transform::SetScale(glm::vec3 _scale)
 void Transform::OnTransformChanged()
 {
     InvalidateGlobalMatrix();
-    Engine::GetInstance().events->PublishImmediate(TransformChangedEvent(owner, GetPosition(), GetEulerRotation(), GetScale()));
+    Engine::GetInstance().events->PublishImmediate(Event(Event::Type::TransformChanged, owner));
 }
 
 

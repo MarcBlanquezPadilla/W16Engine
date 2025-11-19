@@ -1,115 +1,100 @@
 #pragma once
 #include <string>
 #include <glm/glm.hpp>
+#include "SDL3/SDL.h"
 
 class GameObject;
+class Transform;
 
 struct Event
 {
     enum class Type
     {
+        //WINDOW
         WindowResize,
         WindowClose,
+
+        //INPUT
+        EventSDL,
         FileDropped,
 
+        //SCENE
         SceneLoaded,
         SceneSaved,
         SceneCleared,
 
+        //GAMEOBJECT
         GameObjectCreated,
         GameObjectDestroyed,
         GameObjectEnabled,
         GameObjectDisabled,
         GameObjectSelected,
         GameObjectDeselected,
-
-        TransformChanged,
-
         StaticChanged,
 
+        //TRANSFORM
+        TransformChanged,
+
+        //GAME
         Play,
         Pause,
         Unpause,
         Stop,
-
         TimeScaleChanged,
 
+        //OTHERS
         Custom,
         Invalid
     };
 
     Type type;
 
-    Event(Type type) : type(type) {}
-    virtual ~Event() = default;
-};
+    struct Point2dData {
+        int x;
+        int y;
+    };
+
+    struct StringData {
+        char filePath[260];
+    };
+
+    struct GameObjectData {
+        GameObject* gameObject;
+    };
+
+    struct SDLEvent
+    {
+        SDL_Event* event;
+    };
+
+    union Data
+    {
+        Point2dData point;
+        StringData string;
+        GameObjectData gameObject;
+        SDLEvent event;
+    } data;
 
 
-struct WindowResizeEvent : public Event
-{
-    int width;
-    int height;
+    Event(Type t) : type(t) {}
 
-    WindowResizeEvent(int w, int h)
-        : Event(Type::WindowResize), width(w), height(h) {
+    Event(Type t, int w, int h) : type(t) {
+        data.point.x = w;
+        data.point.y = h;
     }
-};
 
-struct FileDroppedEvent : public Event
-{
-    std::string filePath;
-
-    FileDroppedEvent(const std::string& path)
-        : Event(Type::FileDropped), filePath(path) {
+    Event(Type t, const char* path) : type(t) {
+        strncpy_s(data.string.filePath, path, 260);
     }
-};
 
-struct GameObjectEvent : public Event
-{
-    GameObject* gameObject;
-
-    GameObjectEvent(Type type, GameObject* go)
-        : Event(type), gameObject(go) {
+    Event(Type t, GameObject* gameObject) : type(t) {
+        data.gameObject.gameObject = gameObject;
     }
-};
 
-struct TransformChangedEvent : public Event
-{
-    GameObject* gameObject;
-    glm::vec3 position;
-    glm::vec3 rotation;
-    glm::vec3 scale;
-
-    TransformChangedEvent(GameObject* go, const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scl)
-        : Event(Type::TransformChanged), gameObject(go), position(pos), rotation(rot), scale(scl) {
+    Event(Type t, SDL_Event* event) : type(t) {
+        data.event.event = event;
     }
+
+    Event() : type(Type::Invalid) {}
 };
 
-struct StaticChangedEvent : public Event
-{
-    GameObject* gameObject;
-    bool isStatic;
-
-    StaticChangedEvent(GameObject* go, bool static_)
-        : Event(Type::StaticChanged), gameObject(go), isStatic(static_) {
-    }
-};
-
-struct TimeScaleChangedEvent : public Event
-{
-    float timeScale;
-
-    TimeScaleChangedEvent(float scale)
-        : Event(Type::TimeScaleChanged), timeScale(scale) {
-    }
-};
-
-struct CustomEvent : public Event
-{
-    std::string eventName;
-    void* data;
-
-    CustomEvent(const std::string& name, void* data = nullptr)
-        : Event(Type::Custom), eventName(name), data(data) {
-    }
-};

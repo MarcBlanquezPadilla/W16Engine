@@ -1,14 +1,14 @@
 #pragma once
 #include "Module.h"
-#include <map>
 #include "Event.h"
 
+#include <map>
 #include <memory>
 #include <vector>
 #include <queue>
 
 
-class IEventListener;
+class EventListener;
 
 class EventSystem : public Module
 {
@@ -20,9 +20,9 @@ public:
 
     bool CleanUp();
 
-    void Subscribe(Event::Type eventType, IEventListener* listener);
-    void Unsubscribe(Event::Type eventType, IEventListener* listener);
-    void UnsubscribeAll(IEventListener* listener);
+    void Subscribe(Event::Type eventType, EventListener* listener);
+    void Unsubscribe(Event::Type eventType, EventListener* listener);
+    void UnsubscribeAll(EventListener* listener);
 
     void PublishImmediate(const Event& event);
     void Publish(std::shared_ptr<Event> event);
@@ -35,7 +35,7 @@ public:
     int GetQueuedEventCount() const { return eventQueue.size(); }
 
 public:
-    std::map<Event::Type, std::vector<IEventListener*>> listeners;
+    std::map<Event::Type, std::vector<EventListener*>> listeners;
     std::queue<std::shared_ptr<Event>> eventQueue;
 
     bool processingEvents;

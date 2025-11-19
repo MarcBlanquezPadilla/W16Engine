@@ -1,9 +1,11 @@
 #pragma once
 #include "Module.h"
+#include "Global.h"
+#include "EventListener.h"
 #include "SDL3/SDL.h"
 #include <string>
 
-class Window : public Module
+class Window : public Module, public EventListener
 {
 public:
 
@@ -28,6 +30,9 @@ public:
 	std::string GetCPU();
 	std::string GetRAM();
 
+	//EVENTS
+	void OnEvent(const Event& event) override;
+
 
 public:
 
@@ -35,10 +40,9 @@ public:
 	SDL_GLContext context;
 
 	std::string title;
-	int width = 1280;
-	int height = 720;
-
-	int scale = 1;
+	int width = WINDOW_WIDTH;
+	int height = WINDOW_HEIGHT;
+	int scale = WINDOW_SCALE;
 
 	std::string sdlVersion;
 	std::string cpu_brand;

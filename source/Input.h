@@ -63,10 +63,6 @@ public:
 
 	using InputListener = std::function<void(SDL_Event*)>;
 
-	void SubscribeToEvent(InputListener listener)
-	{
-		listeners.push_back(listener);
-	}
 
 
 public:
@@ -86,7 +82,6 @@ private:
 	int mouseMotionY;
 	int mouseX;
 	int mouseY;
+	int scale;
 	float mouseWheelY;
-
-	std::vector<InputListener> listeners;
 };

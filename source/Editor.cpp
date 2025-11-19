@@ -1,7 +1,8 @@
-#include "Editor.h"
 #include "Engine.h"
+#include "Editor.h"
 #include "Render.h"
 #include "Interface.h"
+#include "EventSystem.h"
 
 #include "Input.h"
 #include "Camera.h"
@@ -33,9 +34,7 @@ bool Editor::Awake()
 	bool ret = true;
 
 	//SUBSCRIBE TO INPUT EVENT
-	Engine::GetInstance().input->SubscribeToEvent([this](SDL_Event* event) {
-		this->HandleInput(event);
-	});
+	Engine::GetInstance().events->Subscribe(Event::Type::EventSDL, this);
 
 	//INIT INTERFACE
 	userInterface = new Interface();
@@ -44,6 +43,7 @@ bool Editor::Awake()
 	//DEBUG
 	startLastRay = { 0,0,0 };
 	endLastRay = { 0,0,0 };
+
 
 	debugRay = false;
 	debugMesh = false;
@@ -250,4 +250,20 @@ void Editor::TestMouseRay(int mouseX, int mouseY)
 void Editor::HandleInput(SDL_Event* event)
 {
 	userInterface->HandleInput(event);
+}
+
+void Editor::OnEvent(const Event& event)
+{
+	switch (event.type)
+	{
+	case Event::Type::EventSDL:
+	{
+		{
+			HandleInput(event.data.event.event);
+		}
+		break;
+	}
+	default:
+		break;
+	}
 }

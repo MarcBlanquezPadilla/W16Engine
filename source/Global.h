@@ -2,6 +2,7 @@
 
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
+#define WINDOW_SCALE 1
 
 #define VERSION "1.0"
 #define NAME "W16 Motor"

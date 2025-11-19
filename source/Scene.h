@@ -8,7 +8,7 @@ class Tree;
 class AABB;
 struct Ray;
 
-class Scene : public Module, public IEventListener
+class Scene : public Module, public EventListener
 {
 public:
 

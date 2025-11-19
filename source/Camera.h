@@ -1,5 +1,6 @@
 #pragma once
 #include "Module.h"
+#include "EventListener.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <array>
@@ -8,7 +9,7 @@ class AABB;
 class Frustum;
 struct Ray;
 
-class Camera : public Module
+class Camera : public Module , public EventListener
 {
 public:
 
@@ -29,6 +30,9 @@ public:
 	Ray GetRayFromMouse(int mouseX, int mouseY);
 
 	void LockCamera(bool _lockCamera) { lockCamera = _lockCamera; }
+
+	//EVENTS
+	void OnEvent(const Event& event) override;
 
 private:
 	void CalcMouseVectors();

@@ -26,7 +26,7 @@ bool EventSystem::CleanUp()
     return true;
 }
 
-void EventSystem::Subscribe(Event::Type eventType, IEventListener* listener)
+void EventSystem::Subscribe(Event::Type eventType, EventListener* listener)
 {
 	if (!listener) return;
 
@@ -37,7 +37,7 @@ void EventSystem::Subscribe(Event::Type eventType, IEventListener* listener)
     }
 }
 
-void EventSystem::Unsubscribe(Event::Type eventType, IEventListener* listener)
+void EventSystem::Unsubscribe(Event::Type eventType, EventListener* listener)
 {
     if (!listener) return;
 
@@ -47,7 +47,7 @@ void EventSystem::Unsubscribe(Event::Type eventType, IEventListener* listener)
     );
 }
 
-void EventSystem::UnsubscribeAll(IEventListener* listener)
+void EventSystem::UnsubscribeAll(EventListener* listener)
 {
     if (!listener) return;
 
@@ -63,9 +63,9 @@ void EventSystem::UnsubscribeAll(IEventListener* listener)
 
 void EventSystem::PublishImmediate(const Event& event)
 {
-    std::vector<IEventListener*> listenersCopy = listeners[event.type];
+    std::vector<EventListener*> listenersCopy = listeners[event.type];
 
-    for (IEventListener* listener : listenersCopy)
+    for (EventListener* listener : listenersCopy)
     {
         if (listener)
         {

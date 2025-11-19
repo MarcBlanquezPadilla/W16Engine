@@ -4,6 +4,7 @@
 #include "Engine.h"
 #include "Input.h"
 #include "GameObject.h"
+#include "EventSystem.h"
 
 #include "components/Component.h"
 #include "components/Mesh.h"
@@ -83,6 +84,7 @@ Loader::~Loader()
 
 bool Loader::Awake()
 {
+	Engine::GetInstance().events->Subscribe(Event::Type::FileDropped, this);
 	return true;
 }
 
@@ -620,3 +622,20 @@ bool Loader::LoadScene()
 }
 
 #pragma endregion
+
+void Loader::OnEvent(const Event& event)
+{
+	switch (event.type)
+	{
+	case Event::Type::FileDropped:
+	{
+		{
+			HandleAssetDrop(event.data.string.filePath);
+		}
+		break;
+	}
+
+	default:
+		break;
+	}
+}

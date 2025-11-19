@@ -14,7 +14,7 @@
 #include "components/Transform.h"
 #include "utils/Frustum.h"
 #include "utils/Ray.h"
-
+#include "EventSystem.h"
 
 Camera::Camera(bool startEnabled) : Module(startEnabled)
 {
@@ -80,6 +80,9 @@ bool Camera::Awake()
 
 	Engine::GetInstance().render->UpdateViewMatix(viewMatrix);
 	Engine::GetInstance().render->UpdateProjectionMatix(projectionMatrix);
+
+	//EVENTS
+	Engine::GetInstance().events->Subscribe(Event::Type::WindowResize, this);
 
 	return ret;
 }
@@ -301,4 +304,21 @@ bool Camera::CleanUp()
 	frustum = nullptr;
 
 	return ret;
+}
+
+void Camera::OnEvent(const Event& event)
+{
+	switch (event.type)
+	{
+	case Event::Type::WindowResize:
+	{
+		{
+			windowChanged = true;
+		}
+		break;
+	}
+
+	default:
+		break;
+	}
 }
