@@ -187,15 +187,13 @@ void Render::DrawRenderList(const std::multimap<float, RenderObject>& map)
 
 
 		//DRAW NORMALS
-		if (renderObject.mesh->drawNormals && renderObject.mesh->normalData.VAO != 0)
+		if (renderObject.mesh->drawNormals && renderObject.mesh->meshData.VAO != 0)
 		{
 			glUseProgram(normalShaderProgram);
-
 			glUniformMatrix4fv(normalModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
+			glBindVertexArray(renderObject.mesh->meshData.VAO);
 
-			glBindVertexArray(renderObject.mesh->normalData.VAO);
-
-			glDrawArrays(GL_LINES, 0, renderObject.mesh->normalData.numVertices);
+			glDrawArrays(GL_POINTS, 0, renderObject.mesh->meshData.numVertices);
 
 			glUseProgram(shaderProgram);
 		}
@@ -238,28 +236,30 @@ void Render::DrawStencil()
 {
 	GameObject* selectedGO = Engine::GetInstance().scene->GetSelectedGameObject();
 
-	if (!selectedGO) return;
+	if (selectedGO && selectedGO->GetEnabled())
+	{
+		selectedMesh = (Mesh*)selectedGO->GetComponent(ComponentType::Mesh);
+		glm::mat4 globalMatrix;
 
-	selectedMesh = (Mesh*)selectedGO->GetComponent(ComponentType::Mesh);
-	glm::mat4 globalMatrix;
+		if (selectedMesh && selectedGO->TryGetGlobalMatrix(globalMatrix))
+		{
+			glUseProgram(outlineShaderProgram);
 
-	if (!selectedMesh || !selectedGO->TryGetGlobalMatrix(globalMatrix)) return;
+			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+			glStencilMask(0x00);
 
-	glUseProgram(outlineShaderProgram);
+			glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetViewMatrix()));
+			glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetProjectionMatrix()));
+			glUniform4f(outlineColorLoc, 0.0f, 1.0f, 1.0f, 1.0f);
+			glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(globalMatrix));
 
-	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-	glStencilMask(0x00);
+			glBindVertexArray(selectedMesh->stencilData.VAO);
+			glDrawElements(GL_TRIANGLES, selectedMesh->stencilData.numVertices, GL_UNSIGNED_INT, 0);
 
-	glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE,glm::value_ptr(Engine::GetInstance().camera->GetViewMatrix()));
-	glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE,glm::value_ptr(Engine::GetInstance().camera->GetProjectionMatrix()));
-	glUniform4f(outlineColorLoc, 0.0f, 1.0f, 1.0f, 1.0f);
-	glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE,glm::value_ptr(globalMatrix));
-
-	glBindVertexArray(selectedMesh->stencilData.VAO);
-	glDrawElements(GL_TRIANGLES, selectedMesh->stencilData.numVertices, GL_UNSIGNED_INT, 0);
-
-	glBindVertexArray(0);
-	glUseProgram(0);
+			glBindVertexArray(0);
+			glUseProgram(0);
+		}
+	}
 }
 
 void Render::BuildRenderListsRecursive(GameObject* gameObject)
@@ -464,41 +464,60 @@ bool Render::CreateDefaultShader()
 bool Render::CreateNormalShader()
 {
 	unsigned int vShader = 0;
-	const char* vertexShaderSource = "#version 460 core\n"
+	const char* vertexSource = "#version 460 core\n"
 		"layout (location = 0) in vec3 position;\n"
-		"uniform mat4 model; \n"
-		"uniform mat4 view; \n"
-		"uniform mat4 projection; \n"
-		"void main()\n"
-		"{\n"
-		"   gl_Position = projection * view * model * vec4(position, 1.0f);\n"
+		"layout (location = 2) in vec3 aNormal;\n"
+		"out VS_OUT { vec3 normal; } vs_out;\n"
+		"void main() {\n"
+		"   gl_Position = vec4(position, 1.0);\n"
+		"   vs_out.normal = aNormal;\n"
 		"}\n";
+	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexSource, strlen(vertexSource))) return false;
 
-	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
-		return false;
+	unsigned int gShader = 0;
+	const char* geometrySource = "#version 460 core\n"
+		"layout (points) in;\n"
+		"layout (line_strip, max_vertices = 2) out;\n"
+		"in VS_OUT { vec3 normal; } gs_in[];\n"
+		"uniform mat4 model;\n"
+		"uniform mat4 view;\n"
+		"uniform mat4 projection;\n"
+		"const float LINE_LENGTH = 0.5;\n"
+		"void main() {\n"
+		"   // Calcular la normal en el mundo (sin escala)\n"
+		"   vec3 worldNormal = normalize(mat3(transpose(inverse(model))) * gs_in[0].normal);\n"
+		"   // Calcular la posición del vértice en el mundo\n"
+		"   vec4 worldPos = model * gl_in[0].gl_Position;\n"
+
+		"   // EMITIR PUNTO 1 (Inicio)\n"
+		"   gl_Position = projection * view * worldPos;\n"
+		"   EmitVertex();\n"
+
+		"   // EMITIR PUNTO 2 (Fin: Inicio + Normal)\n"
+		"   gl_Position = projection * view * (worldPos + vec4(worldNormal * LINE_LENGTH, 0.0));\n"
+		"   EmitVertex();\n"
+
+		"   EndPrimitive();\n"
+		"}\n";
+	if (!CreateShaderFromSources(gShader, GL_GEOMETRY_SHADER, geometrySource, strlen(geometrySource))) return false;
+
 
 	unsigned int fShader = 0;
-	const char* fragmentShaderSource = "#version 460 core\n"
+	const char* fragmentSource = "#version 460 core\n"
 		"out vec4 color;\n"
 		"void main() { color = vec4(1.0, 1.0, 0.0, 1.0); }\n";
+	if (!CreateShaderFromSources(fShader, GL_FRAGMENT_SHADER, fragmentSource, strlen(fragmentSource))) return false;
 
-	if (!CreateShaderFromSources(fShader, GL_FRAGMENT_SHADER, fragmentShaderSource, strlen(fragmentShaderSource)))
-		return false;
-
+	// 4. LINKEO
 	normalShaderProgram = glCreateProgram();
 	glAttachShader(normalShaderProgram, vShader);
+	glAttachShader(normalShaderProgram, gShader); // <-- Añadimos el GS
 	glAttachShader(normalShaderProgram, fShader);
 	glLinkProgram(normalShaderProgram);
 
-	int status = 0;
-	glGetProgramiv(normalShaderProgram, GL_LINK_STATUS, &status);
-	if (status == GL_FALSE)
-	{
-		LOG("Error linking normal shader!");
-		return false;
-	}
-
+	// (Chequeo de errores estándar...)
 	glDeleteShader(vShader);
+	glDeleteShader(gShader);
 	glDeleteShader(fShader);
 
 	normalModelMatrixLoc = glGetUniformLocation(normalShaderProgram, "model");
