@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.10)
 
 project(W16Engine)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 find_package(SDL3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
@@ -59,6 +62,8 @@ add_executable(W16Engine
 	source/windows/HierarchyWindow.h
 	source/windows/InspectorWindow.cpp
 	source/windows/InspectorWindow.h
+	source/windows/ProjectWindow.cpp
+	source/windows/ProjectWindow.h
 	source/utils/Log.cpp 
 	source/utils/Log.h
 	source/utils/Timer.cpp
@@ -70,6 +75,8 @@ add_executable(W16Engine
 	source/utils/Frustum.cpp
 	source/utils/Tree.cpp
 	source/utils/Tree.h
+	source/utils/FileUtils.cpp
+	source/utils/FileUtils.h
 	source/geometry/Plane.h
 	source/geometry/Plane.cpp
 )

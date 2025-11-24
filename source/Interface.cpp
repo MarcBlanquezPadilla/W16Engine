@@ -12,6 +12,7 @@
 #include "windows/AboutWindow.h"
 #include "windows/HierarchyWindow.h"
 #include "windows/InspectorWindow.h"
+#include "windows/ProjectWindow.h"
 
 #include "utils/Log.h"
 
@@ -69,6 +70,7 @@ bool Interface::Awake()
 	windows[Menu::View].push_back(new ConsoleWindow(true));
 	windows[Menu::View].push_back(new HierarchyWindow(true));
 	windows[Menu::View].push_back(new InspectorWindow(true));
+	windows[Menu::View].push_back(new ProjectWindow(true));
 
 	windows[Menu::Help].push_back(new AboutWindow(false));
 

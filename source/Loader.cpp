@@ -11,66 +11,17 @@
 #include "components/Transform.h"
 #include "components/Texture.h"
 #include "utils/Log.h"
+#include "utils/FileUtils.h"
 #include "Global.h"
 
 #include <list>
+#include <vector>
+
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "SDL3/SDL_filesystem.h"
 
 #include "pugixml.hpp"
-
-std::string GetDirectoryFromPath(const std::string& filePath)
-{
-	size_t pos = filePath.find_last_of("\\/");
-	return (std::string::npos == pos) ? "" : filePath.substr(0, pos + 1);
-}
-
-std::string GetFileExtension(const std::string& filePath)
-{
-	size_t pos = filePath.find_last_of(".");
-	if (std::string::npos == pos) return "";
-
-	std::string ext = filePath.substr(pos + 1);
-
-	std::transform(ext.begin(), ext.end(), ext.begin(),
-		[](unsigned char c) { return std::tolower(c); });
-
-	return ext;
-}
-
-std::string GetFileName(const std::string& filePath)
-{
-	size_t pos = filePath.find_last_of("/\\");
-	if (std::string::npos == pos) return filePath;
-	return filePath.substr(pos + 1);
-}
-
-std::string FindFileInDirectory(const std::string& directoryPath, const std::string& fileName)
-{
-	std::string resultPath = "";
-
-	struct CallbackData {
-		std::string* result;
-		const std::string* target;
-	} data{ &resultPath, &fileName };
-
-	SDL_EnumerateDirectory(
-		directoryPath.c_str(),
-		[](void* userdata, const char* dirname, const char* fname) -> SDL_EnumerationResult {
-			auto* d = static_cast<CallbackData*>(userdata);
-			if (fname && *d->target == fname) {
-				*d->result = std::string(dirname) + "/" + fname;
-				return SDL_ENUM_SUCCESS;
-			}
-			return SDL_ENUM_CONTINUE;
-		},
-		&data
-	);
-
-	return resultPath;
-}
 
 Loader::Loader(bool startEnabled) : Module(startEnabled)
 {
