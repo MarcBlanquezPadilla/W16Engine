@@ -261,6 +261,7 @@ void Interface::SetupDockspace(unsigned int dockspace_id)
 	ImGui::DockBuilderDockWindow("Hierarchy", dock_left_id);
 	ImGui::DockBuilderDockWindow("Inspector", dock_right_id);
 	ImGui::DockBuilderDockWindow("Console", dock_bottom_id);
+	ImGui::DockBuilderDockWindow("Project", dock_bottom_id);
 	ImGui::DockBuilderFinish(dockspace_id);
 }
 
