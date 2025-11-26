@@ -16,6 +16,7 @@ class Mesh;
 #define CHECKERS_WIDTH 64
 #define CHECKERS_HEIGHT 64
 
+
 struct RenderObject
 {
 	Mesh* mesh;
@@ -129,5 +130,6 @@ private:
 
 	std::multimap<float,RenderObject> opaqueList;
 	std::multimap<float,RenderObject> transparentList;
+	std::vector<RenderObject> stencilList;
 	std::vector<RenderLine> linesList;
 };

@@ -20,7 +20,6 @@ uint32_t GenerateUUID()
 
 GameObject::GameObject(bool _enabled, std::string _name) : enabled(_enabled), name(_name)
 {
-	selected = false;
 	UUID = GenerateUUID();
 	parentUUID = 0;
 	parent = nullptr;
@@ -128,6 +127,17 @@ Component* GameObject::GetComponent(ComponentType type)
 	return nullptr;
 }
 
+bool GameObject::TryGetComponent(ComponentType type, Component*& outComponent)
+{
+	outComponent = nullptr;
+	if (components.count(type) > 0)
+	{
+		outComponent = components[type];
+		return true;
+	}
+	return false;
+}
+
 void GameObject::AddChild(GameObject* gameObject)
 {
 	std::string baseName = gameObject->name;
@@ -168,6 +178,7 @@ void GameObject::Save(pugi::xml_node gameObjectNode)
 	gameObjectNode.append_attribute("UID") = UUID;
 	gameObjectNode.append_attribute("ParentUID") = parentUUID;
 	gameObjectNode.append_attribute("Enabled") = enabled;
+	gameObjectNode.append_attribute("Static") = isStatic;
 
 	if (components.size() > 0)
 	{
@@ -199,6 +210,7 @@ void GameObject::Load(pugi::xml_node gameObjectNode)
 	name = gameObjectNode.attribute("Name").as_string();
 	UUID = gameObjectNode.attribute("UID").as_uint();
 	enabled = gameObjectNode.attribute("Enabled").as_bool();
+	isStatic = gameObjectNode.attribute("Static").as_bool();
 
 	pugi::xml_node componentsNode = gameObjectNode.child("Components");
 
@@ -260,15 +272,6 @@ bool GameObject::TryGetGlobalAABB(AABB& globalAABB)
 	else return false;
 }
 
-void GameObject::SetSelected(bool _selected)
-{
-	selected = _selected;
-	for (auto component : components)
-	{
-		component.second->selected = _selected;
-	}
-}
-
 void GameObject::SetStatic(bool _static)
 {
 	isStatic = _static;
@@ -291,11 +294,6 @@ bool GameObject::GetEnabled()
 	else ret = enabled;
 
 	return ret;
-}
-
-bool GameObject::GetSelected()
-{
-	return selected;
 }
 
 bool GameObject::GetStatic()

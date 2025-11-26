@@ -26,31 +26,31 @@ public:
 	bool CleanUp();
 
 	//GAMEOBJECT
-	std::vector<GameObject*> GetGameObjects() { return gameObjects; }
-	std::vector<GameObject*> GetAllGameObjects();
-	GameObject* GetSelectedGameObject() { return selectedGameObject; }
 	void CollectGameObjectsRecursive(GameObject* go, std::vector<GameObject*>& list);
-	void SetSelectedGameObject(GameObject* gameObject);
 	void AddGameObject(GameObject* gameObject);
 
-	//WORLD
-	AABB GetWorldLimits();
-
 	//TREE
-	void RebuildTrees();
+	void RebuildTree();
 	void MarkStaticTreeDirty() { staticTreeDirty = true; }
-	void MarkDinamicTreeDirty() { dynamicTreeDirty = true; }
+	
+	//RAY
 	void QueryRay(Ray ray, std::vector<GameObject*>& results);
+	void QueryRayToStatic(Ray ray, std::vector<GameObject*>& results);
+	void QueryRayToDynamic(Ray ray, std::vector<GameObject*>& results);
+
+	//GETTERS
+	std::vector<GameObject*> GetGameObjects() { return gameObjects; }
+	AABB GetWorldLimits();
+	std::vector<GameObject*> GetAllGameObjects();
+	std::vector<GameObject*> GetStaticGameObjects();
+	std::vector<GameObject*> GetDynamicGameObjects();
 
 	//EVENTS
 	void OnEvent(const Event& event) override;
 
 private:
 	std::vector<GameObject*> gameObjects;
-	GameObject* selectedGameObject;
 
 	Tree* staticTree;
-	Tree* dynamicTree;
 	bool staticTreeDirty;
-	bool dynamicTreeDirty;
 };

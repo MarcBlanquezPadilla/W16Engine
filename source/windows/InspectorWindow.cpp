@@ -33,7 +33,7 @@ void InspectorWindow::Draw()
         return;
     }
 
-    GameObject* gameObject = Engine::GetInstance().scene->GetSelectedGameObject();
+    GameObject* gameObject = Engine::GetInstance().editor->GetSelectedGameObject();
     Editor* editor = Engine::GetInstance().editor;
 
     if (gameObject != nullptr)
@@ -132,6 +132,7 @@ void InspectorWindow::Draw()
 
                         ImGui::Separator();
                         ImGui::Checkbox("Draw Normals", &mesh->drawNormals);
+                        ImGui::Checkbox("Draw Stencil", &mesh->drawStencil);
                     }
                 }
                 break;

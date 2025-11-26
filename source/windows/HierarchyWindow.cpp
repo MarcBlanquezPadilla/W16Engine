@@ -2,6 +2,7 @@
 #include "../Engine.h"
 #include "../Scene.h"
 #include "../Loader.h"
+#include "../Editor.h"
 #include "../Global.h"
 #include "../GameObject.h"
 #include "imgui.h"
@@ -54,8 +55,7 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* go)
 {
     if (go == nullptr) return;
 
-    Scene* scene = Engine::GetInstance().scene;
-    GameObject* selected_go = scene->GetSelectedGameObject();
+    GameObject* selected_go = Engine::GetInstance().editor->GetSelectedGameObject();
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
 
@@ -73,7 +73,7 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* go)
 
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left) || ImGui::IsItemClicked(ImGuiMouseButton_Right))
     {
-        scene->SetSelectedGameObject(go);
+        Engine::GetInstance().editor->SetSelected(go);
     }
 
     if (node_open)

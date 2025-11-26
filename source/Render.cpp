@@ -101,6 +101,7 @@ bool Render::PreUpdate()
 
 	opaqueList.clear();
 	transparentList.clear();
+	stencilList.clear();
 	linesList.clear();
 	selectedMesh = nullptr;
 
@@ -164,10 +165,11 @@ void Render::DrawRenderList(const std::multimap<float, RenderObject>& map)
 		RenderObject renderObject = pair->second;
 
 		//STENCIL
-		if (renderObject.mesh->selected)
+		if (renderObject.mesh->drawStencil)
 		{
 			glStencilFunc(GL_ALWAYS, 1, 0xFF);
 			glStencilMask(0xFF);
+			stencilList.push_back(renderObject);
 		}
 		else
 		{
@@ -234,31 +236,23 @@ void Render::DrawLinesList(std::vector<RenderLine> list)
 
 void Render::DrawStencil()
 {
-	GameObject* selectedGO = Engine::GetInstance().scene->GetSelectedGameObject();
-
-	if (selectedGO && selectedGO->GetEnabled())
+	for (RenderObject renderObject : stencilList)
 	{
-		selectedMesh = (Mesh*)selectedGO->GetComponent(ComponentType::Mesh);
-		glm::mat4 globalMatrix;
+		glUseProgram(outlineShaderProgram);
 
-		if (selectedMesh && selectedGO->TryGetGlobalMatrix(globalMatrix))
-		{
-			glUseProgram(outlineShaderProgram);
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
 
-			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-			glStencilMask(0x00);
+		glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetViewMatrix()));
+		glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetProjectionMatrix()));
+		glUniform4f(outlineColorLoc, 0.0f, 1.0f, 1.0f, 1.0f);
+		glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
 
-			glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetViewMatrix()));
-			glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetProjectionMatrix()));
-			glUniform4f(outlineColorLoc, 0.0f, 1.0f, 1.0f, 1.0f);
-			glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(globalMatrix));
+		glBindVertexArray(renderObject.mesh->stencilData.VAO);
+		glDrawElements(GL_TRIANGLES, renderObject.mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
 
-			glBindVertexArray(selectedMesh->stencilData.VAO);
-			glDrawElements(GL_TRIANGLES, selectedMesh->stencilData.numVertices, GL_UNSIGNED_INT, 0);
-
-			glBindVertexArray(0);
-			glUseProgram(0);
-		}
+		glBindVertexArray(0);
+		glUseProgram(0);
 	}
 }
 

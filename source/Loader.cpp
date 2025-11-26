@@ -249,7 +249,9 @@ bool Loader::LoadFromAssimpMesh(aiMesh* assimpMesh, Mesh* mesh)
 
 bool Loader::LoadTexture(const std::string& filePath)
 {
-	GameObject* selectedGameObject = Engine::GetInstance().scene->GetSelectedGameObject();
+	//FIX TIRAR JUSTO ENCIMA DEL OBJETO, SE HA CAMBIADO SCENE GETSELECTED
+	GameObject* selectedGameObject = nullptr;
+	//
 	if (selectedGameObject)
 	{
 		Texture* texture = (Texture*)selectedGameObject->GetComponent(ComponentType::Texture);

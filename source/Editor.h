@@ -10,6 +10,7 @@
 
 union SDL_Event;
 class Interface;
+class GameObject;
 
 class Editor : public Module, public EventListener
 {
@@ -31,12 +32,16 @@ public:
 
 	void HandleInput(SDL_Event* event);
 
+	void SetSelected(GameObject* gameObject);
+	GameObject* GetSelectedGameObject() {
+		return selectedGameObject;
+	};
+
 	//EVENTS
 	void OnEvent(const Event& event) override;
 
 	//CAMBIAR A WINDOW SCENE
 	ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;
-
 private:
 
 	Interface* userInterface;
@@ -48,4 +53,6 @@ private:
 	bool debugAABB;
 	bool debugMesh;
     bool setDefaultUI = false;
+
+	GameObject* selectedGameObject;
 };

@@ -24,8 +24,7 @@ public:
 
 	bool CleanUp();
 
-	Component* AddComponent(ComponentType type);
-	Component* GetComponent(ComponentType type);
+
 
 	void AddChild(GameObject* gameObject);
 	std::vector<GameObject*> GetChilds() { return childs;}
@@ -34,16 +33,17 @@ public:
 	void Load(pugi::xml_node gameObjectNode);
 
 	//GETTERS & SETTERS
-	void SetSelected(bool selected);
-	bool GetSelected();
 	void SetStatic(bool s);
 	bool GetStatic();
 	void SetEnabled(bool enabled);
 	bool GetEnabled();
 
 	//COMPONENTS
+	Component* AddComponent(ComponentType type);
+	Component* GetComponent(ComponentType type);
 	bool TryGetGlobalMatrix(glm::mat4& globalMatrix);
 	bool TryGetGlobalAABB(AABB& globalAABB);
+	bool TryGetComponent(ComponentType type, Component*& component);
 
 public:
 	std::string name;
@@ -61,5 +61,4 @@ public:
 private:
 	bool enabled;
 	bool isStatic;
-	bool selected;
 };

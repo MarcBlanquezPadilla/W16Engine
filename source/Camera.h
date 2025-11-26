@@ -7,7 +7,9 @@
 
 class AABB;
 class Frustum;
+class Camara;
 struct Ray;
+
 
 class Camera : public Module , public EventListener
 {

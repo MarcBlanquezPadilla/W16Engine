@@ -99,7 +99,8 @@ bool Camera::PreUpdate()
 
 	SDL_SetWindowRelativeMouseMode(Engine::GetInstance().window->window, false);
 
-	GameObject* gameObject = Engine::GetInstance().scene->GetSelectedGameObject();
+	//FIX SCENE YA NO TIENE EL OBJETO SELECCIONADO
+	GameObject* gameObject = nullptr;
 
 	bool shouldBeRelative = (
 		(Engine::GetInstance().input->GetMouseButtonDown(3) == KEY_REPEAT) ||

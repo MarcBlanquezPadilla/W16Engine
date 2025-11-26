@@ -9,6 +9,7 @@
 #include "utils/Ray.h"
 #include <list>
 #include <cmath>
+#include "glm/glm.hpp"
 
 Scene::Scene(bool startEnabled) : Module(startEnabled)
 {
@@ -23,12 +24,9 @@ Scene::~Scene()
 bool Scene::Awake()
 {
 	bool ret = true;
+	
 	staticTree = new Tree(TreeType::Octree, 6, 8);
 	staticTreeDirty = true;
-	dynamicTree = new Tree(TreeType::Octree, 6, 8);
-	dynamicTreeDirty = true;
-
-	selectedGameObject = nullptr;
 
 	Engine::GetInstance().events->Subscribe(Event::Type::TransformChanged, this);
 	Engine::GetInstance().events->Subscribe(Event::Type::StaticChanged, this);
@@ -60,8 +58,8 @@ bool Scene::Update(float dt)
 		gameObject->Update(dt);
 	}
 
+
 	staticTree->DrawDebug(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-	dynamicTree->DrawDebug(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
 	return ret;
 }
@@ -80,8 +78,6 @@ bool Scene::CleanUp()
 	LOG("Cleaning Scene");
 	staticTree->Clear();
 	delete staticTree;
-	dynamicTree->Clear();
-	delete dynamicTree;
 
 	for (int i = 0; i < gameObjects.size(); i++)
 	{
@@ -91,20 +87,12 @@ bool Scene::CleanUp()
 
 	gameObjects.clear();
 
-	selectedGameObject = nullptr;
-
 	Engine::GetInstance().events->UnsubscribeAll(this);
 
 	return ret;
 }
 
-void Scene::SetSelectedGameObject(GameObject* gameObject)
-{
-	if (selectedGameObject) selectedGameObject->SetSelected(false);
-	selectedGameObject = gameObject;
-	selectedGameObject->SetSelected(true);
-}
-
+#pragma region GameObjects
 
 void Scene::AddGameObject(GameObject* gameObject)
 {
@@ -137,8 +125,75 @@ void Scene::AddGameObject(GameObject* gameObject)
 
 	gameObject->name = newName;
 	gameObjects.push_back(gameObject);
-	SetSelectedGameObject(gameObject);
 }
+
+#pragma endregion
+
+#pragma region Tree
+
+void Scene::RebuildTree()
+{
+	std::vector<GameObject*> staticObjects;
+	std::vector<GameObject*> dynamicObjects;
+
+	for (GameObject* gameObject : GetAllGameObjects())
+	{
+		if (gameObject->GetStatic()) staticObjects.push_back(gameObject);
+		else dynamicObjects.push_back(gameObject);
+	}
+	
+	if (staticTreeDirty)
+	{
+		staticTree->Build(staticObjects, GetWorldLimits());
+		staticTreeDirty = false;
+		LOG("Static octree rebuilt with %d objects, %d nodes",
+			staticObjects.size(), staticTree->GetNodeCount());
+	}
+}
+
+#pragma endregion
+
+#pragma region Ray
+
+void Scene::QueryRay(Ray ray, std::vector<GameObject*>& results)
+{
+	QueryRayToStatic(ray, results);
+	QueryRayToDynamic(ray, results);
+}
+
+void Scene::QueryRayToStatic(Ray ray, std::vector<GameObject*>& results)
+{
+	std::vector<GameObject*> staticResults;
+
+	RebuildTree();
+	staticTree->QueryRay(ray, staticResults);
+
+	results.insert(results.end(), staticResults.begin(), staticResults.end());
+}
+
+void Scene::QueryRayToDynamic(Ray ray, std::vector<GameObject*>& results)
+{
+	std::vector<GameObject*> dynamicResults;
+
+	for (GameObject* obj : GetDynamicGameObjects())
+	{
+		AABB aabb;
+		glm::mat4 globalMatrix;
+		if (obj->GetStatic() || !obj->TryGetGlobalAABB(aabb) || !obj->TryGetGlobalMatrix(globalMatrix)) continue;
+
+		float dist;
+		if (ray.RayIntersectsAABB(aabb, dist))
+		{
+			dynamicResults.push_back(obj);
+		}
+	}
+
+	results.insert(results.end(), dynamicResults.begin(), dynamicResults.end());
+}
+
+#pragma endregion
+
+#pragma region Getters
 
 void Scene::CollectGameObjectsRecursive(GameObject* go, std::vector<GameObject*>& list)
 {
@@ -162,47 +217,35 @@ std::vector<GameObject*> Scene::GetAllGameObjects()
 	return allGameObjects;
 }
 
-void Scene::RebuildTrees()
-{
-	std::vector<GameObject*> staticObjects;
-	std::vector<GameObject*> dynamicObjects;
 
-	for (GameObject* gameObject : GetAllGameObjects())
-	{
-		if (gameObject->GetStatic()) staticObjects.push_back(gameObject);
-		else dynamicObjects.push_back(gameObject);
-	}
+std::vector<GameObject*> Scene::GetDynamicGameObjects()
+{
+	std::vector<GameObject*> dynamicGameObjects;
 	
-	if (staticTreeDirty)
+	for (GameObject* obj : GetAllGameObjects())
 	{
-		staticTree->Build(staticObjects, GetWorldLimits());
-		staticTreeDirty = false;
-		LOG("Static octree rebuilt with %d objects, %d nodes",
-			staticObjects.size(), staticTree->GetNodeCount());
+		if (obj && !obj->GetStatic())
+		{
+			dynamicGameObjects.push_back(obj);
+		}
 	}
-	if (dynamicTreeDirty)
-	{
-		dynamicTree->Build(dynamicObjects, GetWorldLimits());
-		dynamicTreeDirty = false;
-		LOG("Dynamic octree rebuilt with %d objects, %d nodes",
-			dynamicObjects.size(), dynamicTree->GetNodeCount());
-	}
+
+	return dynamicGameObjects;
 }
 
-void Scene::QueryRay(Ray ray, std::vector<GameObject*>& results)
+std::vector<GameObject*> Scene::GetStaticGameObjects()
 {
-	results.clear();
-	std::vector<GameObject*> staticResults;
-	std::vector<GameObject*> dynamicResults;
+	std::vector<GameObject*> staticGameObjects;
 
-	RebuildTrees();
+	for (GameObject* obj : GetAllGameObjects())
+	{
+		if (obj && obj->GetStatic())
+		{
+			staticGameObjects.push_back(obj);
+		}
+	}
 
-	staticTree->QueryRay(ray, staticResults);
-	dynamicTree->QueryRay(ray, dynamicResults);
-
-	// Combinar resultados
-	results.insert(results.end(), staticResults.begin(), staticResults.end());
-	results.insert(results.end(), dynamicResults.begin(), dynamicResults.end());
+	return staticGameObjects;
 }
 
 AABB Scene::GetWorldLimits()
@@ -232,6 +275,8 @@ AABB Scene::GetWorldLimits()
 	return mapLimits;
 }
 
+#pragma endregion
+
 void Scene::OnEvent(const Event& event)
 {
 	switch (event.type)
@@ -243,7 +288,6 @@ void Scene::OnEvent(const Event& event)
 			if(!gameObject) return;
 			if (gameObject->GetStatic()) 
 				MarkStaticTreeDirty();
-			else MarkDinamicTreeDirty();
 		}
 		break;
 	}
@@ -252,7 +296,6 @@ void Scene::OnEvent(const Event& event)
 		{
 			GameObject* gameObject = event.data.gameObject.gameObject;
 			if (!gameObject) return;
-			MarkDinamicTreeDirty();
 			MarkStaticTreeDirty();
 		}
 		break;

@@ -43,10 +43,11 @@ bool Editor::Awake()
 	//DEBUG
 	startLastRay = { 0,0,0 };
 	endLastRay = { 0,0,0 };
-
-
 	debugRay = false;
 	debugMesh = false;
+	debugAABB = false;
+
+	selectedGameObject = nullptr;
 
 	return ret;
 }
@@ -63,8 +64,7 @@ bool Editor::Update(float dt)
 	//INTERFACE
 	userInterface->Update(dt);
 
-	//GUIZMO
-	GameObject* selectedGameObject = Engine::GetInstance().scene->GetSelectedGameObject();
+	//GUIZMO;
 	Camera* camera = Engine::GetInstance().camera;
 
 	if (selectedGameObject != nullptr)
@@ -134,7 +134,6 @@ bool Editor::Update(float dt)
 
 	if (debugMesh)
 	{
-		GameObject* selectedGameObject = Engine::GetInstance().scene->GetSelectedGameObject();
 		Mesh* selectedMesh = nullptr;
 		if (selectedGameObject)
 		{
@@ -236,14 +235,34 @@ void Editor::TestMouseRay(int mouseX, int mouseY)
 				}
 			}
 		}
-
-		if (closestHit == go) {
-			Engine::GetInstance().scene->SetSelectedGameObject(closestHit);
-		}
 	}
 
 	if (closestHit) {
-		Engine::GetInstance().scene->SetSelectedGameObject(closestHit);
+		SetSelected(closestHit);
+	}	
+}
+
+void Editor::SetSelected(GameObject* gameObject)
+{
+	if (selectedGameObject)
+	{
+		Component* meshComp = nullptr;
+		if (selectedGameObject->TryGetComponent(ComponentType::Mesh, meshComp))
+		{
+			Mesh* mesh = static_cast<Mesh*>(meshComp);
+			mesh->drawStencil = false;
+		}
+	}
+
+	if (gameObject)
+	{
+		selectedGameObject = gameObject;
+		Component* meshComp = nullptr;
+		if (gameObject->TryGetComponent(ComponentType::Mesh, meshComp))
+		{
+			Mesh* mesh = static_cast<Mesh*>(meshComp);
+			mesh->drawStencil = true;
+		}
 	}
 }
 

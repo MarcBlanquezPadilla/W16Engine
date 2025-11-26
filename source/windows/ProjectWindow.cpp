@@ -25,12 +25,10 @@ void ProjectWindow::Draw()
 
     ImGui::Columns(2, "ProjectColumns", true);
 
-    //PRIMERO LA VENTANITA A LA IZQUIERDA DONDE SALEN LAS CARPETAS COMO DESPLEGABLES
     ImGui::BeginChild("FolderTree", ImVec2(0, 0), true);
     DrawFolderTree("Assets");
     ImGui::EndChild();
 
-    //LA MUESTRA DE LOS CONTENIDOS DE LAS CARPETAS
     ImGui::NextColumn();
     ImGui::BeginChild("FolderContent", ImVec2(0, 0), true);
     ImGui::Text("Current: %s", currentPath.c_str());
@@ -42,7 +40,7 @@ void ProjectWindow::Draw()
         bool isDirectory = IsFileDirectory(path);
 
         if (isDirectory)
-            ImGui::Text("[DIR] ");
+            ImGui::Text("[DIRE] ");
         else
             ImGui::Text("[FILE] ");
 
