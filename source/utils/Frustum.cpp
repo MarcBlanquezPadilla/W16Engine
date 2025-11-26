@@ -1,6 +1,16 @@
 #pragma once
 #include "Frustum.h"
 
+Frustum::Frustum()
+{
+    planes = {};
+}
+
+Frustum::~Frustum()
+{
+
+}
+
 void Frustum::Update(const glm::mat4& viewProjMatrix)
 {
     const auto& mat = viewProjMatrix;

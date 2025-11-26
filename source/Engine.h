@@ -62,7 +62,6 @@ public:
 	Input* input;
 	OpenGL* openGL;
 	Render* render;
-	Camera* camera;
 	Scene* scene;
 	Editor* editor;
 	Loader* loader;

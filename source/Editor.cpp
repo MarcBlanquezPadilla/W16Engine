@@ -2,10 +2,11 @@
 #include "Editor.h"
 #include "Render.h"
 #include "Interface.h"
+#include "EditorCamera.h"
+#include "CameraLens.h"
 #include "EventSystem.h"
 
 #include "Input.h"
-#include "Camera.h"
 #include "Scene.h"
 #include "GameObject.h"
 #include "components/Transform.h"
@@ -16,7 +17,6 @@
 #include "utils/Tree.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtc/type_ptr.hpp"
 #include <glm/gtx/intersect.hpp>
 #include "ImGuizmo.h"
 #include "Imgui.h"
@@ -40,11 +40,15 @@ bool Editor::Awake()
 	userInterface = new Interface();
 	userInterface->Awake();
 
+	//INIT EDITOR CAMERA
+	editorCamera = new EditorCamera();
+	editorCamera->Awake();
+
 	//DEBUG
 	startLastRay = { 0,0,0 };
 	endLastRay = { 0,0,0 };
-	debugRay = false;
-	debugMesh = false;
+	debugRay = true;
+	debugMesh = true;
 	debugAABB = false;
 
 	selectedGameObject = nullptr;
@@ -55,78 +59,13 @@ bool Editor::Awake()
 bool Editor::PreUpdate()
 {
 	userInterface->PreUpdate();
+	editorCamera->PreUpdate();
 
 	return true;
 }
 
 bool Editor::Update(float dt)
 {
-	//INTERFACE
-	userInterface->Update(dt);
-
-	//GUIZMO;
-	Camera* camera = Engine::GetInstance().camera;
-
-	if (selectedGameObject != nullptr)
-	{
-		if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_W) == KEY_DOWN) currentGizmoOperation = ImGuizmo::TRANSLATE;
-		else if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_E) == KEY_DOWN) currentGizmoOperation = ImGuizmo::SCALE;
-		else if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_R) == KEY_DOWN) currentGizmoOperation = ImGuizmo::ROTATE;
-
-		Transform* transform = (Transform*)selectedGameObject->GetComponent(ComponentType::Transform);
-		if (transform)
-		{
-			ImGuizmo::SetOrthographic(false);
-
-			ImGuiViewport* viewport = ImGui::GetMainViewport();
-			ImGuizmo::SetRect(viewport->Pos.x, viewport->Pos.y, viewport->Size.x, viewport->Size.y);
-
-			const glm::mat4& viewMatrix = camera->GetViewMatrix();
-			const glm::mat4& projectionMatrix = camera->GetProjectionMatrix();
-			glm::mat4 modelMatrix = transform->GetLocalMatrix();
-
-			ImGuizmo::Manipulate(
-				glm::value_ptr(viewMatrix),
-				glm::value_ptr(projectionMatrix),
-				currentGizmoOperation,
-				ImGuizmo::LOCAL,
-				glm::value_ptr(modelMatrix)
-			);
-
-			bool isGuizmoUsing = ImGuizmo::IsUsing();
-			camera->LockCamera(isGuizmoUsing);
-			if (isGuizmoUsing)
-			{
-				glm::vec3 newPos, newEulerRot, newScale;
-
-				ImGuizmo::DecomposeMatrixToComponents(
-					glm::value_ptr(modelMatrix),
-					glm::value_ptr(newPos),
-					glm::value_ptr(newEulerRot),
-					glm::value_ptr(newScale)
-				);
-
-				transform->SetPosition(newPos);
-				transform->SetEulerRotation(newEulerRot);
-				transform->SetScale(newScale);
-			}
-		}
-	}
-
-	//MOUSE PICKING
-	if (Engine::GetInstance().input->GetMouseButtonDown(SDL_BUTTON_LEFT) == KEY_DOWN)
-	{
-		if (!ImGui::GetIO().WantCaptureMouse && !ImGuizmo::IsOver())
-		{
-			int mouseX, mouseY;
-			// Necesitas la posición absoluta del ratón en la ventana
-			// SDL_GetMouseState(&mouseX, &mouseY); (En Input.cpp puedes hacer un getter para esto)
-			Vector2D mousePos = Engine::GetInstance().input->GetMousePosition();
-
-			TestMouseRay(mousePos.getX(), mousePos.getY());
-		}
-	}
-
 	if (debugRay)
 	{
 		Engine::GetInstance().render->DrawLine(startLastRay, endLastRay, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
@@ -165,6 +104,9 @@ bool Editor::Update(float dt)
 			}
 		}
 	}
+
+	//INTERFACE
+	userInterface->Update(dt);
 	return true;
 }
 
@@ -177,15 +119,19 @@ bool Editor::PostUpdate()
 
 bool Editor::CleanUp()
 {
+
 	userInterface->CleanUp();
+	editorCamera->CleanUp();
+	
+	delete editorCamera;
 	delete userInterface;
 
 	return true;
 }
 
-void Editor::TestMouseRay(int mouseX, int mouseY)
+void Editor::TestMouseRay(int mouseX, int mouseY, int width, int height)
 {
-	Ray ray = Engine::GetInstance().camera->GetRayFromMouse(mouseX, mouseY);
+	Ray ray = editorCamera->GetCameraLens()->GetRayFromMouse(mouseX, mouseY, width, height);
 
 	startLastRay = ray.origin;
 	endLastRay = ray.origin + (ray.direction * 100.0f);
@@ -269,6 +215,15 @@ void Editor::SetSelected(GameObject* gameObject)
 void Editor::HandleInput(SDL_Event* event)
 {
 	userInterface->HandleInput(event);
+}
+
+EditorCamera* Editor::GetEditorCamera()
+{
+	return editorCamera;
+}
+CameraLens* Editor::GetEditorCameraLens()
+{
+	return editorCamera->GetCameraLens();
 }
 
 void Editor::OnEvent(const Event& event)

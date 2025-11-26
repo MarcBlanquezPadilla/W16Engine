@@ -28,10 +28,10 @@ add_executable(W16Engine
 	source/Vector2D.h
 	source/Render.cpp
 	source/Render.h
-	source/Camera.cpp
-	source/Camera.h
-	source/CCamera.cpp
-	source/CCamera.h
+	source/EditorCamera.cpp
+	source/EditorCamera.h
+	source/CameraLens.cpp
+	source/CameraLens.h
 	source/Scene.cpp
 	source/Scene.h
 	source/GameObject.cpp
@@ -66,6 +66,8 @@ add_executable(W16Engine
 	source/windows/InspectorWindow.h
 	source/windows/ProjectWindow.cpp
 	source/windows/ProjectWindow.h
+	source/windows/SceneWindow.cpp
+	source/windows/SceneWindow.h
 	source/utils/Log.cpp 
 	source/utils/Log.h
 	source/utils/Timer.cpp

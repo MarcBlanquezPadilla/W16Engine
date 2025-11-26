@@ -109,12 +109,6 @@ bool Window::Awake()
 	return ret;
 }
 
-bool Window::PostUpdate()
-{
-	SDL_GL_SwapWindow(window);
-	return true;
-}
-
 bool Window::CleanUp()
 {
 	LOG("Destroying SDL window and quitting all SDL systems");

@@ -13,6 +13,7 @@
 #include "windows/HierarchyWindow.h"
 #include "windows/InspectorWindow.h"
 #include "windows/ProjectWindow.h"
+#include "windows/SceneWindow.h"
 
 #include "utils/Log.h"
 
@@ -71,6 +72,7 @@ bool Interface::Awake()
 	windows[Menu::View].push_back(new HierarchyWindow(true));
 	windows[Menu::View].push_back(new InspectorWindow(true));
 	windows[Menu::View].push_back(new ProjectWindow(true));
+	windows[Menu::View].push_back(new SceneWindow(true));
 
 	windows[Menu::Help].push_back(new AboutWindow(false));
 
@@ -262,6 +264,8 @@ void Interface::SetupDockspace(unsigned int dockspace_id)
 	ImGui::DockBuilderDockWindow("Inspector", dock_right_id);
 	ImGui::DockBuilderDockWindow("Console", dock_bottom_id);
 	ImGui::DockBuilderDockWindow("Project", dock_bottom_id);
+	ImGui::DockBuilderDockWindow("Scene", dock_main_id);
+
 	ImGui::DockBuilderFinish(dockspace_id);
 }
 

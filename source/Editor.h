@@ -11,6 +11,8 @@
 union SDL_Event;
 class Interface;
 class GameObject;
+class EditorCamera;
+class CameraLens;
 
 class Editor : public Module, public EventListener
 {
@@ -28,23 +30,25 @@ public:
 
 	bool CleanUp();
 
-	void TestMouseRay(int mouseX, int mouseY);
+	void TestMouseRay(int mouseX, int mouseY, int width, int height);
 
 	void HandleInput(SDL_Event* event);
 
 	void SetSelected(GameObject* gameObject);
-	GameObject* GetSelectedGameObject() {
-		return selectedGameObject;
-	};
+	
+	GameObject* GetSelectedGameObject() { return selectedGameObject; };
+
+	EditorCamera* GetEditorCamera();
+	CameraLens* GetEditorCameraLens();
 
 	//EVENTS
 	void OnEvent(const Event& event) override;
 
-	//CAMBIAR A WINDOW SCENE
 	ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;
-private:
 
+private:
 	Interface* userInterface;
+	EditorCamera* editorCamera;
 
 	glm::vec3 startLastRay;
 	glm::vec3 endLastRay;
@@ -52,6 +56,7 @@ private:
 	bool debugRay;
 	bool debugAABB;
 	bool debugMesh;
+
     bool setDefaultUI = false;
 
 	GameObject* selectedGameObject;

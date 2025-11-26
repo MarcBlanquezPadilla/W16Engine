@@ -3,7 +3,6 @@
 #include "Window.h"
 #include "input.h"
 #include "Render.h"
-#include "Camera.h"
 #include "Scene.h"
 #include "Editor.h"
 #include "Loader.h"
@@ -21,24 +20,21 @@ Engine::Engine() {
     startTime = Timer();
     frameTime = PerfTimer();
 
+    events = new EventSystem(true);
     window = new Window(true);
     input = new Input(true);
     render = new Render(true);
-    camera = new Camera(true);
     scene = new Scene(true);
     loader = new Loader(true);
-    events = new EventSystem(true);
     editor = new Editor(true);
     
+    AddModule(events);
     AddModule(window);
     AddModule(input);
     AddModule(render);
-    AddModule(camera);
     AddModule(scene);
     AddModule(loader);
     AddModule(editor);
-    AddModule(events);
-
 }
 
 
@@ -133,6 +129,8 @@ bool Engine::PostUpdate() {
         }
     }
 
+    window->Swap();
+
     return ret;
 }
 
@@ -140,14 +138,17 @@ bool Engine::CleanUp() {
 
     bool ret = true;
 
-    for (int i = 0; i < moduleList.size(); i++) {
+    for (auto it = moduleList.rbegin(); it != moduleList.rend(); ++it)
+    {
+        Module* module = *it;
 
-        ret = moduleList[i]->CleanUp();
-        if (!ret) {
-
-            continue;
+        if (module->CleanUp() == false)
+        {
+            LOG("Error cleaning up module %s", module->name.c_str());
+            ret = false;
         }
-        delete moduleList[i];
+
+        delete module;
     }
 
     moduleList.clear();

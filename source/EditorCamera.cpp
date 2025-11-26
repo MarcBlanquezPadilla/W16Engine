@@ -1,4 +1,4 @@
-#include "Camera.h"
+#include "EditorCamera.h"
 #include <SDL3/sdl.h>
 #include "utils/Log.h"
 #include "glm/glm.hpp"
@@ -6,6 +6,7 @@
 #include "Global.h"
 #include "Input.h"
 #include "Engine.h"
+#include "CameraLens.h"
 #include "Render.h"
 #include "Scene.h"
 #include "Window.h"
@@ -16,21 +17,26 @@
 #include "utils/Ray.h"
 #include "EventSystem.h"
 
-Camera::Camera(bool startEnabled) : Module(startEnabled)
+EditorCamera::EditorCamera()
 {
-	name = "Camera";
+	
 }
 
-Camera::~Camera()
+EditorCamera::~EditorCamera()
 {
 
 }
 
-bool Camera::Awake()
+bool EditorCamera::Awake()
 {
 	bool ret = true;
 	
-	frustum = new Frustum();
+	cameraLens = new CameraLens();
+	Engine::GetInstance().render->AddCamera(cameraLens);
+
+	int w, h;
+	Engine::GetInstance().window->GetWindowSize(w, h);
+	cameraLens->SetRenderTarget(w, h);
 
 	position = glm::vec3(0.0f, 0.0f, 10.0f);
 	forward = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -58,29 +64,6 @@ bool Camera::Awake()
 	mouseCaptured = false;
 	lockCamera = false;
 
-	forward.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-	forward.y = sin(glm::radians(pitch));
-	forward.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-	
-	right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
-	up = glm::normalize(glm::cross(right, forward));
-
-	viewMatrix = glm::lookAt(
-		position,
-		position + forward,
-		up
-	);
-
-	projectionMatrix = glm::perspective(
-		glm::radians(fieldOfView),
-		(float)Engine::GetInstance().window->width / (float)Engine::GetInstance().window->height,
-		0.1f,
-		1000.0f
-	);
-
-	Engine::GetInstance().render->UpdateViewMatix(viewMatrix);
-	Engine::GetInstance().render->UpdateProjectionMatix(projectionMatrix);
-
 	//EVENTS
 	Engine::GetInstance().events->Subscribe(Event::Type::WindowResize, this);
 
@@ -88,7 +71,7 @@ bool Camera::Awake()
 }
 
 
-bool Camera::PreUpdate()
+bool EditorCamera::PreUpdate()
 {
 	bool ret = true;
 
@@ -119,7 +102,6 @@ bool Camera::PreUpdate()
 		SDL_SetWindowRelativeMouseMode(Engine::GetInstance().window->window, false);
 		mouseCaptured = false;
 	}
-
 	
 	orbit = Engine::GetInstance().input->GetMouseButtonDown(1) == KEY_REPEAT && Engine::GetInstance().input->GetKey(SDL_SCANCODE_LALT) == KEY_REPEAT && gameObject;
 	move = Engine::GetInstance().input->GetMouseButtonDown(3) == KEY_REPEAT;
@@ -166,7 +148,6 @@ bool Camera::PreUpdate()
 	//WASD AND MOUSE MOVEMENT
 	else if (move)
 	{
-		
 		CalcMouseVectors();
 		
 		bool wPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_W) == KEY_REPEAT;
@@ -219,34 +200,20 @@ bool Camera::PreUpdate()
 	//UPDATE MATRIX
 	if (viewChanged)
 	{
-		viewMatrix = glm::lookAt(
-			position,
-			position + forward,
-			up
-		);
-		Engine::GetInstance().render->UpdateViewMatix(viewMatrix);
+		cameraLens->LookAt(position, position + forward, up);
 		viewChanged = false;
 	}
 	
 	if (windowChanged)
 	{
-		projectionMatrix = glm::perspective(
-			glm::radians(fieldOfView),
-			(float)Engine::GetInstance().window->width / (float)Engine::GetInstance().window->height,
-			0.1f,
-			1000.0f
-		);
-		Engine::GetInstance().render->UpdateProjectionMatix(projectionMatrix);
+		cameraLens->SetPerspective(fieldOfView, (float)Engine::GetInstance().window->width / (float)Engine::GetInstance().window->height, 0.1f, 1000.0f );
 		windowChanged = false;
 	}
-
-	glm::mat4 viewProj = GetProjectionMatrix() * GetViewMatrix();
-	frustum->Update(viewProj);
 
 	return ret;
 }
 
-void Camera::CalcMouseVectors()
+void EditorCamera::CalcMouseVectors()
 {
 	//MOUSE
 	float mouseX, mouseY;
@@ -274,48 +241,26 @@ void Camera::CalcMouseVectors()
 	up = glm::normalize(glm::cross(right, forward));
 }
 
-Ray Camera::GetRayFromMouse(int mouseX, int mouseY)
-{
-	int width = Engine::GetInstance().window->width;
-	int height = Engine::GetInstance().window->height;
 
-	float x = (2.0f * mouseX) / width - 1.0f;
-	float y = 1.0f - (2.0f * mouseY) / height;
-
-	glm::vec4 ray_clip = glm::vec4(x, y, -1.0, 1.0);
-
-	glm::vec4 ray_eye = glm::inverse(projectionMatrix) * ray_clip;
-	ray_eye = glm::vec4(ray_eye.x, ray_eye.y, -1.0, 0.0);
-
-	glm::vec3 ray_wor = glm::vec3(glm::inverse(viewMatrix) * ray_eye);
-	ray_wor = glm::normalize(ray_wor);
-
-	Ray ray;
-	ray.origin = position;
-	ray.direction = glm::normalize(ray_wor);
-
-	return ray;
-}
-
-bool Camera::CleanUp()
+bool EditorCamera::CleanUp()
 {
 	bool ret = true;
 
-	delete frustum;
-	frustum = nullptr;
+	cameraLens->CleanUp();
+	delete cameraLens;
 
 	return ret;
 }
 
-void Camera::OnEvent(const Event& event)
+void EditorCamera::OnEvent(const Event& event)
 {
 	switch (event.type)
 	{
 	case Event::Type::WindowResize:
 	{
-		{
-			windowChanged = true;
-		}
+		cameraLens->SetRenderTarget(event.data.point.x, event.data.point.y);
+		windowChanged = true;
+		
 		break;
 	}
 

@@ -15,8 +15,6 @@ public:
 
 	bool Awake();
 
-	bool PostUpdate();
-
 	bool CleanUp();
 
 	void SetTitle(const char* title);
@@ -26,6 +24,8 @@ public:
 	int GetScale() const;
 
 	std::string GetSDLVersion() { return sdlVersion; }
+
+	void Swap() { SDL_GL_SwapWindow(window); }
 
 	std::string GetCPU();
 	std::string GetRAM();

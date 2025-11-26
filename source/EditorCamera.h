@@ -2,22 +2,20 @@
 #include "Module.h"
 #include "EventListener.h"
 #include <glm/gtc/matrix_transform.hpp>
-
 #include <array>
 
 class AABB;
-class Frustum;
-class Camara;
+class CameraLens;
 struct Ray;
 
 
-class Camera : public Module , public EventListener
+class EditorCamera : public EventListener
 {
 public:
 
-	Camera(bool startEnabled);
+	EditorCamera();
 
-	virtual ~Camera();
+	virtual ~EditorCamera();
 
 	bool Awake();
 
@@ -25,13 +23,9 @@ public:
 
 	bool CleanUp();
 
-	glm::mat4 GetViewMatrix() const { return viewMatrix; }
-	glm::mat4 GetProjectionMatrix() const { return projectionMatrix; }
-	glm::vec3 GetPosition() const { return position; }
-
-	Ray GetRayFromMouse(int mouseX, int mouseY);
-
 	void LockCamera(bool _lockCamera) { lockCamera = _lockCamera; }
+
+	CameraLens* GetCameraLens() { return cameraLens; }
 
 	//EVENTS
 	void OnEvent(const Event& event) override;
@@ -43,12 +37,8 @@ public:
 	bool windowChanged;
 	bool viewChanged;
 
-	Frustum* frustum;
-
 private:
-	glm::mat4 projectionMatrix;
-	glm::mat4 viewMatrix;
-
+	
 	glm::vec3 position;
 	glm::vec3 forward;
 	glm::vec3 up;
@@ -78,4 +68,5 @@ private:
 	bool mouseCaptured;
 	bool lockCamera;
 
+	CameraLens* cameraLens;
 };

@@ -5,9 +5,9 @@
 
 #include "EventSystem.h"
 #include "Render.h"
+#include "CameraLens.h"
 #include "Window.h"
 #include "Engine.h"
-#include "Camera.h"
 #include "utils/Frustum.h"
 #include "Scene.h"
 #include "GameObject.h"
@@ -99,8 +99,6 @@ bool Render::PreUpdate()
 {
 	bool ret = true;
 
-	opaqueList.clear();
-	transparentList.clear();
 	stencilList.clear();
 	linesList.clear();
 	selectedMesh = nullptr;
@@ -112,53 +110,105 @@ bool Render::PostUpdate()
 {
 	bool ret = true;
 
-	for (GameObject* gameObject : Engine::GetInstance().scene->GetGameObjects())
+	for (CameraLens* camera : activeCameras)
 	{
-		BuildRenderListsRecursive(gameObject);
+		RenderScene(camera);
 	}
 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, Engine::GetInstance().window->width, Engine::GetInstance().window->height);
+
+	glDisable(GL_SCISSOR_TEST);
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+	return ret;
+}
+
+bool Render::RenderScene(const CameraLens* camera)
+{
+	if (!camera) return false;
+
+	// 1. BIND AL FRAMEBUFFER (o ventana principal si fboID == 0)
+	if (camera->fboID != 0)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, camera->fboID);
+		glViewport(0, 0, camera->textureWidth, camera->textureHeight);
+	}
+	else
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, Engine::GetInstance().window->width, Engine::GetInstance().window->height);
+	}
+
+	// 2. LIMPIAR BUFFERS - SOLO UNA VEZ AL PRINCIPIO
+	glDisable(GL_SCISSOR_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glClearStencil(0);
 
+	// 3. ACTUALIZAR MATRICES DE LA CÁMARA
+	UpdateViewMatix(camera->GetViewMatrix());
+	UpdateProjectionMatix(camera->GetProjectionMatrix());
+
+	// 4. LIMPIAR LISTAS Y CONSTRUIR NUEVAS
+	opaqueList.clear();
+	transparentList.clear();
+
+	for (GameObject* gameObject : Engine::GetInstance().scene->GetGameObjects())
+	{
+		BuildRenderListsRecursive(gameObject, camera);
+	}
+
+	// 5. CONFIGURAR ESTADOS DE OPENGL PARA RENDERIZADO
 	glUseProgram(shaderProgram);
 	glEnable(GL_STENCIL_TEST);
-	glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
+	// 6. RENDERIZAR OPACOS
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
 	glDisable(GL_BLEND);
-	DrawRenderList(opaqueList);
+	glEnable(GL_CULL_FACE);
+	DrawRenderList(opaqueList, camera);
 
+	// 7. RENDERIZAR TRANSPARENTES
 	glEnable(GL_BLEND);
 	glDepthMask(GL_FALSE);
-	DrawRenderList(transparentList);
+	DrawRenderList(transparentList, camera);
 
+	// 8. RENDERIZAR LÍNEAS
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
-	DrawLinesList(linesList);
+	DrawLinesList(linesList, camera);
 
+	// 9. RENDERIZAR OUTLINES (STENCIL)
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 	glDisable(GL_CULL_FACE);
-	DrawStencil();
+	DrawStencil(camera);
 
+	// 10. RESETEAR ESTADOS
 	glDisable(GL_STENCIL_TEST);
-	glStencilMask(0xFF); 
+	glStencilMask(0xFF);
 	glStencilFunc(GL_ALWAYS, 0, 0xFF);
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
 	glDisable(GL_BLEND);
+	glEnable(GL_CULL_FACE);
 
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glUseProgram(0);
 
-	return ret;
+	// 11. DESVINCULAR FRAMEBUFFER
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	return true;
 }
 
-void Render::DrawRenderList(const std::multimap<float, RenderObject>& map)
+void Render::DrawRenderList(const std::multimap<float, RenderObject>& map, const CameraLens* camera)
 {
 	for (auto pair = map.rbegin(); pair != map.rend(); ++pair)
 	{
@@ -208,7 +258,7 @@ void Render::DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::v
 	linesList.push_back(line);
 }
 
-void Render::DrawLinesList(std::vector<RenderLine> list)
+void Render::DrawLinesList(std::vector<RenderLine> list, const CameraLens* camera)
 {
 	for (RenderLine line : list)
 	{
@@ -216,8 +266,8 @@ void Render::DrawLinesList(std::vector<RenderLine> list)
 
 		glm::mat4 model = glm::mat4(1.0f);
 		glUniformMatrix4fv(lineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(lineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetViewMatrix()));
-		glUniformMatrix4fv(lineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetProjectionMatrix()));
+		glUniformMatrix4fv(lineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+		glUniformMatrix4fv(lineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 
 		glUniform4fv(lineColorLoc, 1, glm::value_ptr(line.color));
 
@@ -234,7 +284,7 @@ void Render::DrawLinesList(std::vector<RenderLine> list)
 	}
 }
 
-void Render::DrawStencil()
+void Render::DrawStencil(const CameraLens* camera)
 {
 	for (RenderObject renderObject : stencilList)
 	{
@@ -243,8 +293,8 @@ void Render::DrawStencil()
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 		glStencilMask(0x00);
 
-		glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetViewMatrix()));
-		glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(Engine::GetInstance().camera->GetProjectionMatrix()));
+		glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+		glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 		glUniform4f(outlineColorLoc, 0.0f, 1.0f, 1.0f, 1.0f);
 		glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
 
@@ -256,7 +306,7 @@ void Render::DrawStencil()
 	}
 }
 
-void Render::BuildRenderListsRecursive(GameObject* gameObject)
+void Render::BuildRenderListsRecursive(GameObject* gameObject, const CameraLens* camera)
 {
 	glm::mat4 globalModelMatrix;
 	if (gameObject && gameObject->GetEnabled())
@@ -269,7 +319,8 @@ void Render::BuildRenderListsRecursive(GameObject* gameObject)
 			{
 				const AABB& globalAABB = mesh->aabb->GetGlobalAABB(globalModelMatrix);
 
-				if (Engine::GetInstance().camera->frustum->InFrustum(globalAABB))
+				
+				if (camera->GetFrustum()->InFrustum(globalAABB))
 				{
 					Texture* texture = (Texture*)gameObject->GetComponent(ComponentType::Texture);
 					unsigned int texToBind = checkerTextureID;
@@ -285,7 +336,7 @@ void Render::BuildRenderListsRecursive(GameObject* gameObject)
 					RenderObject renderObject = { mesh, texToBind, globalModelMatrix };
 
 					glm::vec3 aabbCenter = (globalAABB.min + globalAABB.max) * 0.5f;
-					float distanceToCamera = glm::distance(aabbCenter, Engine::GetInstance().camera->GetPosition());
+					float distanceToCamera = glm::distance(aabbCenter, camera->position);
 
 					if (texture && texture->transparent)
 					{
@@ -300,7 +351,7 @@ void Render::BuildRenderListsRecursive(GameObject* gameObject)
 		}
 		for (GameObject* go : gameObject->childs)
 		{
-			BuildRenderListsRecursive(go);
+			BuildRenderListsRecursive(go, camera);
 		}
 	}
 }
@@ -311,6 +362,7 @@ bool Render::CleanUp()
 {
 	bool ret = true;
 
+	activeCameras.clear();
 
 	glDeleteProgram(shaderProgram);
 	glDeleteProgram(normalShaderProgram);
@@ -759,6 +811,8 @@ void Render::DeleteMeshFromGPU(MeshData& meshData)
 	meshData = MeshData();
 }
 
+
+
 unsigned int Render::UploadTextureToGPU(unsigned char* data, int width, int height)
 {
 	unsigned int textureID = 0;
@@ -811,4 +865,15 @@ void Render::OnEvent(const Event& event)
 	default:
 		break;
 	}
+}
+
+void Render::AddCamera(CameraLens* camera)
+{
+	activeCameras.push_back(camera);
+}
+
+void Render::RemoveCamera(CameraLens* camera)
+{
+	auto it = std::remove(activeCameras.begin(), activeCameras.end(), camera);
+	activeCameras.erase(it, activeCameras.end());
 }

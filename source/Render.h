@@ -11,6 +11,7 @@
 struct MeshData;
 struct Vertex;
 class GameObject;
+class CameraLens;
 class Mesh;
 
 #define CHECKERS_WIDTH 64
@@ -63,7 +64,14 @@ public:
 
 	void DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color);
 
+	//WINDOW
 	void ChangeWindowSize(int x, int y);
+
+	//RENDER
+	bool RenderScene(const CameraLens* camera);
+
+	void AddCamera(CameraLens* camera);
+	void RemoveCamera(CameraLens* camera);
 
 	//INFORMATION
 	std::string GetGLVersion() { return glVersion; }
@@ -84,16 +92,17 @@ private:
 	bool CreateLineShader();
 
 	//DRAW FUNCTIONS
-	void DrawRenderList(const std::multimap<float, RenderObject>& map);
-	void DrawLinesList(std::vector<RenderLine> list);
-	void DrawStencil();
-	void BuildRenderListsRecursive(GameObject* gameObject);
+	void DrawRenderList(const std::multimap<float, RenderObject>& map, const CameraLens* camera);
+	void DrawLinesList(std::vector<RenderLine> list, const CameraLens* camera);
+	void DrawStencil(const CameraLens* camera);
+	void BuildRenderListsRecursive(GameObject* gameObject, const CameraLens* camera);
 
 private:
 	unsigned int shaderProgram;
 	unsigned int normalShaderProgram;
 	unsigned int outlineShaderProgram;
 	unsigned int checkerTextureID;
+
 
 	//MODEL DRAW
 	GLint modelMatrixLoc;
@@ -132,4 +141,6 @@ private:
 	std::multimap<float,RenderObject> transparentList;
 	std::vector<RenderObject> stencilList;
 	std::vector<RenderLine> linesList;
+
+	std::vector<CameraLens*> activeCameras;
 };
