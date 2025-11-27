@@ -10,6 +10,7 @@
 #include <fstream>
 #include <cmath>
 #include <unordered_map>
+#include "imgui.h"
 
 struct Vec3Comparator {
     bool operator()(const glm::vec3& a, const glm::vec3& b) const {
@@ -19,7 +20,7 @@ struct Vec3Comparator {
     }
 };
 
-Mesh::Mesh(GameObject* owner, bool enabled) : Component(owner, enabled)
+Mesh::Mesh(GameObject* owner) : Component(owner)
 {
     aabb = nullptr;
 }
@@ -258,4 +259,30 @@ std::vector<Vertex> Mesh::GetVertices()
 std::vector<unsigned int> Mesh::GetIndices()
 {
     return indices;
+}
+
+void Mesh::OnEditor()
+{
+    if (ImGui::CollapsingHeader("Mesh"))
+    {
+        ImGui::Text("Vertices:");
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.0f, 1.0f), "%d", meshData.numVertices);
+
+        ImGui::Text("Indices:");
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.0f, 1.0f), "%d", meshData.numIndices);
+
+        ImGui::Text("VAO (ID):");
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%u", meshData.VAO);
+
+        ImGui::Text("Has UVs:");
+        ImGui::SameLine();
+        ImGui::TextUnformatted(hasUVs ? "Yes" : "No");
+
+        ImGui::Separator();
+        ImGui::Checkbox("Draw Normals", &drawNormals);
+        ImGui::Checkbox("Draw Stencil", &drawStencil);
+    }
 }

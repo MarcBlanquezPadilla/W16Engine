@@ -127,6 +127,13 @@ void Scene::AddGameObject(GameObject* gameObject)
 	gameObjects.push_back(gameObject);
 }
 
+
+void Scene::RemoveGameObject(GameObject* go)
+{
+	auto it = std::remove(gameObjects.begin(), gameObjects.end(), go);
+	if (it != gameObjects.end()) gameObjects.erase(it, gameObjects.end());
+}
+
 #pragma endregion
 
 #pragma region Tree

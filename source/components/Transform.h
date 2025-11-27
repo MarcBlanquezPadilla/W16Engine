@@ -9,7 +9,7 @@ class Transform : public Component
 {
 public:
 
-    Transform(GameObject* owner, bool enabled);
+    Transform(GameObject* owner);
 
     virtual ~Transform() override;
 
@@ -26,6 +26,8 @@ public:
     void SetQuaternionRotation(glm::quat _rotation);
     void SetPosition(glm::vec3 _position);
     void SetScale(glm::vec3 _position);
+    
+    void SetLocalMatrix(const glm::mat4& localNatrix);
 
     void OnTransformChanged();
 
@@ -37,6 +39,9 @@ public:
     glm::mat4 GetLocalMatrix();
     glm::mat4 GetGlobalMatrix();
     void InvalidateGlobalMatrix();
+
+
+    void OnEditor() override;
 
 
 

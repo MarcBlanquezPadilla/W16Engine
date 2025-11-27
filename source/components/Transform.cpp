@@ -8,8 +8,13 @@
 
 #include <vector>
 #include <assimp/scene.h>
+#include "imgui.h"
+#include "ImGuizmo.h"
 
-Transform::Transform(GameObject* owner, bool enabled) : Component(owner, enabled)
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/matrix_decompose.hpp"
+
+Transform::Transform(GameObject* owner) : Component(owner)
 {
     position = glm::vec3(0.0f, 0.0f, 0.0f);
     scale = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -204,6 +209,49 @@ void Transform::OnTransformChanged()
     Engine::GetInstance().events->PublishImmediate(Event(Event::Type::TransformChanged, owner));
 }
 
+void Transform::OnEditor()
+{
+    if (ImGui::CollapsingHeader("Transform"))
+    {
+        //ATRIBUTES
+        ImGui::Text("Position");
+        glm::vec3 current_position = GetPosition();
+        if (ImGui::InputFloat3("##Pos", &current_position.x))
+        {
+            SetPosition(current_position);
+        }
 
+        ImGui::Text("Rotation");
+        glm::vec3 current_euler_degrees = GetEulerRotation();
+        if (ImGui::InputFloat3("##Rot", &current_euler_degrees.x))
+        {
+            SetEulerRotation(current_euler_degrees);
+        }
 
+        ImGui::Text("Scale");
+        glm::vec3 current_scale = GetScale();
+        if (ImGui::InputFloat3("##Scale", &current_scale.x))
+        {
+            SetScale(current_scale);
+        }
+    }
+}
 
+void Transform::SetLocalMatrix(const glm::mat4& newLocalMatrix)
+{
+    localMatrix = newLocalMatrix;
+    dirtyLocalMatrix = false;
+
+    glm::vec3 skew;
+    glm::vec4 perspective;
+    glm::quat rotationQuat;
+
+    if (glm::decompose(newLocalMatrix, scale, rotationQuat, position, skew, perspective))
+    {
+        rotation = rotationQuat;
+
+        eulerRotation = glm::degrees(glm::eulerAngles(rotationQuat));
+    }
+
+    InvalidateGlobalMatrix();
+}

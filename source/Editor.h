@@ -44,7 +44,15 @@ public:
 	//EVENTS
 	void OnEvent(const Event& event) override;
 
+
+
+public:
+
 	ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;
+
+	bool debugRay;
+	bool debugAABB;
+	bool debugMesh;
 
 private:
 	Interface* userInterface;
@@ -52,10 +60,6 @@ private:
 
 	glm::vec3 startLastRay;
 	glm::vec3 endLastRay;
-
-	bool debugRay;
-	bool debugAABB;
-	bool debugMesh;
 
     bool setDefaultUI = false;
 

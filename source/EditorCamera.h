@@ -26,6 +26,8 @@ public:
 	void LockCamera(bool _lockCamera) { lockCamera = _lockCamera; }
 
 	CameraLens* GetCameraLens() { return cameraLens; }
+	
+	bool GetCameraLocked() { return lockCamera; }
 
 	//EVENTS
 	void OnEvent(const Event& event) override;

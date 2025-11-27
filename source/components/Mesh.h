@@ -53,7 +53,7 @@ class Mesh : public Component
 {
 public:
 
-    Mesh(GameObject* owner, bool enabled);
+    Mesh(GameObject* owner);
 
     ~Mesh() override;
 
@@ -73,6 +73,8 @@ public:
 
     std::vector<Vertex> GetVertices();
     std::vector<unsigned int> GetIndices();
+
+    void OnEditor() override;
 
 private:
     bool LoadToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices);

@@ -1,10 +1,12 @@
 #include "GameObject.h"
+#include "Scene.h"
 #include "Engine.h"
 #include "EventSystem.h"
 #include "components/Component.h"
 #include "components/Mesh.h"
 #include "components/Transform.h"
 #include "components/Texture.h"
+#include "components/Camera.h"
 #include "utils/Log.h"
 #include "utils/AABB.h"
 
@@ -98,22 +100,26 @@ Component* GameObject::AddComponent(ComponentType type)
 	case ComponentType::None:
 		break;
 	case ComponentType::Transform:
-		component = new Transform(this, true);
+		component = new Transform(this);
 		transform = (Transform*)component;
 		break;
 	case ComponentType::Mesh:
-		component = new Mesh(this, true);
+		component = new Mesh(this);
 		break;
 	case ComponentType::Texture:
-		component = new Texture(this, true);
+		component = new Texture(this);
+		break;
+	case ComponentType::Camera:
+		component = new Camera(this);
 		break;
 	}
 
 	if (component != nullptr)
 	{
 		components[type] = component;
+		component->Start();
+		component->OnEnable();
 	}
-
 	return component;
 }
 
@@ -280,23 +286,149 @@ void GameObject::SetStatic(bool _static)
 
 void GameObject::SetEnabled(bool _enabled)
 {
+	if (enabled == _enabled) return;
+
+	bool wasActive = GetEnabled();
+
 	enabled = _enabled;
+
+	bool nowActive = GetEnabled();
+
+	if (wasActive != nowActive)
+	{
+		UpdateEnabledRecursive(nowActive);
+	}
+}
+
+void GameObject::UpdateEnabledRecursive(bool effectiveState)
+{
+	if (effectiveState)
+		OnEnable();
+	else
+		OnDisable();
+
+	for (GameObject* child : childs)
+	{
+		if (child->enabled)
+		{
+			child->UpdateEnabledRecursive(effectiveState);
+		}
+	}
 }
 
 bool GameObject::GetEnabled()
 {
-	bool ret;
+	if (!enabled) return false;
+
 	if (parent != nullptr)
 	{
-		ret = parent->GetEnabled();
-		if (ret) ret = enabled;
+		return parent->GetEnabled();
 	}
-	else ret = enabled;
 
-	return ret;
+	return true;
+}
+
+bool GameObject::OnEnable()
+{
+	for (auto const& pair : components)
+	{
+		Component* component = pair.second;
+		if (component->enabled)
+		{
+			component->OnEnable();
+		}
+	}
+
+	return true;
+}
+
+bool GameObject::OnDisable()
+{
+	for (auto const& pair : components)
+	{
+		Component* component = pair.second;
+		if (component->enabled)
+		{
+			component->OnDisable();
+		}
+	}
+
+	return true;
 }
 
 bool GameObject::GetStatic()
 {
 	return isStatic;
+}
+
+void GameObject::RemoveChild(GameObject* childToRemove)
+{
+	auto it = std::find(childs.begin(), childs.end(), childToRemove);
+	if (it != childs.end())
+	{
+		childs.erase(it);
+	}
+}
+
+bool GameObject::IsDescendant(GameObject* potentialDescendant)
+{
+	for (GameObject* child : childs)
+	{
+		if (child == potentialDescendant) return true;
+
+		if (child->IsDescendant(potentialDescendant)) return true;
+	}
+	return false;
+}
+
+void GameObject::SetParent(GameObject* newParent)
+{
+	if (parent == newParent) return;
+	if (newParent == this) return;
+	if (newParent != nullptr && IsDescendant(newParent)) return;
+
+	glm::mat4 currentGlobalMatrix = transform->GetGlobalMatrix();
+	bool wasActive = GetEnabled();
+
+	if (parent != nullptr)
+	{
+		parent->RemoveChild(this);
+	}
+	else
+	{
+		Engine::GetInstance().scene->RemoveGameObject(this);
+	}
+
+	parent = newParent;
+	parentUUID = (parent) ? parent->UUID : 0;
+
+	if (parent != nullptr)
+	{
+		parent->childs.push_back(this);
+	}
+	else
+	{
+		Engine::GetInstance().scene->AddGameObject(this);
+	}
+
+	if (parent != nullptr)
+	{
+		glm::mat4 parentGlobal = parent->transform->GetGlobalMatrix();
+		glm::mat4 parentInverse = glm::inverse(parentGlobal);
+		glm::mat4 newLocal = parentInverse * currentGlobalMatrix;
+
+		transform->SetLocalMatrix(newLocal);
+	}
+	else
+	{
+		transform->SetLocalMatrix(currentGlobalMatrix);
+	}
+
+	transform->GetGlobalMatrix();
+
+	bool nowActive = GetEnabled();
+	if (wasActive != nowActive)
+	{
+		UpdateEnabledRecursive(nowActive);
+	}
 }

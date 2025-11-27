@@ -37,7 +37,6 @@ Engine::Engine() {
     AddModule(editor);
 }
 
-
 bool Engine::Awake() {
     
     bool ret = true;

@@ -13,18 +13,22 @@ public:
 
     void SetRenderTarget(int width, int height);
     void SetPerspective(float fovDegrees, float aspectRatio, float nearPlane, float farPlane);
+    void SetProjectionMatrix(glm::mat4 projectionMatrix);
+    void SetViewMatrix(glm::mat4 viewMatrix);
     void LookAt(const glm::vec3& eye, const glm::vec3& center, const glm::vec3& up);
 
     const glm::mat4& GetViewMatrix() const { return viewMatrix; }
     const glm::mat4& GetProjectionMatrix() const { return projectionMatrix; }
 
     const Frustum* GetFrustum() const { return frustum; }
+    bool GetActiveCamera() const { return activeCamera; }
 
     Ray GetRayFromMouse(int mouseX, int mouseY, int width, int height);
 
     bool CleanUp();
 
-
+private:
+    void UpdateFrustum();
 
 public:
     unsigned int fboID = 0;
@@ -40,13 +44,13 @@ public:
     float fov;
     float aspectRatio;
     float zNear;
-    float zFar;
-
-private:
-    void UpdateFrustum();
+    float zFar;    
+    bool activeCamera;
 
 private:
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
     Frustum* frustum = nullptr;
+
+
 };

@@ -30,12 +30,28 @@ void SceneWindow::Draw()
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
-    if (!ImGui::Begin(name, &is_active))
+    if (!ImGui::Begin(name, &is_active, ImGuiWindowFlags_MenuBar))
     {
         ImGui::End();
         ImGui::PopStyleVar();
         return;
     }
+
+	ImGui::PopStyleVar();
+
+	if (ImGui::BeginMenuBar())
+	{
+		if (ImGui::BeginMenu("Debug"))
+		{
+            ImGui::MenuItem("Ray", NULL, &Engine::GetInstance().editor->debugRay);
+            ImGui::MenuItem("Mesh", NULL, &Engine::GetInstance().editor->debugMesh);
+            ImGui::MenuItem("AABB", NULL, &Engine::GetInstance().editor->debugAABB);
+
+            ImGui::EndMenu();
+		}
+
+		ImGui::EndMenuBar();
+	}
     
     CameraLens* cam = Engine::GetInstance().editor->GetEditorCameraLens();
     ImVec2 viewportSize = ImGui::GetContentRegionAvail();
@@ -52,6 +68,9 @@ void SceneWindow::Draw()
     ImVec2 winPos = ImGui::GetCursorScreenPos();
 
     ImGui::Image((ImTextureID)(intptr_t)textureID, viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+
+    //ENABLE CAMERA CONTROLS
+    Engine::GetInstance().GetInstance().editor->GetEditorCamera()->LockCamera(!ImGui::IsWindowHovered());
 
     //PICKING
     if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0) && !ImGuizmo::IsOver())
@@ -114,5 +133,4 @@ void SceneWindow::Draw()
 	}
 
     ImGui::End();
-    ImGui::PopStyleVar();
 }

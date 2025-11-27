@@ -6,8 +6,9 @@
 #include "../Engine.h"
 #include "../Render.h"
 #include <IL/il.h>
+#include "imgui.h"
 
-Texture::Texture(GameObject* owner, bool enabled) : Component(owner, enabled)
+Texture::Texture(GameObject* owner) : Component(owner)
 {
 	
 }
@@ -108,5 +109,24 @@ void Texture::UnloadFromCPU()
     {
         ilDeleteImages(1, &ilImageID);
         ilImageID = 0;
+    }
+}
+
+void Texture::OnEditor()
+{
+    if (ImGui::CollapsingHeader("Texture"))
+    {
+        ImGui::Text("Path:");
+        ImGui::TextWrapped(path.c_str());
+
+        ImGui::Text("Size:");
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%dx%d", width, height);
+        ImGui::Text("Texture ID (GPU):");
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%u", textureID);
+        ImGui::Separator();
+        ImGui::Checkbox("Use Checker Texture", &use_checker);
+        ImGui::Checkbox("Transparent", &transparent);
     }
 }

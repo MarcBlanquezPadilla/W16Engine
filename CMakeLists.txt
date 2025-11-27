@@ -53,6 +53,8 @@ add_executable(W16Engine
 	source/components/Transform.h
 	source/components/Texture.cpp
 	source/components/Texture.h
+	source/components/Camera.cpp
+	source/components/Camera.h
 	source/windows/UIWindow.h
 	source/windows/ConfigWindow.cpp
 	source/windows/ConfigWindow.h

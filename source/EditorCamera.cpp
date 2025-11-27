@@ -7,6 +7,7 @@
 #include "Input.h"
 #include "Engine.h"
 #include "CameraLens.h"
+#include "Editor.h"
 #include "Render.h"
 #include "Scene.h"
 #include "Window.h"
@@ -83,7 +84,7 @@ bool EditorCamera::PreUpdate()
 	SDL_SetWindowRelativeMouseMode(Engine::GetInstance().window->window, false);
 
 	//FIX SCENE YA NO TIENE EL OBJETO SELECCIONADO
-	GameObject* gameObject = nullptr;
+	GameObject* gameObject = Engine::GetInstance().editor->GetSelectedGameObject();
 
 	bool shouldBeRelative = (
 		(Engine::GetInstance().input->GetMouseButtonDown(3) == KEY_REPEAT) ||

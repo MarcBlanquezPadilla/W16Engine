@@ -35,6 +35,7 @@ bool Editor::Awake()
 
 	//SUBSCRIBE TO INPUT EVENT
 	Engine::GetInstance().events->Subscribe(Event::Type::EventSDL, this);
+	Engine::GetInstance().events->Subscribe(Event::Type::CastRay, this);
 
 	//INIT INTERFACE
 	userInterface = new Interface();
@@ -47,8 +48,8 @@ bool Editor::Awake()
 	//DEBUG
 	startLastRay = { 0,0,0 };
 	endLastRay = { 0,0,0 };
-	debugRay = true;
-	debugMesh = true;
+	debugRay = false;
+	debugMesh = false;
 	debugAABB = false;
 
 	selectedGameObject = nullptr;
@@ -95,12 +96,80 @@ bool Editor::Update(float dt)
 					glm::vec3 v3_world = glm::vec3(modelMatrix * glm::vec4(v3_local, 1.0f));
 
 					Render* render = Engine::GetInstance().render;
-					glm::vec4 color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+					glm::vec4 color = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
 
 					render->DrawLine(v1_world, v2_world, color);
 					render->DrawLine(v2_world, v3_world, color);
 					render->DrawLine(v3_world, v1_world, color);
 				}
+			}
+		}
+	}
+
+	if (debugAABB)
+	{
+		if (selectedGameObject)
+		{
+			Mesh* mesh = (Mesh*)selectedGameObject->GetComponent(ComponentType::Mesh);
+			Transform* transform = selectedGameObject->transform;
+
+			if (mesh && transform)
+			{
+				glm::vec3 localMin = mesh->aabb->min;
+				glm::vec3 localMax = mesh->aabb->max;
+
+				glm::vec3 localCorners[8] = {
+					{ localMin.x, localMin.y, localMin.z },
+					{ localMax.x, localMin.y, localMin.z },
+					{ localMin.x, localMax.y, localMin.z },
+					{ localMax.x, localMax.y, localMin.z },
+					{ localMin.x, localMin.y, localMax.z },
+					{ localMax.x, localMin.y, localMax.z },
+					{ localMin.x, localMax.y, localMax.z },
+					{ localMax.x, localMax.y, localMax.z }
+				};
+
+				glm::mat4 modelMatrix = transform->GetGlobalMatrix();
+
+				glm::vec3 globalMin = glm::vec3(FLT_MAX);
+				glm::vec3 globalMax = glm::vec3(-FLT_MAX);
+
+				for (int i = 0; i < 8; i++)
+				{
+					glm::vec4 transformed = modelMatrix * glm::vec4(localCorners[i], 1.0f);
+					glm::vec3 worldPos = glm::vec3(transformed);
+
+					globalMin = glm::min(globalMin, worldPos);
+					globalMax = glm::max(globalMax, worldPos);
+				}
+
+				Render* render = Engine::GetInstance().render;
+				glm::vec4 color = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+
+				glm::vec3 p1 = globalMin;
+				glm::vec3 p2 = glm::vec3(globalMax.x, globalMin.y, globalMin.z);
+				glm::vec3 p3 = glm::vec3(globalMin.x, globalMax.y, globalMin.z);
+				glm::vec3 p4 = glm::vec3(globalMax.x, globalMax.y, globalMin.z);
+
+				glm::vec3 p5 = glm::vec3(globalMin.x, globalMin.y, globalMax.z);
+				glm::vec3 p6 = glm::vec3(globalMax.x, globalMin.y, globalMax.z);
+				glm::vec3 p7 = glm::vec3(globalMin.x, globalMax.y, globalMax.z);
+				glm::vec3 p8 = globalMax;
+
+				render->DrawLine(p1, p2, color);
+				render->DrawLine(p2, p4, color);
+				render->DrawLine(p4, p3, color);
+				render->DrawLine(p3, p1, color);
+
+				render->DrawLine(p5, p6, color);
+				render->DrawLine(p6, p8, color);
+				render->DrawLine(p8, p7, color);
+				render->DrawLine(p7, p5, color);
+
+				render->DrawLine(p1, p5, color);
+				render->DrawLine(p2, p6, color);
+				render->DrawLine(p3, p7, color);
+				render->DrawLine(p4, p8, color);
 			}
 		}
 	}
@@ -132,9 +201,6 @@ bool Editor::CleanUp()
 void Editor::TestMouseRay(int mouseX, int mouseY, int width, int height)
 {
 	Ray ray = editorCamera->GetCameraLens()->GetRayFromMouse(mouseX, mouseY, width, height);
-
-	startLastRay = ray.origin;
-	endLastRay = ray.origin + (ray.direction * 100.0f);
 
 	std::vector <GameObject*> candidates;
 
@@ -234,6 +300,14 @@ void Editor::OnEvent(const Event& event)
 	{
 		{
 			HandleInput(event.data.event.event);
+		}
+		break;
+	}
+	case Event::Type::CastRay:
+	{
+		{
+			startLastRay = event.data.ray.ray->origin;
+			endLastRay = event.data.ray.ray->origin + (event.data.ray.ray->direction * 100.0f);
 		}
 		break;
 	}

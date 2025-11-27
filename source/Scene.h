@@ -28,6 +28,7 @@ public:
 	//GAMEOBJECT
 	void CollectGameObjectsRecursive(GameObject* go, std::vector<GameObject*>& list);
 	void AddGameObject(GameObject* gameObject);
+	void RemoveGameObject(GameObject* gameObject);
 
 	//TREE
 	void RebuildTree();

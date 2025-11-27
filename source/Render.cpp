@@ -129,7 +129,7 @@ bool Render::RenderScene(const CameraLens* camera)
 {
 	if (!camera) return false;
 
-	// 1. BIND AL FRAMEBUFFER (o ventana principal si fboID == 0)
+	//BIND FRAMEBUFFER
 	if (camera->fboID != 0)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, camera->fboID);
@@ -141,16 +141,16 @@ bool Render::RenderScene(const CameraLens* camera)
 		glViewport(0, 0, Engine::GetInstance().window->width, Engine::GetInstance().window->height);
 	}
 
-	// 2. LIMPIAR BUFFERS - SOLO UNA VEZ AL PRINCIPIO
+	//CLEAN BUFFERS
 	glDisable(GL_SCISSOR_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glClearStencil(0);
 
-	// 3. ACTUALIZAR MATRICES DE LA CÁMARA
+	//UPDATE CAM MATRIX
 	UpdateViewMatix(camera->GetViewMatrix());
 	UpdateProjectionMatix(camera->GetProjectionMatrix());
 
-	// 4. LIMPIAR LISTAS Y CONSTRUIR NUEVAS
+	//CLEAN LIST AND BUILD NEWS
 	opaqueList.clear();
 	transparentList.clear();
 
@@ -159,37 +159,36 @@ bool Render::RenderScene(const CameraLens* camera)
 		BuildRenderListsRecursive(gameObject, camera);
 	}
 
-	// 5. CONFIGURAR ESTADOS DE OPENGL PARA RENDERIZADO
+	//CONFIG OPENGL
 	glUseProgram(shaderProgram);
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-	// 6. RENDERIZAR OPACOS
+	//RENDER OPAQUES
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
 	glDisable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
 	DrawRenderList(opaqueList, camera);
 
-	// 7. RENDERIZAR TRANSPARENTES
+	//RENDER TRANSPARENT
 	glEnable(GL_BLEND);
 	glDepthMask(GL_FALSE);
 	DrawRenderList(transparentList, camera);
 
-	// 8. RENDERIZAR LÍNEAS
+	//RENDER LINES
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
 	DrawLinesList(linesList, camera);
 
-	// 9. RENDERIZAR OUTLINES (STENCIL)
-	glDisable(GL_DEPTH_TEST);
+	//RENDER STENCIL
 	glDisable(GL_BLEND);
 	glDisable(GL_CULL_FACE);
 	DrawStencil(camera);
 
-	// 10. RESETEAR ESTADOS
+	//RESET STATES
 	glDisable(GL_STENCIL_TEST);
 	glStencilMask(0xFF);
 	glStencilFunc(GL_ALWAYS, 0, 0xFF);
@@ -202,7 +201,7 @@ bool Render::RenderScene(const CameraLens* camera)
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glUseProgram(0);
 
-	// 11. DESVINCULAR FRAMEBUFFER
+	//UNBINF FRAMEBUFFER
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	return true;
@@ -286,24 +285,53 @@ void Render::DrawLinesList(std::vector<RenderLine> list, const CameraLens* camer
 
 void Render::DrawStencil(const CameraLens* camera)
 {
+	glEnable(GL_STENCIL_TEST);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	for (RenderObject renderObject : stencilList)
 	{
 		glUseProgram(outlineShaderProgram);
-
-		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		glStencilMask(0x00);
-
 		glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
 		glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
-		glUniform4f(outlineColorLoc, 0.0f, 1.0f, 1.0f, 1.0f);
 		glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
-
+		glUniform4f(outlineColorLoc, 0.0f, 1.0f, 1.0f, 1.0f);
+		
 		glBindVertexArray(renderObject.mesh->stencilData.VAO);
+
+		//OUTLINE
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
+		glDepthFunc(GL_LEQUAL);
+		glDepthMask(GL_FALSE);
+
+		glDrawElements(GL_TRIANGLES, renderObject.mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
+
+		//FILL ALL IF OBJECT BEHIND
+		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		glStencilFunc(GL_ALWAYS, 2, 0xFF);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+		glStencilMask(0xFF);
+		glDepthFunc(GL_LEQUAL);
+		glDrawElements(GL_TRIANGLES, renderObject.mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
+
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glDepthFunc(GL_GREATER);
+		glStencilFunc(GL_NOTEQUAL, 2, 0xFF);
+		glStencilMask(0x00);
+
 		glDrawElements(GL_TRIANGLES, renderObject.mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
 
 		glBindVertexArray(0);
 		glUseProgram(0);
 	}
+
+	glDepthFunc(GL_LESS);
+	glDepthMask(GL_TRUE);
+	glDisable(GL_BLEND);
+	glDisable(GL_STENCIL_TEST);
 }
 
 void Render::BuildRenderListsRecursive(GameObject* gameObject, const CameraLens* camera)

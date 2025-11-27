@@ -20,14 +20,19 @@ public:
 
 	bool Awake();
 
+	bool OnEnable();
+
+	bool OnDisable();
+
 	bool Update(float dt);
 
 	bool CleanUp();
 
-
-
 	void AddChild(GameObject* gameObject);
 	std::vector<GameObject*> GetChilds() { return childs;}
+	void SetParent(GameObject* newParent);
+
+	bool IsDescendant(GameObject* potentialParent);
 
 	void Save(pugi::xml_node gameObjectNode);
 	void Load(pugi::xml_node gameObjectNode);
@@ -36,6 +41,7 @@ public:
 	void SetStatic(bool s);
 	bool GetStatic();
 	void SetEnabled(bool enabled);
+	void UpdateEnabledRecursive(bool enabled);
 	bool GetEnabled();
 
 	//COMPONENTS
@@ -44,6 +50,9 @@ public:
 	bool TryGetGlobalMatrix(glm::mat4& globalMatrix);
 	bool TryGetGlobalAABB(AABB& globalAABB);
 	bool TryGetComponent(ComponentType type, Component*& component);
+
+private:
+	void RemoveChild(GameObject* childToRemove);
 
 public:
 	std::string name;

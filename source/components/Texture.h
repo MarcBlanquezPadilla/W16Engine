@@ -8,7 +8,7 @@ class Texture : public Component
 {
 public:
 
-    Texture(GameObject* owner, bool enabled);
+    Texture(GameObject* owner);
 
     virtual ~Texture() override;
 
@@ -28,6 +28,8 @@ public:
     void UnloadFromCPU();
 
     unsigned int GetTextureID() const { return textureID; }
+
+    void OnEditor() override;
 
 public:
 

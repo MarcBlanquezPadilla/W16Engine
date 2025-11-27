@@ -1,5 +1,6 @@
 #include "CameraLens.h"
 #include "Engine.h"
+#include "EventSystem.h"
 #include "Window.h"
 #include "utils/Frustum.h"
 #include "utils/Ray.h"
@@ -20,6 +21,8 @@ CameraLens::CameraLens()
     zNear = 0.1f;
     zFar = 1000.0f;
 
+    activeCamera = false;
+
     LookAt(position, reference, up);
     SetPerspective(fov, aspectRatio, zNear, zFar);
 }
@@ -28,6 +31,7 @@ CameraLens::~CameraLens()
 {
 
 }
+
 
 void CameraLens::SetPerspective(float fov, float aspect, float near, float far)
 {
@@ -48,6 +52,20 @@ void CameraLens::LookAt(const glm::vec3& eye, const glm::vec3& center, const glm
     this->up = _up;
 
     viewMatrix = glm::lookAt(eye, center, up);
+
+    UpdateFrustum();
+}
+
+void CameraLens::SetProjectionMatrix(glm::mat4 proj)
+{
+    projectionMatrix = proj;
+
+    UpdateFrustum();
+}
+
+void CameraLens::SetViewMatrix(glm::mat4 view)
+{
+    projectionMatrix = view;
 
     UpdateFrustum();
 }
@@ -74,6 +92,8 @@ Ray CameraLens::GetRayFromMouse(int mouseX, int mouseY, int width, int height)
     Ray ray;
     ray.origin = position;
     ray.direction = glm::normalize(ray_wor);
+
+    Engine::GetInstance().events->PublishImmediate(Event(Event::Type::CastRay, &ray));
 
     return ray;
 }

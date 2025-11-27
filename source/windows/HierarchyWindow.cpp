@@ -48,6 +48,39 @@ void HierarchyWindow::Draw()
         ImGui::EndPopup();
     }
 
+    ImVec2 contentSize = ImGui::GetContentRegionAvail();
+
+    ImGui::Dummy(contentSize);
+
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_NODE"))
+        {
+            GameObject* droppedGO = *(GameObject**)payload->Data;
+
+            draggedGameObject = droppedGO;
+            targetGameObject = nullptr;
+            toRoot = true;
+        }
+        ImGui::EndDragDropTarget();
+    }
+
+    if (draggedGameObject != nullptr)
+    {
+        if (toRoot)
+        {
+            draggedGameObject->SetParent(nullptr);
+        }
+        else if (targetGameObject != nullptr)
+        {
+            draggedGameObject->SetParent(targetGameObject);
+        }
+
+        draggedGameObject = nullptr;
+        targetGameObject = nullptr;
+        toRoot = false;
+    }
+
     ImGui::End();
 }
 
@@ -74,6 +107,30 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* go)
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left) || ImGui::IsItemClicked(ImGuiMouseButton_Right))
     {
         Engine::GetInstance().editor->SetSelected(go);
+    }
+
+    if (ImGui::BeginDragDropSource())
+    {
+        ImGui::SetDragDropPayload("HIERARCHY_NODE", &go, sizeof(GameObject*));
+
+        ImGui::Text("Moving %s", go->name.c_str());
+
+        draggedGameObject = go;
+
+        ImGui::EndDragDropSource();
+    }
+
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_NODE"))
+        {
+            GameObject* droppedGO = *(GameObject**)payload->Data;
+
+            draggedGameObject = droppedGO;
+            targetGameObject = go;
+            toRoot = false;
+        }
+        ImGui::EndDragDropTarget();
     }
 
     if (node_open)
