@@ -15,13 +15,14 @@ CameraLens::CameraLens()
     position = glm::vec3(0.0f, 0.0f, 5.0f);
     reference = glm::vec3(0.0f, 0.0f, 0.0f);
     up = glm::vec3(0.0f, 1.0f, 0.0f);
+    backgroundColor = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
 
     fov = 60.0f;
     aspectRatio = 16.0f / 9.0f;
     zNear = 0.1f;
     zFar = 1000.0f;
-
-    activeCamera = false;
+    depth = 0;
+    activeCamera = true;
 
     LookAt(position, reference, up);
     SetPerspective(fov, aspectRatio, zNear, zFar);
@@ -31,7 +32,6 @@ CameraLens::~CameraLens()
 {
 
 }
-
 
 void CameraLens::SetPerspective(float fov, float aspect, float near, float far)
 {
@@ -43,6 +43,37 @@ void CameraLens::SetPerspective(float fov, float aspect, float near, float far)
     projectionMatrix = glm::perspective(glm::radians(fov), aspectRatio, zNear, zFar);
 
     UpdateFrustum();
+}
+
+void CameraLens::UpdatePerspective()
+{
+    projectionMatrix = glm::perspective(glm::radians(fov), aspectRatio, zNear, zFar);
+
+    UpdateFrustum();
+}
+
+void CameraLens::SetFov(float fov)
+{
+    this->fov = fov;
+    UpdatePerspective();
+}
+
+void CameraLens::SetAspectRatio(float aspectRatio)
+{
+    this->aspectRatio = aspectRatio;
+    UpdatePerspective();
+}
+
+void CameraLens::SetFarPlane(float farPlane)
+{
+    this->zFar = farPlane;
+    UpdatePerspective();
+}
+
+void CameraLens::SetNearPlane(float nearPlane)
+{
+    this->zNear = nearPlane;
+    UpdatePerspective();
 }
 
 void CameraLens::LookAt(const glm::vec3& eye, const glm::vec3& center, const glm::vec3& _up)
@@ -65,7 +96,7 @@ void CameraLens::SetProjectionMatrix(glm::mat4 proj)
 
 void CameraLens::SetViewMatrix(glm::mat4 view)
 {
-    projectionMatrix = view;
+    viewMatrix = view;
 
     UpdateFrustum();
 }
@@ -168,4 +199,9 @@ void CameraLens::SetRenderTarget(int width, int height)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
+}
+
+void CameraLens::SetActiveCamera(bool b)
+{
+    activeCamera = b;
 }

@@ -40,6 +40,7 @@ void HierarchyWindow::Draw()
     {
         if (ImGui::BeginMenu("Create"))
         {
+            if (ImGui::MenuItem("Empty")) { loader->CreateBasic(EMPTY); }
             if (ImGui::MenuItem("Cube")) { loader->CreateBasic(CUBE); }
             if (ImGui::MenuItem("Sphere")) { loader->CreateBasic(SPHERE); }
             if (ImGui::MenuItem("Pyramid")) { loader->CreateBasic(PYRAMID); }

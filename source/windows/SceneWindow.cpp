@@ -60,7 +60,7 @@ void SceneWindow::Draw()
     if (viewportSize.x != cam->textureWidth || viewportSize.y != cam->textureHeight)
     {
         cam->SetRenderTarget((int)viewportSize.x, (int)viewportSize.y);
-        cam->SetPerspective(cam->fov, viewportSize.x / viewportSize.y, cam->zNear, cam->zFar);
+        cam->SetPerspective(cam->GetFov(), viewportSize.x / viewportSize.y, cam->GetNearPlane(), cam->GetFarPlane());
     }
 
     unsigned int textureID = cam->textureID;

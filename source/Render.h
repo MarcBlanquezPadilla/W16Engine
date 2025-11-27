@@ -69,9 +69,10 @@ public:
 
 	//RENDER
 	bool RenderScene(const CameraLens* camera);
-
 	void AddCamera(CameraLens* camera);
 	void RemoveCamera(CameraLens* camera);
+	CameraLens* GetMainCamera();
+	int GetMainCamerasNum() { return mainCameras; }
 
 	//INFORMATION
 	std::string GetGLVersion() { return glVersion; }
@@ -143,4 +144,6 @@ private:
 	std::vector<RenderLine> linesList;
 
 	std::vector<CameraLens*> activeCameras;
+	CameraLens* mainCamera;
+	int mainCameras;
 };

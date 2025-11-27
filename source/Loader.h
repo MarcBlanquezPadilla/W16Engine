@@ -47,7 +47,9 @@ public:
 	void OnEvent(const Event& event) override;
 
 private:
+	void CreateEmpty();
 	void CreateCube();
 	void CreateSphere();
 	void CreatePyramid();
+
 };

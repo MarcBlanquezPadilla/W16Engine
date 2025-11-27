@@ -323,6 +323,9 @@ void Loader::CreateBasic(int basic)
 {
 	switch (basic)
 	{
+	case EMPTY:
+		CreateEmpty();
+		break;
 	case CUBE:
 		CreateCube();
 		break;
@@ -332,6 +335,16 @@ void Loader::CreateBasic(int basic)
 	case PYRAMID:
 		CreatePyramid();
 		break;
+	}
+}
+
+void Loader::CreateEmpty()
+{
+	GameObject* gameObject = new GameObject(true, "Empty");
+
+	if (gameObject)
+	{
+		Engine::GetInstance().scene->AddGameObject(gameObject);
 	}
 }
 

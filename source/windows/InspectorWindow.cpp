@@ -81,12 +81,6 @@ void InspectorWindow::Draw()
                     ImGui::CloseCurrentPopup();
                 }
             }
-            else
-            {
-                ImGui::BeginDisabled();
-                ImGui::MenuItem("Camera (Added)");
-                ImGui::EndDisabled();
-            }
             if (gameObject->GetComponent(ComponentType::Mesh) == nullptr)
             {
                 if (ImGui::MenuItem("Mesh"))

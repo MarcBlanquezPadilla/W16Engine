@@ -16,6 +16,7 @@
 #define LIBRARY_5 "ImGui (Editor UI)"
 #define LIBRARY_6 "GLM (Math)"
 
-#define CUBE 0
-#define PYRAMID 1
-#define SPHERE 2
+#define EMPTY 0
+#define CUBE 1
+#define PYRAMID 2
+#define SPHERE 3

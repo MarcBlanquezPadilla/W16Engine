@@ -2,6 +2,7 @@
 #include <IL/il.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <SDL3/sdl.h>
+#include <algorithm>
 
 #include "EventSystem.h"
 #include "Render.h"
@@ -92,6 +93,9 @@ bool Render::Awake()
 
 	Engine::GetInstance().events->Subscribe(Event::Type::WindowResize, this);
 	
+	mainCamera = nullptr;
+	mainCameras = 0;
+	
 	return ret;
 }
 
@@ -102,6 +106,7 @@ bool Render::PreUpdate()
 	stencilList.clear();
 	linesList.clear();
 	selectedMesh = nullptr;
+	mainCamera = nullptr;
 
 	return ret;
 }
@@ -109,6 +114,11 @@ bool Render::PreUpdate()
 bool Render::PostUpdate()
 {
 	bool ret = true;
+
+	std::sort(activeCameras.begin(), activeCameras.end(), [](CameraLens* a, CameraLens* b) {
+
+		return a->depth < b->depth;
+	});
 
 	for (CameraLens* camera : activeCameras)
 	{
@@ -889,7 +899,6 @@ void Render::OnEvent(const Event& event)
 		}
 		break;
 	}
-
 	default:
 		break;
 	}
@@ -904,4 +913,41 @@ void Render::RemoveCamera(CameraLens* camera)
 {
 	auto it = std::remove(activeCameras.begin(), activeCameras.end(), camera);
 	activeCameras.erase(it, activeCameras.end());
+}
+
+CameraLens* Render::GetMainCamera()
+{
+	if (mainCamera != nullptr && mainCamera->GetActiveCamera() && mainCamera->depth == 0)
+	{
+		return mainCamera;
+	}
+
+	mainCameras = 0;
+
+	for (CameraLens* cam : activeCameras)
+	{
+		if (cam->GetActiveCamera() && cam->depth == 0)
+		{
+			mainCameras++;
+			mainCamera = cam;
+		}
+	}
+
+	if (mainCameras > 1)
+	{
+		LOG("WARNING: There's more than one active camera with Depth = 0 (Main Layer)!");
+	}
+
+	mainCamera = nullptr;
+
+	for (CameraLens* cam : activeCameras)
+	{
+		if (cam->GetActiveCamera() && cam->depth == 0)
+		{
+			mainCamera = cam;
+			break;
+		}
+	}
+
+	return mainCamera;
 }

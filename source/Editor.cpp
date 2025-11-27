@@ -188,7 +188,6 @@ bool Editor::PostUpdate()
 
 bool Editor::CleanUp()
 {
-
 	userInterface->CleanUp();
 	editorCamera->CleanUp();
 	
@@ -296,22 +295,18 @@ void Editor::OnEvent(const Event& event)
 {
 	switch (event.type)
 	{
-	case Event::Type::EventSDL:
-	{
+		case Event::Type::EventSDL:
 		{
 			HandleInput(event.data.event.event);
+			break;
 		}
-		break;
-	}
-	case Event::Type::CastRay:
-	{
+		case Event::Type::CastRay:
 		{
 			startLastRay = event.data.ray.ray->origin;
 			endLastRay = event.data.ray.ray->origin + (event.data.ray.ray->direction * 100.0f);
+			break;
 		}
-		break;
-	}
-	default:
-		break;
+		default:
+			break;
 	}
 }

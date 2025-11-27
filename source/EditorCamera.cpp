@@ -38,6 +38,7 @@ bool EditorCamera::Awake()
 	int w, h;
 	Engine::GetInstance().window->GetWindowSize(w, h);
 	cameraLens->SetRenderTarget(w, h);
+	cameraLens->depth = -1;
 
 	position = glm::vec3(0.0f, 0.0f, 10.0f);
 	forward = glm::vec3(0.0f, 0.0f, -1.0f);

@@ -37,6 +37,8 @@ void Camera::OnDisable()
 
 void Camera::Update(float dt)
 {
+    lens->SetActiveCamera(enabled);
+
     Transform* transform = (Transform*)owner->GetComponent(ComponentType::Transform);
 
     if (transform && lens)
@@ -65,16 +67,28 @@ void Camera::OnEditor()
 {
     if (ImGui::CollapsingHeader("Camera"))
     {
-        if (ImGui::DragFloat("FOV", &lens->fov, 0.1f, 1.0f, 179.0f));
-
-        if (ImGui::DragFloat("Near Plane", &lens->zNear, 0.1f, 0.01f, 1000.0f));
-
-        if (ImGui::DragFloat("Far Plane", &lens->zFar, 1.0f, 0.1f, 10000.0f));
-
-        bool isMain = isMainCamera;
-        if (ImGui::Checkbox("Main Camera", &isMain))
+        float fov = lens->GetFov();
+        if (ImGui::DragFloat("FOV", &fov, 0.1f, 1.0f, 160.0f))
         {
-            SetMainCamera(isMain);
+            lens->SetFov(fov);
+        }
+
+        float zNear = lens->GetNearPlane();
+        if (ImGui::DragFloat("Near Plane", &zNear, 0.1f, 0.01f, 1000.0f))
+        {
+            lens->SetNearPlane(zNear);
+        }
+
+        float zFar = lens->GetFarPlane();
+        if (ImGui::DragFloat("Far Plane", &zFar, 1.0f, 0.1f, 10000.0f))
+        {
+            lens->SetFarPlane(zFar);
+        }
+
+        int depth = lens->depth;
+        if (ImGui::InputInt("Depth", &depth))
+        {
+            lens->depth = glm::clamp(depth, 0, 100000);
         }
 
         ImGui::Text("FBO:");
