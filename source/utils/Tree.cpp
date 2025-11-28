@@ -319,34 +319,29 @@ void Tree::DrawDebug(glm::vec4 _color)
 
     for (const AABB& box : allNodesAABB)
     {
-        // 1. Calcular las 8 esquinas usando min y max
         glm::vec3 min = box.min;
         glm::vec3 max = box.max;
 
-        glm::vec3 v0 = min;                                   // Esquina inferior izquierda atrás
-        glm::vec3 v1 = glm::vec3(max.x, min.y, min.z);        // Esquina inferior derecha atrás
-        glm::vec3 v2 = glm::vec3(max.x, max.y, min.z);        // Esquina superior derecha atrás
-        glm::vec3 v3 = glm::vec3(min.x, max.y, min.z);        // Esquina superior izquierda atrás
+        glm::vec3 v0 = min;
+        glm::vec3 v1 = glm::vec3(max.x, min.y, min.z);
+        glm::vec3 v2 = glm::vec3(max.x, max.y, min.z);
+        glm::vec3 v3 = glm::vec3(min.x, max.y, min.z);
 
-        glm::vec3 v4 = glm::vec3(min.x, min.y, max.z);        // Esquina inferior izquierda frente
-        glm::vec3 v5 = glm::vec3(max.x, min.y, max.z);        // Esquina inferior derecha frente
-        glm::vec3 v6 = max;                                   // Esquina superior derecha frente
-        glm::vec3 v7 = glm::vec3(min.x, max.y, max.z);        // Esquina superior izquierda frente
+        glm::vec3 v4 = glm::vec3(min.x, min.y, max.z);
+        glm::vec3 v5 = glm::vec3(max.x, min.y, max.z);
+        glm::vec3 v6 = max;
+        glm::vec3 v7 = glm::vec3(min.x, max.y, max.z);
 
-
-        // Cara Trasera (Z min)
         render->DrawLine(v0, v1, color);
         render->DrawLine(v1, v2, color);
         render->DrawLine(v2, v3, color);
         render->DrawLine(v3, v0, color);
 
-        // Cara Frontal (Z max)
         render->DrawLine(v4, v5, color);
         render->DrawLine(v5, v6, color);
         render->DrawLine(v6, v7, color);
         render->DrawLine(v7, v4, color);
 
-        // Conexiones (Profundidad)
         render->DrawLine(v0, v4, color);
         render->DrawLine(v1, v5, color);
         render->DrawLine(v2, v6, color);

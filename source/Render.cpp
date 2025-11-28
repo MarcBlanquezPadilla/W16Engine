@@ -84,6 +84,13 @@ bool Render::Awake()
 		return false;
 	}
 
+	//CREATE MESH LINES SHADER
+	if (!CreateMeshLinesShader())
+	{
+		LOG("Error creating mesh lines shader");
+		return false;
+	}
+
 	//CREATE CHECKER TEXTURE
 	if (!CreateCheckerTexture())
 	{
@@ -92,6 +99,9 @@ bool Render::Awake()
 	}
 
 	Engine::GetInstance().events->Subscribe(Event::Type::WindowResize, this);
+
+	debugColor = glm::vec4(DEBUG_R, DEBUG_G, DEBUG_B, DEBUG_A);
+	stencilColor = glm::vec4(STENCIL_R, STENCIL_G, STENCIL_B, STENCIL_A);
 	
 	mainCamera = nullptr;
 	mainCameras = 0;
@@ -105,6 +115,8 @@ bool Render::PreUpdate()
 
 	stencilList.clear();
 	linesList.clear();
+	normalsList.clear();
+	meshLinesList.clear();
 	selectedMesh = nullptr;
 	mainCamera = nullptr;
 
@@ -134,6 +146,23 @@ bool Render::PostUpdate()
 
 	return ret;
 }
+
+bool Render::CleanUp()
+{
+	bool ret = true;
+
+	activeCameras.clear();
+	Engine::GetInstance().events->UnsubscribeAll(this);
+
+	glDeleteProgram(shaderProgram);
+	glDeleteProgram(normalShaderProgram);
+	glDeleteProgram(outlineShaderProgram);
+	ilShutDown();
+
+	return ret;
+}
+
+#pragma region Draw
 
 bool Render::RenderScene(const CameraLens* camera)
 {
@@ -186,17 +215,14 @@ bool Render::RenderScene(const CameraLens* camera)
 	glDepthMask(GL_FALSE);
 	DrawRenderList(transparentList, camera);
 
-	//RENDER LINES
-	glEnable(GL_DEPTH_TEST);
-	glDepthMask(GL_TRUE);
-	glDisable(GL_CULL_FACE);
-	glEnable(GL_BLEND);
-	DrawLinesList(linesList, camera);
-
-	//RENDER STENCIL
-	glDisable(GL_BLEND);
-	glDisable(GL_CULL_FACE);
-	DrawStencil(camera);
+	//RENDER DEBUG
+	if (camera->GetDebugCamera())
+	{
+		DrawStencilList(camera);
+		DrawNormalsList(camera);
+		DrawLinesList(camera);
+		DrawMeshLinesList(camera);
+	}
 
 	//RESET STATES
 	glDisable(GL_STENCIL_TEST);
@@ -215,6 +241,58 @@ bool Render::RenderScene(const CameraLens* camera)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	return true;
+}
+
+void Render::BuildRenderListsRecursive(GameObject* gameObject, const CameraLens* camera)
+{
+	glm::mat4 globalModelMatrix;
+	if (gameObject && gameObject->GetEnabled())
+	{
+		if (gameObject->TryGetGlobalMatrix(globalModelMatrix))
+		{
+			Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
+
+			if (mesh && mesh->enabled && mesh->meshData.VAO != 0)
+			{
+				const AABB& globalAABB = mesh->aabb->GetGlobalAABB(globalModelMatrix);
+
+				if (camera->GetFrustum()->InFrustum(globalAABB))
+				{
+					Texture* texture = (Texture*)gameObject->GetComponent(ComponentType::Texture);
+					unsigned int texToBind = checkerTextureID;
+
+					if (texture)
+					{
+						if (texture->GetTextureID() != 0 && !texture->use_checker)
+						{
+							texToBind = texture->GetTextureID();
+						}
+					}
+
+					RenderObject renderObject = { mesh, texToBind, globalModelMatrix };
+
+					glm::vec3 aabbCenter = (globalAABB.min + globalAABB.max) * 0.5f;
+					float distanceToCamera = glm::distance(aabbCenter, camera->position);
+
+					if (texture && texture->transparent)
+					{
+						transparentList.emplace(distanceToCamera, renderObject);
+					}
+					else
+					{
+						opaqueList.emplace(distanceToCamera, renderObject);
+					}
+
+					if (mesh->drawNormals) normalsList.push_back(renderObject);
+					if (mesh->drawMesh) meshLinesList.push_back(renderObject);
+				}
+			}
+		}
+		for (GameObject* go : gameObject->childs)
+		{
+			BuildRenderListsRecursive(go, camera);
+		}
+	}
 }
 
 void Render::DrawRenderList(const std::multimap<float, RenderObject>& map, const CameraLens* camera)
@@ -245,19 +323,6 @@ void Render::DrawRenderList(const std::multimap<float, RenderObject>& map, const
 
 		glBindVertexArray(renderObject.mesh->meshData.VAO);
 		glDrawElements(GL_TRIANGLES, renderObject.mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
-
-
-		//DRAW NORMALS
-		if (renderObject.mesh->drawNormals && renderObject.mesh->meshData.VAO != 0)
-		{
-			glUseProgram(normalShaderProgram);
-			glUniformMatrix4fv(normalModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
-			glBindVertexArray(renderObject.mesh->meshData.VAO);
-
-			glDrawArrays(GL_POINTS, 0, renderObject.mesh->meshData.numVertices);
-
-			glUseProgram(shaderProgram);
-		}
 	}
 }
 
@@ -267,9 +332,14 @@ void Render::DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::v
 	linesList.push_back(line);
 }
 
-void Render::DrawLinesList(std::vector<RenderLine> list, const CameraLens* camera)
+void Render::DrawLinesList(const CameraLens* camera)
 {
-	for (RenderLine line : list)
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_TRUE);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+
+	for (RenderLine line : linesList)
 	{
 		glUseProgram(lineShaderProgram);
 
@@ -278,7 +348,7 @@ void Render::DrawLinesList(std::vector<RenderLine> list, const CameraLens* camer
 		glUniformMatrix4fv(lineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
 		glUniformMatrix4fv(lineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 
-		glUniform4fv(lineColorLoc, 1, glm::value_ptr(line.color));
+		glUniform4fv(lineColorLoc, 1, glm::value_ptr(debugColor));
 
 		glm::vec3 vertices[2] = { line.startPoint, line.endPoint };
 		glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
@@ -293,7 +363,31 @@ void Render::DrawLinesList(std::vector<RenderLine> list, const CameraLens* camer
 	}
 }
 
-void Render::DrawStencil(const CameraLens* camera)
+void Render::DrawNormalsList(const CameraLens* camera)
+{
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_TRUE);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	
+	//DRAW NORMALS
+	for (RenderObject renderObject : normalsList)
+	{
+		if (renderObject.mesh->drawNormals && renderObject.mesh->meshData.VAO != 0)
+		{
+			glUseProgram(normalShaderProgram);
+			glUniformMatrix4fv(normalModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
+			glUniform4f(normalColorLoc, debugColor.r, debugColor.g, debugColor.b, debugColor.a);
+			glBindVertexArray(renderObject.mesh->meshData.VAO);
+
+			glDrawArrays(GL_POINTS, 0, renderObject.mesh->meshData.numVertices);
+
+			glUseProgram(shaderProgram);
+		}
+	}
+}
+
+void Render::DrawStencilList(const CameraLens* camera)
 {
 	glEnable(GL_STENCIL_TEST);
 	glEnable(GL_DEPTH_TEST);
@@ -307,7 +401,7 @@ void Render::DrawStencil(const CameraLens* camera)
 		glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
 		glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 		glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
-		glUniform4f(outlineColorLoc, 0.0f, 1.0f, 1.0f, 1.0f);
+		glUniform4f(outlineColorLoc, stencilColor.r, stencilColor.g, stencilColor.b, stencilColor.a);
 		
 		glBindVertexArray(renderObject.mesh->stencilData.VAO);
 
@@ -344,71 +438,40 @@ void Render::DrawStencil(const CameraLens* camera)
 	glDisable(GL_STENCIL_TEST);
 }
 
-void Render::BuildRenderListsRecursive(GameObject* gameObject, const CameraLens* camera)
+void Render::DrawMeshLinesList(const CameraLens* camera)
 {
-	glm::mat4 globalModelMatrix;
-	if (gameObject && gameObject->GetEnabled())
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_TRUE);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+
+	for (RenderObject renderObject : meshLinesList)
 	{
-		if (gameObject->TryGetGlobalMatrix(globalModelMatrix))
-		{
-			Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
+		glUseProgram(meshLinesShaderProgram);
 
-			if (mesh && mesh->enabled && mesh->meshData.VAO != 0)
-			{
-				const AABB& globalAABB = mesh->aabb->GetGlobalAABB(globalModelMatrix);
+		glUniformMatrix4fv(meshLinesModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
+		glUniformMatrix4fv(meshLinesViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+		glUniformMatrix4fv(meshLinesProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+		glUniform4f(meshLinesColorLoc, debugColor.r, debugColor.g, debugColor.b, debugColor.a);
 
-				
-				if (camera->GetFrustum()->InFrustum(globalAABB))
-				{
-					Texture* texture = (Texture*)gameObject->GetComponent(ComponentType::Texture);
-					unsigned int texToBind = checkerTextureID;
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-					if (texture)
-					{
-						if (texture->GetTextureID() != 0 && !texture->use_checker)
-						{
-							texToBind = texture->GetTextureID();
-						}
-					}
+		glEnable(GL_POLYGON_OFFSET_LINE);
+		glPolygonOffset(-1.0f, -1.0f);
 
-					RenderObject renderObject = { mesh, texToBind, globalModelMatrix };
+		glBindVertexArray(renderObject.mesh->meshData.VAO);
+		glDrawElements(GL_TRIANGLES, renderObject.mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
 
-					glm::vec3 aabbCenter = (globalAABB.min + globalAABB.max) * 0.5f;
-					float distanceToCamera = glm::distance(aabbCenter, camera->position);
-
-					if (texture && texture->transparent)
-					{
-						transparentList.emplace(distanceToCamera, renderObject);
-					}
-					else
-					{
-						opaqueList.emplace(distanceToCamera, renderObject);
-					}
-				}
-			}
-		}
-		for (GameObject* go : gameObject->childs)
-		{
-			BuildRenderListsRecursive(go, camera);
-		}
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glDisable(GL_POLYGON_OFFSET_LINE);
+		glBindVertexArray(0);
+		glUseProgram(0);
 	}
 }
 
+#pragma endregion
 
-
-bool Render::CleanUp()
-{
-	bool ret = true;
-
-	activeCameras.clear();
-
-	glDeleteProgram(shaderProgram);
-	glDeleteProgram(normalShaderProgram);
-	glDeleteProgram(outlineShaderProgram);
-	ilShutDown();
-
-	return ret;
-}
+#pragma region Shaders
 
 bool Render::CreateShaderFromSources(unsigned int& shaderID, int type, const char* source, const int soruceLength)
 {
@@ -434,45 +497,7 @@ bool Render::CreateShaderFromSources(unsigned int& shaderID, int type, const cha
 	return true;
 }
 
-void Render::UpdateProjectionMatix(glm::mat4 pm)
-{
-	//UPDATE DEFAULT SHADER
-	glUseProgram(shaderProgram);
-	glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
 
-	//UPDATE NORMAL SHADER
-	glUseProgram(normalShaderProgram);
-	glUniformMatrix4fv(normalProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
-
-	// UPDATE OUTLINER SHADER
-	glUseProgram(outlineShaderProgram);
-	glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
-
-	glUseProgram(lineShaderProgram);
-	glUniformMatrix4fv(lineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
-
-	glUseProgram(shaderProgram);
-}
-
-void Render::UpdateViewMatix(glm::mat4 vm)
-{
-	//UPDATE DEFAULT SHADER
-	glUseProgram(shaderProgram);
-	glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
-
-	//UPDATE NORMAL SHADER
-	glUseProgram(normalShaderProgram);
-	glUniformMatrix4fv(normalViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
-
-	// UPDATE OUTLINER SHADER
-	glUseProgram(outlineShaderProgram);
-	glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
-
-	glUseProgram(lineShaderProgram);
-	glUniformMatrix4fv(lineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
-
-	glUseProgram(shaderProgram);
-}
 
 bool Render::CreateDefaultShader()
 {
@@ -568,19 +593,12 @@ bool Render::CreateNormalShader()
 		"uniform mat4 projection;\n"
 		"const float LINE_LENGTH = 0.5;\n"
 		"void main() {\n"
-		"   // Calcular la normal en el mundo (sin escala)\n"
 		"   vec3 worldNormal = normalize(mat3(transpose(inverse(model))) * gs_in[0].normal);\n"
-		"   // Calcular la posición del vértice en el mundo\n"
 		"   vec4 worldPos = model * gl_in[0].gl_Position;\n"
-
-		"   // EMITIR PUNTO 1 (Inicio)\n"
 		"   gl_Position = projection * view * worldPos;\n"
 		"   EmitVertex();\n"
-
-		"   // EMITIR PUNTO 2 (Fin: Inicio + Normal)\n"
 		"   gl_Position = projection * view * (worldPos + vec4(worldNormal * LINE_LENGTH, 0.0));\n"
 		"   EmitVertex();\n"
-
 		"   EndPrimitive();\n"
 		"}\n";
 	if (!CreateShaderFromSources(gShader, GL_GEOMETRY_SHADER, geometrySource, strlen(geometrySource))) return false;
@@ -589,17 +607,16 @@ bool Render::CreateNormalShader()
 	unsigned int fShader = 0;
 	const char* fragmentSource = "#version 460 core\n"
 		"out vec4 color;\n"
-		"void main() { color = vec4(1.0, 1.0, 0.0, 1.0); }\n";
+		"uniform vec4 lineColor;\n"
+		"void main() { color = lineColor; }\n";
 	if (!CreateShaderFromSources(fShader, GL_FRAGMENT_SHADER, fragmentSource, strlen(fragmentSource))) return false;
 
-	// 4. LINKEO
 	normalShaderProgram = glCreateProgram();
 	glAttachShader(normalShaderProgram, vShader);
-	glAttachShader(normalShaderProgram, gShader); // <-- Añadimos el GS
+	glAttachShader(normalShaderProgram, gShader);
 	glAttachShader(normalShaderProgram, fShader);
 	glLinkProgram(normalShaderProgram);
 
-	// (Chequeo de errores estándar...)
 	glDeleteShader(vShader);
 	glDeleteShader(gShader);
 	glDeleteShader(fShader);
@@ -607,6 +624,7 @@ bool Render::CreateNormalShader()
 	normalModelMatrixLoc = glGetUniformLocation(normalShaderProgram, "model");
 	normalViewMatrixLoc = glGetUniformLocation(normalShaderProgram, "view");
 	normalProjectionMatrixLoc = glGetUniformLocation(normalShaderProgram, "projection");
+	normalColorLoc = glGetUniformLocation(normalShaderProgram, "lineColor");
 
 	return true;
 }
@@ -728,35 +746,101 @@ bool Render::CreateLineShader()
 	return true;
 }
 
-bool Render::CreateCheckerTexture()
+bool Render::CreateMeshLinesShader()
 {
-	GLubyte checkerImage[CHECKERS_HEIGHT][CHECKERS_WIDTH][4];
-	for (int i = 0; i < CHECKERS_HEIGHT; i++) {
-		for (int j = 0; j < CHECKERS_WIDTH; j++) {
-			int c = ((((i & 0x8) == 0) ^ (((j & 0x8)) == 0))) * 255;
-			checkerImage[i][j][0] = (GLubyte)c;
-			checkerImage[i][j][1] = (GLubyte)c;
-			checkerImage[i][j][2] = (GLubyte)c;
-			checkerImage[i][j][3] = (GLubyte)255;
-		}
+	unsigned int vShader = 0;
+	const char* vertexShaderSource = "#version 460 core\n"
+		"layout (location = 0) in vec3 position;\n"
+		"uniform mat4 model; \n"
+		"uniform mat4 view; \n"
+		"uniform mat4 projection; \n"
+		"void main()\n"
+		"{\n"
+		"   gl_Position = projection * view * model * vec4(position, 1.0f);\n"
+		"}\n";
+
+	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
+		return false;
+
+	unsigned int fShader = 0;
+	const char* fragmentShaderSource ="#version 460 core\n"
+		"out vec4 color;\n"
+		"uniform vec4 lineColor;\n"
+		"void main() { color = lineColor; }\n";
+
+	if (!CreateShaderFromSources(fShader, GL_FRAGMENT_SHADER, fragmentShaderSource, strlen(fragmentShaderSource)))
+		return false;
+
+	meshLinesShaderProgram = glCreateProgram();
+	glAttachShader(meshLinesShaderProgram, vShader);
+	glAttachShader(meshLinesShaderProgram, fShader);
+	glLinkProgram(meshLinesShaderProgram);
+
+	int status = 0;
+	glGetProgramiv(meshLinesShaderProgram, GL_LINK_STATUS, &status);
+	if (status == GL_FALSE)
+	{
+		LOG("Error al linkar el shader de normales!");
+		return false;
 	}
 
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glGenTextures(1, &checkerTextureID);
-	glBindTexture(GL_TEXTURE_2D, checkerTextureID);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glDeleteShader(vShader);
+	glDeleteShader(fShader);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CHECKERS_WIDTH, CHECKERS_HEIGHT,
-		0, GL_RGBA, GL_UNSIGNED_BYTE, checkerImage);
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
+	meshLinesModelMatrixLoc = glGetUniformLocation(meshLinesShaderProgram, "model");
+	meshLinesViewMatrixLoc = glGetUniformLocation(meshLinesShaderProgram, "view");
+	meshLinesProjectionMatrixLoc = glGetUniformLocation(meshLinesShaderProgram, "projection");
+	meshLinesColorLoc = glGetUniformLocation(meshLinesShaderProgram, "lineColor");
 
 	return true;
 }
+
+#pragma endregion
+
+#pragma region Matrix
+void Render::UpdateProjectionMatix(glm::mat4 pm)
+{
+	//UPDATE DEFAULT SHADER
+	glUseProgram(shaderProgram);
+	glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
+
+	//UPDATE NORMAL SHADER
+	glUseProgram(normalShaderProgram);
+	glUniformMatrix4fv(normalProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
+
+	// UPDATE OUTLINER SHADER
+	glUseProgram(outlineShaderProgram);
+	glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
+
+	glUseProgram(lineShaderProgram);
+	glUniformMatrix4fv(lineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
+
+	glUseProgram(shaderProgram);
+}
+
+void Render::UpdateViewMatix(glm::mat4 vm)
+{
+	//UPDATE DEFAULT SHADER
+	glUseProgram(shaderProgram);
+	glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
+
+	//UPDATE NORMAL SHADER
+	glUseProgram(normalShaderProgram);
+	glUniformMatrix4fv(normalViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
+
+	// UPDATE OUTLINER SHADER
+	glUseProgram(outlineShaderProgram);
+	glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
+
+	glUseProgram(lineShaderProgram);
+	glUniformMatrix4fv(lineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
+
+	glUseProgram(shaderProgram);
+}
+
+#pragma endregion
+
+#pragma region GPU
 
 bool Render::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
 
@@ -796,7 +880,7 @@ bool Render::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vert
 
 }
 
-bool Render::UploadSmoothedMeshToGPU(unsigned int& vao, unsigned int& vbo, unsigned int& sharedEbo ,const std::vector<Vertex>& vertices)
+bool Render::UploadSmoothedMeshToGPU(unsigned int& vao, unsigned int& vbo, unsigned int& sharedEbo, const std::vector<Vertex>& vertices)
 {
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
@@ -883,26 +967,9 @@ void Render::DeleteTextureFromGPU(unsigned int textureID)
 	}
 }
 
-void Render::ChangeWindowSize(int x, int y)
-{
-	glViewport(0, 0, x, y);
-}
+#pragma endregion
 
-void Render::OnEvent(const Event& event)
-{
-	switch (event.type)
-	{
-	case Event::Type::WindowResize:
-	{
-		{
-			ChangeWindowSize(event.data.point.x, event.data.point.y);
-		}
-		break;
-	}
-	default:
-		break;
-	}
-}
+#pragma region Cameras
 
 void Render::AddCamera(CameraLens* camera)
 {
@@ -950,4 +1017,57 @@ CameraLens* Render::GetMainCamera()
 	}
 
 	return mainCamera;
+}
+
+#pragma endregion
+
+bool Render::CreateCheckerTexture()
+{
+	GLubyte checkerImage[CHECKERS_HEIGHT][CHECKERS_WIDTH][4];
+	for (int i = 0; i < CHECKERS_HEIGHT; i++) {
+		for (int j = 0; j < CHECKERS_WIDTH; j++) {
+			int c = ((((i & 0x8) == 0) ^ (((j & 0x8)) == 0))) * 255;
+			checkerImage[i][j][0] = (GLubyte)c;
+			checkerImage[i][j][1] = (GLubyte)c;
+			checkerImage[i][j][2] = (GLubyte)c;
+			checkerImage[i][j][3] = (GLubyte)255;
+		}
+	}
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glGenTextures(1, &checkerTextureID);
+	glBindTexture(GL_TEXTURE_2D, checkerTextureID);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CHECKERS_WIDTH, CHECKERS_HEIGHT,
+		0, GL_RGBA, GL_UNSIGNED_BYTE, checkerImage);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return true;
+}
+
+void Render::ChangeWindowSize(int x, int y)
+{
+	glViewport(0, 0, x, y);
+}
+
+void Render::OnEvent(const Event& event)
+{
+	switch (event.type)
+	{
+	case Event::Type::WindowResize:
+	{
+		{
+			ChangeWindowSize(event.data.point.x, event.data.point.y);
+		}
+		break;
+	}
+	default:
+		break;
+	}
 }

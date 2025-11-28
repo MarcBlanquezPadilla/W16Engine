@@ -23,7 +23,6 @@ uint32_t GenerateUUID()
 GameObject::GameObject(bool _enabled, std::string _name) : enabled(_enabled), name(_name)
 {
 	UUID = GenerateUUID();
-	parentUUID = 0;
 	parent = nullptr;
 	transform = nullptr;
 	childs.clear();
@@ -36,12 +35,6 @@ GameObject::~GameObject()
 
 }
 
-bool GameObject::Awake()
-{
-	bool ret = true;
-
-	return ret;
-}
 
 bool GameObject::Update(float dt)
 {
@@ -66,24 +59,25 @@ bool GameObject::Update(float dt)
 
 bool GameObject::CleanUp()
 {
-	bool ret = true;
+	Engine::GetInstance().events->PublishImmediate(Event(Event::Type::GameObjectDestroyed, this));
 
-	for each(auto pair in components)
+	for (auto const& pair : components)
 	{
 		pair.second->CleanUp();
 		delete pair.second;
 	}
-
 	components.clear();
 
-	for (int i = 0; i < childs.size(); i++)
+	for (GameObject* child : childs)
 	{
-		childs[i]->CleanUp();
-		delete childs[i];
+		if (child != nullptr) {
+			child->parent = nullptr;
+		}
 	}
+
 	childs.clear();
 
-	return ret;
+	return true;
 }
 
 Component* GameObject::AddComponent(ComponentType type)
@@ -173,7 +167,6 @@ void GameObject::AddChild(GameObject* gameObject)
 		counter++;
 	}
 	gameObject->name = newName;
-	gameObject->parentUUID = UUID;
 	gameObject->parent = this;
 	childs.push_back(gameObject);
 }
@@ -182,7 +175,6 @@ void GameObject::Save(pugi::xml_node gameObjectNode)
 {
 	gameObjectNode.append_attribute("Name") = name.c_str();
 	gameObjectNode.append_attribute("UID") = UUID;
-	gameObjectNode.append_attribute("ParentUID") = parentUUID;
 	gameObjectNode.append_attribute("Enabled") = enabled;
 	gameObjectNode.append_attribute("Static") = isStatic;
 
@@ -193,8 +185,10 @@ void GameObject::Save(pugi::xml_node gameObjectNode)
 		{
 			pugi::xml_node compoenntNode = componentsNode.append_child("Component");
 			Component* component = pair.second;
-			if (component->enabled)
+			if (component)
 			{
+				compoenntNode.append_attribute("type") = (int)component->GetType();
+				compoenntNode.append_attribute("enabled") = component->enabled;
 				component->Save(compoenntNode);
 			}
 		}
@@ -363,10 +357,32 @@ bool GameObject::GetStatic()
 
 void GameObject::RemoveChild(GameObject* childToRemove)
 {
-	auto it = std::find(childs.begin(), childs.end(), childToRemove);
+	if (childToRemove == nullptr) return;
+
+	// 1. Buscar y borrar del vector de hijos
+	// Usamos std::remove_if o un bucle manual. std::remove es más limpio.
+	auto it = std::remove(childs.begin(), childs.end(), childToRemove);
+
 	if (it != childs.end())
 	{
-		childs.erase(it);
+		childs.erase(it, childs.end());
+
+		// 2. Romper el vínculo en el hijo
+		childToRemove->parent = nullptr;
+
+		// 3. MANTENER POSICIÓN VISUAL (World Position Stays)
+		// Al quitar el padre, la matriz Local del hijo ahora es relativa al Mundo (0,0,0).
+		// Para que el objeto no "salte" de sitio, debemos actualizar su Transform
+		// para que su nueva Local sea igual a su antigua Global.
+
+		Transform* childTransform = (Transform*)childToRemove->GetComponent(ComponentType::Transform);
+		if (childTransform)
+		{
+			// La matriz global actual es la correcta visualmente.
+			// Como ahora no tiene padre, Local = Global.
+			glm::mat4 globalMatrix = childTransform->GetGlobalMatrix();
+			childTransform->SetLocalMatrix(globalMatrix);
+		}
 	}
 }
 
@@ -400,7 +416,6 @@ void GameObject::SetParent(GameObject* newParent)
 	}
 
 	parent = newParent;
-	parentUUID = (parent) ? parent->UUID : 0;
 
 	if (parent != nullptr)
 	{
@@ -431,4 +446,9 @@ void GameObject::SetParent(GameObject* newParent)
 	{
 		UpdateEnabledRecursive(nowActive);
 	}
+}
+
+void GameObject::Destroy()
+{
+	Engine::GetInstance().scene->DestroyGameObject(this);
 }

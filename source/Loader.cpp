@@ -59,6 +59,7 @@ bool Loader::Start()
 
 bool Loader::CleanUp()
 {
+	Engine::GetInstance().events->UnsubscribeAll(this);
 	return true;
 }
 

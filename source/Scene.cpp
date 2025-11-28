@@ -53,22 +53,58 @@ bool Scene::Update(float dt)
 	bool ret = true;
 
 	//GAME OBJECTS
-	for each(GameObject* gameObject in gameObjects)
+	for (GameObject* gameObject : gameObjects)
 	{
 		gameObject->Update(dt);
 	}
-
-
-	staticTree->DrawDebug(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 
 	return ret;
 }
 
 bool Scene::PostUpdate()
 {
-	bool ret = true;
+	//DESTROY GAMEOBJECTS
+	if (!objectsPendingToDelete.empty())
+	{
+		for (GameObject* go : objectsPendingToDelete)
+		{
 
-	return ret;
+			//LIMPIAR DE LA LISTA PRINCIPAL
+			auto it = std::remove(gameObjects.begin(), gameObjects.end(), go);
+			if (it != gameObjects.end()) gameObjects.erase(it, gameObjects.end());
+
+			//LIMPIAR DE LISTAS OPTIMIZADAS
+			if (go->GetStatic())
+			{
+				auto itS = std::remove(staticGameObjects.begin(), staticGameObjects.end(), go);
+				if (itS != staticGameObjects.end()) {
+					staticGameObjects.erase(itS, staticGameObjects.end());
+					MarkStaticTreeDirty(); // Solo marcamos dirty, no reconstruimos aquí
+				}
+			}
+			else
+			{
+				auto itD = std::remove(dynamicGameObjects.begin(), dynamicGameObjects.end(), go);
+				if (itD != dynamicGameObjects.end()) dynamicGameObjects.erase(itD, dynamicGameObjects.end());
+			}
+
+			//DESVINCULAR DE LA FAMILIA (Para que el padre no tenga un puntero muerto)
+			if (go->parent != nullptr)
+			{
+				go->parent->RemoveChild(go);
+			}
+
+			//MUERTE FINAL
+			go->CleanUp(); // Lanza evento Destroyed
+			delete go;
+		}
+
+		// Limpiar la cola
+		objectsPendingToDelete.clear();
+	}
+
+	return true;
+
 }
 
 bool Scene::CleanUp()
@@ -76,18 +112,62 @@ bool Scene::CleanUp()
 	bool ret = true;
 
 	LOG("Cleaning Scene");
-	staticTree->Clear();
-	delete staticTree;
+	Engine::GetInstance().events->UnsubscribeAll(this);
+	// 1. ¡CRÍTICO! Limpiar la cola de pendientes para evitar doble borrado
+	objectsPendingToDelete.clear();
 
+	// 2. Limpiar el árbol
+	if (staticTree) {
+		staticTree->Clear();
+		delete staticTree;
+		staticTree = nullptr;
+	}
+
+	// 3. Borrar todos los GameObjects (Dueño de la memoria)
+	for (int i = 0; i < gameObjects.size(); i++)
+	{
+		if (gameObjects[i])
+		{
+			gameObjects[i]->CleanUp(); // Emite evento Destroyed
+			delete gameObjects[i];
+			gameObjects[i] = nullptr;
+		}
+	}
+	gameObjects.clear();
+
+	// 4. ¡CRÍTICO! Limpiar las listas de optimización
+	// (Ahora contienen punteros a basura, hay que vaciarlas)
+	staticGameObjects.clear();
+	dynamicGameObjects.clear();
+
+	Engine::GetInstance().events->UnsubscribeAll(this);
+
+	return ret;
+}
+
+bool Scene::NewScene()
+{
+	bool ret = true;
+	LOG("Creating New Scene");
+
+	// 1. Limpiar listas auxiliares
+	objectsPendingToDelete.clear();
+	staticGameObjects.clear();
+	dynamicGameObjects.clear();
+
+	// 2. Borrar objetos
 	for (int i = 0; i < gameObjects.size(); i++)
 	{
 		gameObjects[i]->CleanUp();
 		delete gameObjects[i];
 	}
-
 	gameObjects.clear();
 
-	Engine::GetInstance().events->UnsubscribeAll(this);
+	// 3. Resetear árbol
+	if (staticTree) staticTree->Clear();
+	staticTreeDirty = true;
+
+	Engine::GetInstance().events->PublishImmediate(Event(Event::Type::SceneCleared));
 
 	return ret;
 }
@@ -125,6 +205,10 @@ void Scene::AddGameObject(GameObject* gameObject)
 
 	gameObject->name = newName;
 	gameObjects.push_back(gameObject);
+	if (gameObject->GetStatic())
+		staticGameObjects.push_back(gameObject);
+	else
+		dynamicGameObjects.push_back(gameObject);
 }
 
 
@@ -132,6 +216,19 @@ void Scene::RemoveGameObject(GameObject* go)
 {
 	auto it = std::remove(gameObjects.begin(), gameObjects.end(), go);
 	if (it != gameObjects.end()) gameObjects.erase(it, gameObjects.end());
+}
+
+void Scene::DestroyGameObject(GameObject* gameObject)
+{
+	if (!gameObject || gameObject->pendingToDelete) return;
+
+	gameObject->pendingToDelete = true;
+	objectsPendingToDelete.push_back(gameObject);
+
+	for (GameObject* child : gameObject->childs)
+	{
+		DestroyGameObject(child);
+	}
 }
 
 #pragma endregion
@@ -224,37 +321,6 @@ std::vector<GameObject*> Scene::GetAllGameObjects()
 	return allGameObjects;
 }
 
-
-std::vector<GameObject*> Scene::GetDynamicGameObjects()
-{
-	std::vector<GameObject*> dynamicGameObjects;
-	
-	for (GameObject* obj : GetAllGameObjects())
-	{
-		if (obj && !obj->GetStatic())
-		{
-			dynamicGameObjects.push_back(obj);
-		}
-	}
-
-	return dynamicGameObjects;
-}
-
-std::vector<GameObject*> Scene::GetStaticGameObjects()
-{
-	std::vector<GameObject*> staticGameObjects;
-
-	for (GameObject* obj : GetAllGameObjects())
-	{
-		if (obj && obj->GetStatic())
-		{
-			staticGameObjects.push_back(obj);
-		}
-	}
-
-	return staticGameObjects;
-}
-
 AABB Scene::GetWorldLimits()
 {
 	AABB mapLimits;
@@ -300,9 +366,24 @@ void Scene::OnEvent(const Event& event)
 	}
 	case Event::Type::StaticChanged:
 	{
+		GameObject* gameObject = event.data.gameObject.gameObject;
+		if (!gameObject) return;
+		if (gameObject->GetStatic())
 		{
-			GameObject* gameObject = event.data.gameObject.gameObject;
-			if (!gameObject) return;
+			auto it = std::remove(dynamicGameObjects.begin(), dynamicGameObjects.end(), gameObject);
+			if (it != dynamicGameObjects.end()) dynamicGameObjects.erase(it, dynamicGameObjects.end());
+
+			staticGameObjects.push_back(gameObject);
+
+			MarkStaticTreeDirty();
+		}
+		else
+		{
+			auto it = std::remove(staticGameObjects.begin(), staticGameObjects.end(), gameObject);
+			if (it != staticGameObjects.end()) staticGameObjects.erase(it, staticGameObjects.end());
+
+			dynamicGameObjects.push_back(gameObject);
+
 			MarkStaticTreeDirty();
 		}
 		break;

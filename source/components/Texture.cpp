@@ -31,7 +31,6 @@ void Texture::CleanUp()
 
 void Texture::Save(pugi::xml_node componentNode)
 {
-    componentNode.append_attribute("type") = (int)GetType();
     componentNode.append_attribute("path") = path.c_str();
     componentNode.append_attribute("useChecker") = use_checker;
     componentNode.append_attribute("transparent") = transparent;

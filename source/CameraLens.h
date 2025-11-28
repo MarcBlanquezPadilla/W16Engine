@@ -12,7 +12,6 @@ public:
     ~CameraLens();
 
     void SetRenderTarget(int width, int height);
-
     void SetPerspective(float fovDegrees, float aspectRatio, float nearPlane, float farPlane);
     void UpdatePerspective();
     void SetFov(float fovDegress);
@@ -35,6 +34,9 @@ public:
     
     bool GetActiveCamera() const { return activeCamera; }
     void SetActiveCamera(bool b);
+
+    bool GetDebugCamera() const { return debugCamera; }
+    void SetDebugCamera(bool b);
 
     Ray GetRayFromMouse(int mouseX, int mouseY, int width, int height);
 
@@ -67,4 +69,5 @@ private:
     float zFar;
 
     bool activeCamera;
+    bool debugCamera;
 };

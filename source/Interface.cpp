@@ -112,7 +112,7 @@ bool Interface::Update(float dt)
 			}
 			if (ImGui::MenuItem("New Scene"))
 			{
-				Engine::GetInstance().scene->CleanUp();
+				Engine::GetInstance().scene->NewScene();
 			}
 			if (ImGui::MenuItem("Save Scene"))
 			{

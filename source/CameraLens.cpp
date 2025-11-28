@@ -23,6 +23,7 @@ CameraLens::CameraLens()
     zFar = 1000.0f;
     depth = 0;
     activeCamera = true;
+    debugCamera = false;
 
     textureWidth = 500;
     textureHeight = 500;
@@ -208,4 +209,9 @@ void CameraLens::SetRenderTarget(int width, int height)
 void CameraLens::SetActiveCamera(bool b)
 {
     activeCamera = b;
+}
+
+void CameraLens::SetDebugCamera(bool b)
+{
+    debugCamera = b;
 }

@@ -20,3 +20,13 @@
 #define CUBE 1
 #define PYRAMID 2
 #define SPHERE 3
+
+#define DEBUG_R 0.0f
+#define DEBUG_G 1.0f
+#define DEBUG_B 0.0f
+#define DEBUG_A 1.0f
+
+#define STENCIL_R 0.0f
+#define STENCIL_G 1.0f
+#define STENCIL_B 1.0f
+#define STENCIL_A 1.0f

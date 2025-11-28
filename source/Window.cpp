@@ -111,6 +111,7 @@ bool Window::Awake()
 
 bool Window::CleanUp()
 {
+	Engine::GetInstance().events->UnsubscribeAll(this);
 	LOG("Destroying SDL window and quitting all SDL systems");
 
 	if (context != NULL)

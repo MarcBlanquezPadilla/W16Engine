@@ -21,6 +21,9 @@ Camera::~Camera()
 void Camera::Start()
 {
     lens = new CameraLens();
+    
+    UpdateTransform();
+
     lens->SetPerspective(60.0f, 16.0f / 9.0f, 0.1f, 100.0f);
     Engine::GetInstance().events->Subscribe(Event::Type::ChangeActiveCamera, this);
 }
@@ -37,8 +40,12 @@ void Camera::OnDisable()
 
 void Camera::Update(float dt)
 {
+    UpdateTransform();
     lens->SetActiveCamera(enabled);
+}
 
+void Camera::UpdateTransform()
+{
     Transform* transform = (Transform*)owner->GetComponent(ComponentType::Transform);
 
     if (transform && lens)
@@ -58,6 +65,7 @@ void Camera::SetMainCamera(bool mainCamera)
 
 void Camera::CleanUp()
 {
+    Engine::GetInstance().events->UnsubscribeAll(this);
     Engine::GetInstance().render->RemoveCamera(lens);
     lens->CleanUp();
     delete lens;
@@ -127,4 +135,20 @@ void Camera::OnEvent(const Event& event)
     default:
         break;
     }
+}
+
+void Camera::Save(pugi::xml_node componentNode)
+{
+    componentNode.append_attribute("fov") = lens->GetFov();
+    componentNode.append_attribute("farPlane") = lens->GetFarPlane();
+    componentNode.append_attribute("nearPlane") = lens->GetNearPlane();
+    componentNode.append_attribute("depth") = lens->depth;
+}
+
+void Camera::Load(pugi::xml_node componentNode)
+{
+    lens->SetFov(componentNode.attribute("fov").as_float());
+    lens->SetFarPlane(componentNode.attribute("farPlane").as_float());
+    lens->SetNearPlane(componentNode.attribute("nearPlane").as_float());
+    lens->depth = componentNode.attribute("depth").as_int();
 }

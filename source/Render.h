@@ -84,38 +84,42 @@ public:
 
 
 private:
-
 	//CREATE SHADERS FUNCTIONS
 	bool CreateDefaultShader();
 	bool CreateCheckerTexture();
 	bool CreateNormalShader();
+	bool CreateMeshLinesShader();
 	bool CreateOutlineShader();
 	bool CreateLineShader();
 
 	//DRAW FUNCTIONS
 	void DrawRenderList(const std::multimap<float, RenderObject>& map, const CameraLens* camera);
-	void DrawLinesList(std::vector<RenderLine> list, const CameraLens* camera);
-	void DrawStencil(const CameraLens* camera);
+	void DrawLinesList(const CameraLens* camera);
+	void DrawStencilList(const CameraLens* camera);
+	void DrawNormalsList(const CameraLens* camera);
+	void DrawMeshLinesList(const CameraLens* camera);
 	void BuildRenderListsRecursive(GameObject* gameObject, const CameraLens* camera);
 
 private:
-	unsigned int shaderProgram;
-	unsigned int normalShaderProgram;
-	unsigned int outlineShaderProgram;
-	unsigned int checkerTextureID;
 
+	glm::vec4 debugColor;
+	glm::vec4 stencilColor;
 
 	//MODEL DRAW
+	unsigned int shaderProgram;
 	GLint modelMatrixLoc;
 	GLint viewMatrixLoc;
 	GLint projectionMatrixLoc;
 
 	//NORMAL DRAW
+	unsigned int normalShaderProgram;
 	GLint normalModelMatrixLoc;
 	GLint normalViewMatrixLoc;
 	GLint normalProjectionMatrixLoc;
+	GLint normalColorLoc;
 
 	//STENCIL DRAW
+	unsigned int outlineShaderProgram;
 	GLint outlineModelMatrixLoc;
 	GLint outlineViewMatrixLoc;
 	GLint outlineProjectionMatrixLoc;
@@ -131,6 +135,15 @@ private:
 	unsigned int lineVAO = 0;
 	unsigned int lineVBO = 0;
 
+	//MESH LINES DRAW
+	unsigned int meshLinesShaderProgram;
+	GLint meshLinesModelMatrixLoc;
+	GLint meshLinesViewMatrixLoc;
+	GLint meshLinesProjectionMatrixLoc;
+	GLint meshLinesColorLoc;
+
+	unsigned int checkerTextureID;
+
 	GLint hasUVsLoc;
 
 	std::string glVersion;
@@ -141,6 +154,8 @@ private:
 	std::multimap<float,RenderObject> opaqueList;
 	std::multimap<float,RenderObject> transparentList;
 	std::vector<RenderObject> stencilList;
+	std::vector<RenderObject> normalsList;
+	std::vector<RenderObject> meshLinesList;
 	std::vector<RenderLine> linesList;
 
 	std::vector<CameraLens*> activeCameras;

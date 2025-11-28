@@ -51,8 +51,10 @@ public:
 	ImGuizmo::OPERATION currentGizmoOperation = ImGuizmo::TRANSLATE;
 
 	bool debugRay;
+	bool debugTree;
 	bool debugAABB;
 	bool debugMesh;
+	bool debugNormal;
 
 private:
 	Interface* userInterface;

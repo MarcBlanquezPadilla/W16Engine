@@ -23,11 +23,14 @@ public:
 	bool Update(float dt);
 	bool PostUpdate();
 
+	bool NewScene();
+
 	bool CleanUp();
 
 	//GAMEOBJECT
 	void CollectGameObjectsRecursive(GameObject* go, std::vector<GameObject*>& list);
 	void AddGameObject(GameObject* gameObject);
+	void DestroyGameObject(GameObject* gameObject);
 	void RemoveGameObject(GameObject* gameObject);
 
 	//TREE
@@ -41,16 +44,20 @@ public:
 
 	//GETTERS
 	std::vector<GameObject*> GetGameObjects() { return gameObjects; }
-	AABB GetWorldLimits();
 	std::vector<GameObject*> GetAllGameObjects();
-	std::vector<GameObject*> GetStaticGameObjects();
-	std::vector<GameObject*> GetDynamicGameObjects();
+	std::vector<GameObject*> GetStaticGameObjects() const { return staticGameObjects; };
+	std::vector<GameObject*> GetDynamicGameObjects() const { return dynamicGameObjects; };
+	AABB GetWorldLimits();
+	Tree* GetTree() { return staticTree; }
 
 	//EVENTS
 	void OnEvent(const Event& event) override;
 
 private:
 	std::vector<GameObject*> gameObjects;
+	std::vector<GameObject*> dynamicGameObjects;
+	std::vector<GameObject*> staticGameObjects;
+	std::vector<GameObject*> objectsPendingToDelete;
 
 	Tree* staticTree;
 	bool staticTreeDirty;

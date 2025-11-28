@@ -44,7 +44,9 @@ void SceneWindow::Draw()
 		if (ImGui::BeginMenu("Debug"))
 		{
             ImGui::MenuItem("Ray", NULL, &Engine::GetInstance().editor->debugRay);
+            ImGui::MenuItem("Tree", NULL, &Engine::GetInstance().editor->debugTree);
             ImGui::MenuItem("Mesh", NULL, &Engine::GetInstance().editor->debugMesh);
+            ImGui::MenuItem("Normals", NULL, &Engine::GetInstance().editor->debugNormal);
             ImGui::MenuItem("AABB", NULL, &Engine::GetInstance().editor->debugAABB);
 
             ImGui::EndMenu();

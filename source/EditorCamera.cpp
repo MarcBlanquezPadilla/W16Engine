@@ -33,6 +33,7 @@ bool EditorCamera::Awake()
 	bool ret = true;
 	
 	cameraLens = new CameraLens();
+	cameraLens->SetDebugCamera(true);
 	Engine::GetInstance().render->AddCamera(cameraLens);
 
 	int w, h;
@@ -248,6 +249,7 @@ bool EditorCamera::CleanUp()
 {
 	bool ret = true;
 
+	Engine::GetInstance().events->UnsubscribeAll(this);
 	cameraLens->CleanUp();
 	delete cameraLens;
 

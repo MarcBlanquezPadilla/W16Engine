@@ -241,7 +241,6 @@ bool Mesh::LoadFromLibrary(std::string path)
 
 void Mesh::Save(pugi::xml_node componentNode)
 {
-    componentNode.append_attribute("type") = (int)GetType();
     componentNode.append_attribute("path") = libraryPath.c_str();
 }
 
@@ -280,9 +279,5 @@ void Mesh::OnEditor()
         ImGui::Text("Has UVs:");
         ImGui::SameLine();
         ImGui::TextUnformatted(hasUVs ? "Yes" : "No");
-
-        ImGui::Separator();
-        ImGui::Checkbox("Draw Normals", &drawNormals);
-        ImGui::Checkbox("Draw Stencil", &drawStencil);
     }
 }

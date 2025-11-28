@@ -91,6 +91,7 @@ public:
     bool hasUVs = false;
     bool drawNormals = false;
     bool drawStencil = false;
+    bool drawMesh = false;
 
     std::string libraryPath;
 

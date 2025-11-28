@@ -53,7 +53,7 @@ void InspectorWindow::Draw()
 
         ImGui::Separator();
 
-        for each(auto const& pair in gameObject->components)
+        for (auto const& pair : gameObject->components)
         {
             if (pair.second) pair.second->OnEditor();
         }

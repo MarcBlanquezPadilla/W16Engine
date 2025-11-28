@@ -22,7 +22,7 @@ void ConsoleWindow::Draw()
         return;
     }
 
-    for each(std::string message in LogBuffer::GetInstance().GetMessages())
+    for (std::string message : LogBuffer::GetInstance().GetMessages())
     {
         ImGui::Text("%s", message.c_str());
     }

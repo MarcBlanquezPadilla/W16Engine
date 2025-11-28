@@ -37,8 +37,6 @@ void Transform::CleanUp()
 
 void Transform::Save(pugi::xml_node componentNode)
 {
-    componentNode.append_attribute("type") = (int)GetType();
-
     pugi::xml_node positionNode = componentNode.append_child("Position");
     positionNode.append_attribute("x") = GetPosition().x;
     positionNode.append_attribute("y") = GetPosition().y;

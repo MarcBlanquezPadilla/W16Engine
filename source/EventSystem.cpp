@@ -63,6 +63,11 @@ void EventSystem::UnsubscribeAll(EventListener* listener)
 
 void EventSystem::PublishImmediate(const Event& event)
 {
+    if (listeners.find(event.type) == listeners.end())
+    {
+        return;
+    }
+
     std::vector<EventListener*> listenersCopy = listeners[event.type];
 
     for (EventListener* listener : listenersCopy)

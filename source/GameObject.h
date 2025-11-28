@@ -18,8 +18,6 @@ public:
 
 	~GameObject();
 
-	bool Awake();
-
 	bool OnEnable();
 
 	bool OnDisable();
@@ -29,6 +27,7 @@ public:
 	bool CleanUp();
 
 	void AddChild(GameObject* gameObject);
+	void RemoveChild(GameObject* childToRemove);
 	std::vector<GameObject*> GetChilds() { return childs;}
 	void SetParent(GameObject* newParent);
 
@@ -51,8 +50,7 @@ public:
 	bool TryGetGlobalAABB(AABB& globalAABB);
 	bool TryGetComponent(ComponentType type, Component*& component);
 
-private:
-	void RemoveChild(GameObject* childToRemove);
+	void Destroy();
 
 public:
 	std::string name;
@@ -65,9 +63,10 @@ public:
 	std::map<ComponentType, Component*> components;
 
 	uint32_t UUID;
-	uint32_t parentUUID;
+	bool pendingToDelete = false;
 
 private:
 	bool enabled;
 	bool isStatic;
+
 };

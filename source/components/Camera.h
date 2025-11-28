@@ -11,15 +11,22 @@ public:
     Camera(GameObject* owner);
     ~Camera();
 
+    ComponentType GetType() override {
+        return ComponentType::Camera;
+    };
+
     void Start() override;
     void OnEnable() override;
     void OnDisable() override;
 
     void Update(float dt) override;
+    void UpdateTransform();
     
     void CleanUp() override;
 
     void OnEditor() override;
+    void Save(pugi::xml_node componentNode) override;
+    void Load(pugi::xml_node componentNode) override;
 
     CameraLens* GetLens() { return lens; }
 
