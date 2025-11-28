@@ -94,6 +94,14 @@ void Camera::OnEditor()
         ImGui::Text("FBO:");
         ImGui::SameLine();
         ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%dx", lens->fboID);
+
+        ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+        viewportSize.y = viewportSize.x / lens->GetAspectRatio();
+        ImVec2 winPos = ImGui::GetCursorScreenPos();
+        unsigned int textureID = lens->textureID;
+        
+        ImGui::Separator();
+        ImGui::Image((ImTextureID)(intptr_t)textureID, viewportSize, ImVec2(0, 1), ImVec2(1, 0));
     }
 }
 

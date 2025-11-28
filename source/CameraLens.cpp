@@ -24,6 +24,10 @@ CameraLens::CameraLens()
     depth = 0;
     activeCamera = true;
 
+    textureWidth = 500;
+    textureHeight = 500;
+
+    SetRenderTarget(textureWidth, textureHeight);
     LookAt(position, reference, up);
     SetPerspective(fov, aspectRatio, zNear, zFar);
 }
