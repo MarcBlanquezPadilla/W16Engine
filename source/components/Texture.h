@@ -21,11 +21,7 @@ public:
     void Save(pugi::xml_node componentNode) override;
     void Load(pugi::xml_node componentNode) override;
 
-    bool LoadTexture(const std::string& path);
-
-    void UploadToGPU();
-
-    void UnloadFromCPU();
+    void SetTexture(const std::string path, unsigned int textureID, int width, int height);
 
     unsigned int GetTextureID() const { return textureID; }
 
@@ -35,7 +31,6 @@ public:
 
     std::string path;
     unsigned int textureID = 0;
-    unsigned int ilImageID = 0;
     int width = 0;
     int height = 0;
     bool use_checker = false;

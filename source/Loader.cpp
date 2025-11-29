@@ -2,6 +2,7 @@
 #include "Loader.h"
 #include "Scene.h"
 #include "Engine.h"
+#include "Render.h"
 #include "Input.h"
 #include "GameObject.h"
 #include "EventSystem.h"
@@ -20,6 +21,8 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <IL/il.h>
+#include <IL/ilu.h>
 
 #include "pugixml.hpp"
 
@@ -74,7 +77,7 @@ void Loader::HandleAssetDrop(const std::string& path)
 	}
 	else if (extension == "png" || extension == "dds" || extension == "jpg" || extension == "tga")
 	{
-		LoadTexture(path);
+		LoadTextureToGameObject(path, nullptr);
 	}
 	else
 	{
@@ -171,26 +174,28 @@ GameObject* Loader::ProcessNode(aiNode* node, const aiScene* scene, const std::s
 
 bool Loader::AddMeshAndTextureFromAssimp(GameObject* target, aiMesh* assimpMesh, const aiScene* scene, const std::string& modelDirectory)
 {
-	//ADD MESH
-	Mesh* meshComp = (Mesh*)target->AddComponent(ComponentType::Mesh);
-	if (!meshComp || !LoadFromAssimpMesh(assimpMesh, meshComp))
+	if (target)
 	{
-		LOG("Error loading mesh data for %s.", target->name.c_str());
-		return false;
-	}
-
-	//ADD TEXTURE
-	if (scene->HasMaterials())
-	{
-		aiMaterial* material = scene->mMaterials[assimpMesh->mMaterialIndex];
-		Texture* texComp = (Texture*)target->AddComponent(ComponentType::Texture);
-		if (texComp != nullptr)
+		//ADD MESH
+		Mesh* meshComp = (Mesh*)target->AddComponent(ComponentType::Mesh);
+		if (!meshComp || !LoadFromAssimpMesh(assimpMesh, meshComp))
 		{
-			LoadFromAssimpMaterial(material, modelDirectory, texComp);
+			LOG("Error loading mesh data for %s.", target->name.c_str());
+			return false;
 		}
-	}
 
-	return true; // Éxito
+		//ADD TEXTURE
+		if (scene->HasMaterials())
+		{
+			aiMaterial* material = scene->mMaterials[assimpMesh->mMaterialIndex];
+			if (target != nullptr)
+			{
+				LoadFromAssimpMaterial(material, modelDirectory, target);
+			}
+		}
+		return true;
+	}
+	return false;
 }
 
 bool Loader::LoadFromAssimpMesh(aiMesh* assimpMesh, Mesh* mesh)
@@ -248,35 +253,36 @@ bool Loader::LoadFromAssimpMesh(aiMesh* assimpMesh, Mesh* mesh)
 
 #pragma region Textures
 
-bool Loader::LoadTexture(const std::string& filePath)
+bool Loader::LoadTextureToGameObject(const std::string& filePath, GameObject* gameObject)
 {
-	//FIX TIRAR JUSTO ENCIMA DEL OBJETO, SE HA CAMBIADO SCENE GETSELECTED
-	GameObject* selectedGameObject = nullptr;
-	//
-	if (selectedGameObject)
+	if (gameObject)
 	{
-		Texture* texture = (Texture*)selectedGameObject->GetComponent(ComponentType::Texture);
+		Texture* texture = (Texture*)gameObject->GetComponent(ComponentType::Texture);
 
 		if (texture == nullptr)
 		{
-			texture = (Texture*)selectedGameObject->AddComponent(ComponentType::Texture);
+			texture = (Texture*)gameObject->AddComponent(ComponentType::Texture);
 		}
 
-		if (texture->LoadTexture(filePath))
+		unsigned int textureID = 0;
+		int width = 0;
+		int height = 0;
+		if (LoadTexture(filePath, textureID, width, height))
 		{
-			LOG("Texture %s applied to GameObject: %s", filePath.c_str(), selectedGameObject->name.c_str());
+			texture->SetTexture(filePath, textureID, width, height);
+			LOG("Texture %s applied to GameObject: %s", filePath.c_str(), gameObject->name.c_str());
 			return true;
 		}
 	}
 	else
 	{
-		LOG("No object selected.");
+		LOG("Object is nullptr");
 		return false;
 	}
 
 }
 
-bool Loader::LoadFromAssimpMaterial(aiMaterial* material, const std::string& modelDirectory, Texture* texture)
+bool Loader::LoadFromAssimpMaterial(aiMaterial* material, const std::string& modelDirectory, GameObject* obj)
 {
 	if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
 	{
@@ -285,29 +291,35 @@ bool Loader::LoadFromAssimpMaterial(aiMaterial* material, const std::string& mod
 
 		std::string fileName = GetFileName(aiPath.C_Str());
 
-		// Intento 1: Ruta tal como viene en el material
+		bool foundFile = false;
+
 		std::string texPath = modelDirectory + aiPath.C_Str();
-		if (texture->LoadTexture(texPath))
+		if (DoesFileExist(texPath))
 		{
-			return true;
+			foundFile = true;
 		}
 
-		// Intento 2: Solo el nombre del archivo en el directorio del modelo
 		texPath = modelDirectory + fileName;
-		if (texture->LoadTexture(texPath))
+		if (!foundFile && DoesFileExist(texPath))
 		{
-			return true;
+			foundFile = true;
 		}
 
-		// Intento 3: Buscar el archivo en el directorio del modelo
 		texPath = FindFileInDirectory(modelDirectory, fileName);
-		if (!texPath.empty() && texture->LoadTexture(texPath))
+		if (!foundFile && DoesFileExist(texPath))
 		{
-			return true;
+			foundFile = true;
 		}
 
-		LOG("Error: Could not find texture '%s' in any location", fileName.c_str());
-		return false;
+		if (foundFile)
+		{
+			LoadTextureToGameObject(texPath, obj);
+		}
+		else
+		{
+			LOG("Error: Could not find texture '%s' in any location", fileName.c_str());
+			return false;
+		}
 	}
 	else
 	{
@@ -316,6 +328,59 @@ bool Loader::LoadFromAssimpMaterial(aiMaterial* material, const std::string& mod
 	}
 }
 
+bool Loader::LoadTexture(const std::string& path, unsigned int& textureID, int& width, int& height, bool flip)
+{
+	unsigned int ilImageID = 0;
+	ilGenImages(1, &ilImageID);
+	ilBindImage(ilImageID);
+
+	if (ilLoadImage(path.c_str()))
+	{
+		if (flip) iluFlipImage();
+
+		if (!ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE))
+		{
+			LOG("Error converting image to RGBA: %s", path.c_str());
+			ilDeleteImages(1, &ilImageID);
+			return false;
+		}
+
+		width = ilGetInteger(IL_IMAGE_WIDTH);
+		height = ilGetInteger(IL_IMAGE_HEIGHT);
+
+		LOG("Texture loaded into CPU from: %s (Width: %d, Height: %d)", path.c_str(), width, height);
+
+		if (ilImageID == 0)
+		{
+			LOG("Error: An attempt was made to upload a texture to the GPU without first loading it to the CPU.");
+			return false;
+		}
+
+		ilBindImage(ilImageID);
+		unsigned char* data = ilGetData();
+
+		textureID = Engine::GetInstance().render->UploadTextureToGPU(
+			data,
+			width,
+			height
+		);
+
+		ilBindImage(0);
+
+		if (ilImageID != 0)
+		{
+			ilDeleteImages(1, &ilImageID);
+			ilImageID = 0;
+		}
+	}
+	else
+	{
+		LOG("Error: Failed loading file from %s.", path.c_str());
+		ilDeleteImages(1, &ilImageID);
+		return false;
+	}
+	return true;
+}
 #pragma endregion
 
 #pragma region Basics
@@ -518,7 +583,7 @@ void Loader::CreatePyramid()
 
 bool Loader::SaveScene()
 {
-	std::string savePath = "Assets/Scenes/scene.W16Scene";
+	std::string savePath = "Assets/Scenes/scene.wscene";
 	LOG("Saving scene in: %s", savePath.c_str());
 
 	pugi::xml_document doc;
@@ -543,7 +608,7 @@ bool Loader::SaveScene()
 
 bool Loader::LoadScene()
 {
-	std::string loadPath = "Assets/Scenes/scene.W16Scene";
+	std::string loadPath = "Assets/Scenes/scene.wscene";
 	LOG("Loading scene with path: %s", loadPath.c_str());
 
 	pugi::xml_document doc;

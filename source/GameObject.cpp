@@ -359,27 +359,17 @@ void GameObject::RemoveChild(GameObject* childToRemove)
 {
 	if (childToRemove == nullptr) return;
 
-	// 1. Buscar y borrar del vector de hijos
-	// Usamos std::remove_if o un bucle manual. std::remove es más limpio.
 	auto it = std::remove(childs.begin(), childs.end(), childToRemove);
 
 	if (it != childs.end())
 	{
 		childs.erase(it, childs.end());
 
-		// 2. Romper el vínculo en el hijo
 		childToRemove->parent = nullptr;
-
-		// 3. MANTENER POSICIÓN VISUAL (World Position Stays)
-		// Al quitar el padre, la matriz Local del hijo ahora es relativa al Mundo (0,0,0).
-		// Para que el objeto no "salte" de sitio, debemos actualizar su Transform
-		// para que su nueva Local sea igual a su antigua Global.
 
 		Transform* childTransform = (Transform*)childToRemove->GetComponent(ComponentType::Transform);
 		if (childTransform)
 		{
-			// La matriz global actual es la correcta visualmente.
-			// Como ahora no tiene padre, Local = Global.
 			glm::mat4 globalMatrix = childTransform->GetGlobalMatrix();
 			childTransform->SetLocalMatrix(globalMatrix);
 		}

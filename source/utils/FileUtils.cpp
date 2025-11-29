@@ -82,3 +82,21 @@ bool IsFileDirectory(const std::string& directoryPath)
 {
     return std::filesystem::is_directory(directoryPath);
 }
+
+bool DoesFileExist(const std::string& filePath)
+{
+    return std::filesystem::exists(filePath);
+}
+
+std::string GetPreviousPath(const std::string& directoryPath)
+{
+
+    std::filesystem::path path(directoryPath);
+
+    if (path.has_parent_path())
+    {
+        return path.parent_path().string();
+    }
+
+    return path.string();
+}

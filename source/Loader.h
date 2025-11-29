@@ -33,8 +33,9 @@ public:
 	bool AddMeshAndTextureFromAssimp(GameObject* target, aiMesh* assimpMesh, const aiScene* scene, const std::string& modelDirectory);
 
 	//TEXTURES
-	bool LoadTexture(const std::string& filePath);
-	bool LoadFromAssimpMaterial(aiMaterial* material, const std::string& modelDirectory, Texture* texture);
+	bool LoadTextureToGameObject(const std::string& filePath, GameObject* gameObject);
+	bool LoadFromAssimpMaterial(aiMaterial* material, const std::string& modelDirectory, GameObject* obj);
+	bool LoadTexture(const std::string& path, unsigned int& textureID, int& width, int& height, bool flip = false);
 	
 	//BASICS
 	void CreateBasic(int basic);

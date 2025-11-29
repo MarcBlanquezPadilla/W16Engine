@@ -94,6 +94,7 @@ target_link_libraries(W16Engine PRIVATE
 	glad::glad
 	assimp::assimp
 	DevIL::IL
+	DevIL::ILU
 	glm::glm
 	imgui::imgui
 	imguizmo::imguizmo
@@ -105,5 +106,9 @@ install(DIRECTORY Assets
         COMPONENT Runtime)
 
 install(DIRECTORY Library
+        DESTINATION bin
+        COMPONENT Runtime)
+
+install(DIRECTORY Resources
         DESTINATION bin
         COMPONENT Runtime)

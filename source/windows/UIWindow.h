@@ -6,6 +6,8 @@ public:
     UIWindow(const char* name, bool active) : name(name), is_active(active), defaultEnabled(is_active){}
 
     virtual ~UIWindow() {}
+    
+    virtual void Awake() {}
 
     virtual void CleanUp() {}
 

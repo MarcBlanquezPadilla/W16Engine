@@ -63,23 +63,20 @@ bool Scene::Update(float dt)
 
 bool Scene::PostUpdate()
 {
-	//DESTROY GAMEOBJECTS
 	if (!objectsPendingToDelete.empty())
 	{
 		for (GameObject* go : objectsPendingToDelete)
 		{
 
-			//LIMPIAR DE LA LISTA PRINCIPAL
 			auto it = std::remove(gameObjects.begin(), gameObjects.end(), go);
 			if (it != gameObjects.end()) gameObjects.erase(it, gameObjects.end());
 
-			//LIMPIAR DE LISTAS OPTIMIZADAS
 			if (go->GetStatic())
 			{
 				auto itS = std::remove(staticGameObjects.begin(), staticGameObjects.end(), go);
 				if (itS != staticGameObjects.end()) {
 					staticGameObjects.erase(itS, staticGameObjects.end());
-					MarkStaticTreeDirty(); // Solo marcamos dirty, no reconstruimos aquí
+					MarkStaticTreeDirty();
 				}
 			}
 			else
@@ -88,18 +85,15 @@ bool Scene::PostUpdate()
 				if (itD != dynamicGameObjects.end()) dynamicGameObjects.erase(itD, dynamicGameObjects.end());
 			}
 
-			//DESVINCULAR DE LA FAMILIA (Para que el padre no tenga un puntero muerto)
 			if (go->parent != nullptr)
 			{
 				go->parent->RemoveChild(go);
 			}
 
-			//MUERTE FINAL
-			go->CleanUp(); // Lanza evento Destroyed
+			go->CleanUp();
 			delete go;
 		}
 
-		// Limpiar la cola
 		objectsPendingToDelete.clear();
 	}
 
@@ -113,30 +107,26 @@ bool Scene::CleanUp()
 
 	LOG("Cleaning Scene");
 	Engine::GetInstance().events->UnsubscribeAll(this);
-	// 1. ¡CRÍTICO! Limpiar la cola de pendientes para evitar doble borrado
+
 	objectsPendingToDelete.clear();
 
-	// 2. Limpiar el árbol
 	if (staticTree) {
 		staticTree->Clear();
 		delete staticTree;
 		staticTree = nullptr;
 	}
 
-	// 3. Borrar todos los GameObjects (Dueño de la memoria)
 	for (int i = 0; i < gameObjects.size(); i++)
 	{
 		if (gameObjects[i])
 		{
-			gameObjects[i]->CleanUp(); // Emite evento Destroyed
+			gameObjects[i]->CleanUp();
 			delete gameObjects[i];
 			gameObjects[i] = nullptr;
 		}
 	}
 	gameObjects.clear();
 
-	// 4. ¡CRÍTICO! Limpiar las listas de optimización
-	// (Ahora contienen punteros a basura, hay que vaciarlas)
 	staticGameObjects.clear();
 	dynamicGameObjects.clear();
 
@@ -150,12 +140,10 @@ bool Scene::NewScene()
 	bool ret = true;
 	LOG("Creating New Scene");
 
-	// 1. Limpiar listas auxiliares
 	objectsPendingToDelete.clear();
 	staticGameObjects.clear();
 	dynamicGameObjects.clear();
 
-	// 2. Borrar objetos
 	for (int i = 0; i < gameObjects.size(); i++)
 	{
 		gameObjects[i]->CleanUp();
@@ -163,7 +151,6 @@ bool Scene::NewScene()
 	}
 	gameObjects.clear();
 
-	// 3. Resetear árbol
 	if (staticTree) staticTree->Clear();
 	staticTreeDirty = true;
 

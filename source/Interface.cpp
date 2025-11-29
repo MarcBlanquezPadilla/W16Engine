@@ -78,6 +78,19 @@ bool Interface::Awake()
 
 	windows[Menu::Help].push_back(new AboutWindow(false));
 
+	for (auto const& pair : windows)
+	{
+		const std::vector<UIWindow*>& windows = pair.second;
+
+		for (auto& window : windows)
+		{
+			if (window->is_active)
+			{
+				window->Awake();
+			}
+		}
+	}
+
 	setDefaultUI = true;
 
 	return ret;
