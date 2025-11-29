@@ -72,7 +72,7 @@ void SceneWindow::Draw()
     ImGui::Image((ImTextureID)(intptr_t)textureID, viewportSize, ImVec2(0, 1), ImVec2(1, 0));
 
     //ENABLE CAMERA CONTROLS
-    Engine::GetInstance().GetInstance().editor->GetEditorCamera()->LockCamera(!ImGui::IsWindowHovered());
+    Engine::GetInstance().GetInstance().editor->GetEditorCamera()->LockCamera(!ImGui::IsWindowFocused());
 
     //PICKING
     if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0) && !ImGuizmo::IsOver())
