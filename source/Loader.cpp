@@ -510,13 +510,14 @@ void Loader::CreateSphere()
 			int first = (i * (sectors + 1)) + j;
 			int second = first + sectors + 1;
 
+
 			indices.push_back(first);
-			indices.push_back(second);
 			indices.push_back(first + 1);
+			indices.push_back(second);
 
 			indices.push_back(first + 1);
-			indices.push_back(second);
 			indices.push_back(second + 1);
+			indices.push_back(second);
 		}
 	}
 
