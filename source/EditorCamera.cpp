@@ -83,21 +83,20 @@ bool EditorCamera::PreUpdate()
 		return ret;
 	}
 
-	SDL_SetWindowRelativeMouseMode(Engine::GetInstance().window->window, false);
+	
 
-	//FIX SCENE YA NO TIENE EL OBJETO SELECCIONADO
-	GameObject* gameObject = Engine::GetInstance().editor->GetSelectedGameObject();
+	std::vector<GameObject*> gameObjects = Engine::GetInstance().editor->GetSelectedGameObjects();
 
 	bool shouldBeRelative = (
 		(Engine::GetInstance().input->GetMouseButtonDown(3) == KEY_REPEAT) ||
-		(Engine::GetInstance().input->GetKey(SDL_SCANCODE_LALT) == KEY_REPEAT && Engine::GetInstance().input->GetMouseButtonDown(1) == KEY_REPEAT && gameObject));
+		(Engine::GetInstance().input->GetKey(SDL_SCANCODE_LALT) == KEY_REPEAT && Engine::GetInstance().input->GetMouseButtonDown(1) == KEY_REPEAT && !gameObjects.empty()));
 
 	if (shouldBeRelative && !mouseCaptured)
 	{
-		SDL_SetWindowRelativeMouseMode(Engine::GetInstance().window->window, true);
 
 		float tempX, tempY;
 		SDL_GetRelativeMouseState(&tempX, &tempY);
+		SDL_SetWindowRelativeMouseMode(Engine::GetInstance().window->window, true);
 		mouseCaptured = true;
 	}
 	else if (mouseCaptured && !shouldBeRelative)
@@ -105,23 +104,34 @@ bool EditorCamera::PreUpdate()
 		SDL_SetWindowRelativeMouseMode(Engine::GetInstance().window->window, false);
 		mouseCaptured = false;
 	}
-	
-	orbit = Engine::GetInstance().input->GetMouseButtonDown(1) == KEY_REPEAT && Engine::GetInstance().input->GetKey(SDL_SCANCODE_LALT) == KEY_REPEAT && gameObject;
+
+	orbit = Engine::GetInstance().input->GetMouseButtonDown(1) == KEY_REPEAT && Engine::GetInstance().input->GetKey(SDL_SCANCODE_LALT) == KEY_REPEAT && !gameObjects.empty();
 	move = Engine::GetInstance().input->GetMouseButtonDown(3) == KEY_REPEAT;
-	focus = Engine::GetInstance().input->GetKey(SDL_SCANCODE_F) == KEY_DOWN && gameObject;
+	focus = Engine::GetInstance().input->GetKey(SDL_SCANCODE_F) == KEY_DOWN && !gameObjects.empty();
 	zoom = Engine::GetInstance().input->GetMouseWheelY() != 0;
 
 	//FOCUS
 	if (focus)
 	{
-		Transform* transform = (Transform*)gameObject->GetComponent(ComponentType::Transform);
-		if (transform)
+		glm::vec3 centerPosition(0.0f);
+		int validTransforms = 0;
+
+		for (GameObject* go : gameObjects)
 		{
-			glm::vec3 targetPosition = transform->GetPosition();
+			Transform* transform = (Transform*)go->GetComponent(ComponentType::Transform);
+			if (transform)
+			{
+				centerPosition += transform->GetGlobalPosition();
+				validTransforms++;
+			}
+		}
 
-			forward = glm::normalize(targetPosition - position);
+		if (validTransforms > 0)
+		{
+			centerPosition /= (float)validTransforms;
 
-			position = targetPosition - (forward * focusDistance);
+			forward = glm::normalize(centerPosition - position);
+			position = centerPosition - (forward * focusDistance);
 
 			yaw = glm::degrees(atan2(forward.z, forward.x));
 			pitch = glm::degrees(asin(forward.y));
@@ -134,17 +144,30 @@ bool EditorCamera::PreUpdate()
 		focus = false;
 	}
 	//ORBIT
-	else if(orbit)
-	{	
+	else if (orbit)
+	{
 		CalcMouseVectors();
 
-		Transform* transform = (Transform*)gameObject->GetComponent(ComponentType::Transform);
-		if (transform)
+		glm::vec3 centerPosition(0.0f);
+		int validTransforms = 0;
+
+		for (GameObject* go : gameObjects)
 		{
-			glm::vec3 vectorOrbit = { transform->GetPosition().x - position.x, transform->GetPosition().y - position.y, transform->GetPosition().z - position.z };
+			Transform* transform = (Transform*)go->GetComponent(ComponentType::Transform);
+			if (transform)
+			{
+				centerPosition += transform->GetGlobalPosition();
+				validTransforms++;
+			}
+		}
+
+		if (validTransforms > 0)
+		{
+			centerPosition /= (float)validTransforms;
+
+			glm::vec3 vectorOrbit = centerPosition - position;
 			orbitDistance = glm::length(vectorOrbit);
-			glm::vec3 targetPosition = transform->GetPosition();
-			position = targetPosition - (forward * orbitDistance);
+			position = centerPosition - (forward * orbitDistance);
 			viewChanged = true;
 		}
 	}
@@ -152,7 +175,7 @@ bool EditorCamera::PreUpdate()
 	else if (move)
 	{
 		CalcMouseVectors();
-		
+
 		bool wPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_W) == KEY_REPEAT;
 		bool sPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_S) == KEY_REPEAT;
 		bool aPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_A) == KEY_REPEAT;
@@ -160,7 +183,7 @@ bool EditorCamera::PreUpdate()
 		bool shift = (Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT ||
 			Engine::GetInstance().input->GetKey(SDL_SCANCODE_RSHIFT) == KEY_REPEAT);
 
-			
+
 		int xMovement = 0;
 		if (aPressed && !dPressed) xMovement = -1;
 		if (dPressed && !aPressed) xMovement = 1;
@@ -206,10 +229,10 @@ bool EditorCamera::PreUpdate()
 		cameraLens->LookAt(position, position + forward, up);
 		viewChanged = false;
 	}
-	
+
 	if (windowChanged)
 	{
-		cameraLens->SetPerspective(fieldOfView, (float)Engine::GetInstance().window->width / (float)Engine::GetInstance().window->height, 0.1f, 1000.0f );
+		cameraLens->SetPerspective(fieldOfView, (float)Engine::GetInstance().window->width / (float)Engine::GetInstance().window->height, 0.1f, 1000.0f);
 		windowChanged = false;
 	}
 

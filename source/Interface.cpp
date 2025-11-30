@@ -279,8 +279,8 @@ void Interface::SetupDockspace(unsigned int dockspace_id)
 	ImGui::DockBuilderDockWindow("Inspector", dock_right_id);
 	ImGui::DockBuilderDockWindow("Console", dock_bottom_id);
 	ImGui::DockBuilderDockWindow("Project", dock_bottom_id);
-	ImGui::DockBuilderDockWindow("Scene", dock_main_id);
 	ImGui::DockBuilderDockWindow("Game", dock_main_id);
+	ImGui::DockBuilderDockWindow("Scene", dock_main_id);
 
 	ImGui::DockBuilderFinish(dockspace_id);
 }

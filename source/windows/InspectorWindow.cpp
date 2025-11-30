@@ -33,73 +33,116 @@ void InspectorWindow::Draw()
         return;
     }
 
-    GameObject* gameObject = Engine::GetInstance().editor->GetSelectedGameObject();
-    Editor* editor = Engine::GetInstance().editor;
+    // 1. Obtener la lista de seleccionados
+    const std::vector<GameObject*>& selectedObjects = Engine::GetInstance().editor->GetSelectedGameObjects();
 
-    if (gameObject != nullptr)
+    if (selectedObjects.empty())
     {
-        ImGui::Text(gameObject->name.c_str());
-        bool isEnabled = gameObject->GetEnabled();
-        if (ImGui::Checkbox("Enabled", &isEnabled))
-        {
-            gameObject->SetEnabled(isEnabled);
-        }
-        
-        bool isStatic = gameObject->GetStatic();
-        if (ImGui::Checkbox("Static", &isStatic))
-        {
-            gameObject->SetStatic(isStatic);
-        }
-
+        ImGui::Text("No object selected");
+    }
+    else if (selectedObjects.size() == 1)
+    {
+        // CASO SIMPLE: Solo uno seleccionado -> Dibujar normal
+        DrawGameObjectInfo(selectedObjects[0]);
+    }
+    else
+    {
+        // CASO MULTIPLE: Iterar
+        ImGui::Text("%d Objects Selected", selectedObjects.size());
         ImGui::Separator();
 
-        for (auto const& pair : gameObject->components)
+        for (GameObject* go : selectedObjects)
         {
-            if (pair.second) pair.second->OnEditor();
-        }
+            // PushID es VITAL para que ImGui distinga los botones de cada objeto
+            ImGui::PushID(go);
 
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        float buttonWidth = ImGui::GetContentRegionAvail().x * 0.6f;
-        float centerPos = (ImGui::GetContentRegionAvail().x - buttonWidth) * 0.5f;
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + centerPos);
-
-        if (ImGui::Button("Add Component", ImVec2(buttonWidth, 0)))
-        {
-            ImGui::OpenPopup("AddComponentPopup");
-        }
-
-        if (ImGui::BeginPopup("AddComponentPopup"))
-        {
-            if (gameObject->GetComponent(ComponentType::Camera) == nullptr)
+            // Usamos un Header para cada objeto para no saturar la ventana
+            if (ImGui::CollapsingHeader(go->name.c_str()))
             {
-                if (ImGui::MenuItem("Camera"))
-                {
-                    gameObject->AddComponent(ComponentType::Camera);
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-            if (gameObject->GetComponent(ComponentType::Mesh) == nullptr)
-            {
-                if (ImGui::MenuItem("Mesh"))
-                {
-                    gameObject->AddComponent(ComponentType::Mesh);
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-            if (gameObject->GetComponent(ComponentType::Texture) == nullptr)
-            {
-                if (ImGui::MenuItem("Texture"))
-                {
-                    gameObject->AddComponent(ComponentType::Texture);
-                    ImGui::CloseCurrentPopup();
-                }
+                DrawGameObjectInfo(go);
             }
 
-            ImGui::EndPopup();
+            
+
+            ImGui::PopID();
         }
     }
+
     ImGui::End();
+}
+
+void InspectorWindow::DrawGameObjectInfo(GameObject* gameObject)
+{
+    if (gameObject == nullptr) return;
+
+    // --- (TU CÓDIGO ORIGINAL COPIADO AQUÍ) ---
+
+    char name_buffer[64];
+    sprintf_s(name_buffer, "%s", gameObject->name.c_str());
+
+    // Ojo: Quitamos el checkbox del nombre para evitar conflictos con el CollapsingHeader en multi-selección,
+    // o usamos PushID extra si quieres mantenerlo.
+    // Aquí asumo que quieres editar el nombre:
+    if (ImGui::InputText("Name", name_buffer, sizeof(name_buffer)))
+    {
+        gameObject->name = name_buffer;
+    }
+
+    bool isEnabled = gameObject->GetEnabled();
+    if (ImGui::Checkbox("Enabled", &isEnabled))
+    {
+        gameObject->SetEnabled(isEnabled);
+    }
+
+    ImGui::SameLine();
+
+    bool isStatic = gameObject->GetStatic();
+    if (ImGui::Checkbox("Static", &isStatic))
+    {
+        gameObject->SetStatic(isStatic);
+    }
+
+    // Dibujar Componentes
+    for (auto const& pair : gameObject->components)
+    {
+        if (pair.second) pair.second->OnEditor();
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    // Botón Add Component
+    float buttonWidth = ImGui::GetContentRegionAvail().x * 0.6f;
+    float centerPos = (ImGui::GetContentRegionAvail().x - buttonWidth) * 0.5f;
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + centerPos);
+
+    if (ImGui::Button("Add Component", ImVec2(buttonWidth, 0)))
+    {
+        ImGui::OpenPopup("AddComponentPopup");
+    }
+
+    if (ImGui::BeginPopup("AddComponentPopup"))
+    {
+        // ... (Tu lógica de añadir componentes igual que antes) ...
+        if (gameObject->GetComponent(ComponentType::Camera) == nullptr)
+        {
+            if (ImGui::MenuItem("Camera")) { gameObject->AddComponent(ComponentType::Camera); ImGui::CloseCurrentPopup(); }
+        }
+        if (gameObject->GetComponent(ComponentType::Mesh) == nullptr)
+        {
+            if (ImGui::MenuItem("Mesh")) { gameObject->AddComponent(ComponentType::Mesh); ImGui::CloseCurrentPopup(); }
+        }
+        if (gameObject->GetComponent(ComponentType::Texture) == nullptr)
+        {
+            if (ImGui::MenuItem("Texture")) { gameObject->AddComponent(ComponentType::Texture); ImGui::CloseCurrentPopup(); }
+        }
+
+        ImGui::EndPopup();
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+    ImGui::Spacing();
 }

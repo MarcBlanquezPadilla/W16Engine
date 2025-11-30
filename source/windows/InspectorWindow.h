@@ -1,6 +1,8 @@
 #pragma once
 #include "UIWindow.h"
 
+class GameObject;
+
 class InspectorWindow : public UIWindow
 {
 public:
@@ -10,5 +12,5 @@ public:
     void Draw() override;
 
 private:
-
+    void DrawGameObjectInfo(GameObject* gameObject);
 };

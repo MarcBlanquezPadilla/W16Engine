@@ -36,7 +36,7 @@ public:
 
 	void SetSelected(GameObject* gameObject);
 	
-	GameObject* GetSelectedGameObject() { return selectedGameObject; };
+	std::vector<GameObject*> GetSelectedGameObjects() { return selectedGameObjects; };
 
 	EditorCamera* GetEditorCamera();
 	CameraLens* GetEditorCameraLens();
@@ -55,6 +55,12 @@ public:
 	bool debugAABB;
 	bool debugMesh;
 	bool debugNormal;
+	bool debugGrid;
+	bool debugCamera;
+
+	int gridSize;
+	int gridRows;
+	int gridColumns;
 
 private:
 	Interface* userInterface;
@@ -65,5 +71,5 @@ private:
 
     bool setDefaultUI = false;
 
-	GameObject* selectedGameObject;
+	std::vector<GameObject*> selectedGameObjects;
 };

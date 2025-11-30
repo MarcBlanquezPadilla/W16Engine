@@ -11,6 +11,7 @@
 #include "Scene.h"
 #include "GameObject.h"
 #include "components/Transform.h"
+#include "components/Camera.h"
 #include "components/Mesh.h"
 
 #include "utils/Ray.h"
@@ -56,8 +57,14 @@ bool Editor::Awake()
 	debugMesh = false;
 	debugAABB = false;
 	debugNormal = false;
+	debugGrid = true;
+	debugCamera = true;
 
-	selectedGameObject = nullptr;
+	gridSize = 10;
+	gridRows = 20;
+	gridColumns = 20;
+
+	selectedGameObjects.clear();
 
 	return ret;
 }
@@ -72,8 +79,13 @@ bool Editor::PreUpdate()
 
 bool Editor::Update(float dt)
 {
-	if (selectedGameObject && Engine::GetInstance().input->GetKey(SDL_SCANCODE_DELETE) == KEY_DOWN) 
-		selectedGameObject->Destroy();
+	if (!selectedGameObjects.empty() && Engine::GetInstance().input->GetKey(SDL_SCANCODE_DELETE) == KEY_DOWN)
+	{
+		for (GameObject* selectedGameObject : selectedGameObjects)
+		{
+			selectedGameObject->Destroy();
+		}
+	}
 
 	if (debugRay)
 	{
@@ -87,7 +99,7 @@ bool Editor::Update(float dt)
 		{
 			std::vector<AABB> allNodesAABB;
 			tree->GetAllNodes(allNodesAABB);
-			glm::vec4 color = glm::vec4(DEBUG_R, DEBUG_G, DEBUG_B, DEBUG_A);
+			glm::vec4 color = glm::vec4(DEBUG_COLOR);
 
 
 			Render* render = Engine::GetInstance().render;
@@ -125,82 +137,157 @@ bool Editor::Update(float dt)
 		}
 	}
 
-	Mesh* selectedMesh = nullptr;
-	if (selectedGameObject)
+	if (debugGrid)
 	{
-		Mesh* selectedMesh = (Mesh*)selectedGameObject->GetComponent(ComponentType::Mesh);
+		float startX = -gridRows * gridSize / 2;
+		float startZ = -gridColumns * gridSize / 2;
 
-		if (selectedMesh)
+		int currentX;
+		int currentZ;
+		
+		Render* render = Engine::GetInstance().render;
+
+		glm::vec4 gridColor = glm::vec4(GRID_COLOR);
+
+		for (int x = 0; x <= gridRows; x++)
+		{	
+			currentX = startX + x * gridSize;
+			glm::vec3 startPos = glm::vec3(currentX, 0, startZ);
+			glm::vec3 endPos = glm::vec3(currentX, 0, -startZ);
+			render->DrawLine(startPos, endPos, gridColor);
+		}
+
+		for (int z = 0; z <= gridColumns; z++)
 		{
-			//DEBUG MESH
-			selectedMesh->drawMesh = debugMesh;
+			currentZ = startZ + z * gridSize;
+			glm::vec3 startPos = glm::vec3(startX, 0, currentZ);
+			glm::vec3 endPos = glm::vec3(-startX, 0, currentZ);
+			render->DrawLine(startPos, endPos, gridColor);
+		}
+	}
 
-			//DEBUG NORMALS
-			selectedMesh->drawNormals = debugNormal;
+	
+	if (!selectedGameObjects.empty())
+	{
 
-			//DEBUG AABB
-			if (debugAABB)
+		for (GameObject* selectedGameObject : selectedGameObjects)
+		{
+			
+			if (debugNormal || debugMesh || debugAABB)
 			{
-				Mesh* mesh = (Mesh*)selectedGameObject->GetComponent(ComponentType::Mesh);
-				Transform* transform = selectedGameObject->transform;
+				Mesh* selectedMesh = nullptr;
+				selectedMesh = (Mesh*)selectedGameObject->GetComponent(ComponentType::Mesh);
 
-				if (mesh && transform)
+				if (selectedMesh)
 				{
-					glm::vec3 localMin = mesh->aabb->min;
-					glm::vec3 localMax = mesh->aabb->max;
+					//DEBUG MESH
+					selectedMesh->drawMesh = debugMesh;
 
-					glm::vec3 localCorners[8] = {
-						{ localMin.x, localMin.y, localMin.z },
-						{ localMax.x, localMin.y, localMin.z },
-						{ localMin.x, localMax.y, localMin.z },
-						{ localMax.x, localMax.y, localMin.z },
-						{ localMin.x, localMin.y, localMax.z },
-						{ localMax.x, localMin.y, localMax.z },
-						{ localMin.x, localMax.y, localMax.z },
-						{ localMax.x, localMax.y, localMax.z }
+					//DEBUG NORMALS
+					selectedMesh->drawNormals = debugNormal;
+
+					//DEBUG AABB
+					if (debugAABB)
+					{
+						Transform* selectedTransform = selectedGameObject->transform;
+
+						if (selectedTransform)
+						{
+							glm::vec3 localMin = selectedMesh->aabb->min;
+							glm::vec3 localMax = selectedMesh->aabb->max;
+
+							glm::vec3 localCorners[8] = {
+								{ localMin.x, localMin.y, localMin.z },
+								{ localMax.x, localMin.y, localMin.z },
+								{ localMin.x, localMax.y, localMin.z },
+								{ localMax.x, localMax.y, localMin.z },
+								{ localMin.x, localMin.y, localMax.z },
+								{ localMax.x, localMin.y, localMax.z },
+								{ localMin.x, localMax.y, localMax.z },
+								{ localMax.x, localMax.y, localMax.z }
+							};
+
+							glm::mat4 modelMatrix = selectedTransform->GetGlobalMatrix();
+
+							glm::vec3 globalMin = glm::vec3(FLT_MAX);
+							glm::vec3 globalMax = glm::vec3(-FLT_MAX);
+
+							for (int i = 0; i < 8; i++)
+							{
+								glm::vec4 transformed = modelMatrix * glm::vec4(localCorners[i], 1.0f);
+								glm::vec3 worldPos = glm::vec3(transformed);
+
+								globalMin = glm::min(globalMin, worldPos);
+								globalMax = glm::max(globalMax, worldPos);
+							}
+
+							Render* render = Engine::GetInstance().render;
+							glm::vec4 color = glm::vec4(DEBUG_COLOR);
+
+							glm::vec3 p1 = globalMin;
+							glm::vec3 p2 = glm::vec3(globalMax.x, globalMin.y, globalMin.z);
+							glm::vec3 p3 = glm::vec3(globalMin.x, globalMax.y, globalMin.z);
+							glm::vec3 p4 = glm::vec3(globalMax.x, globalMax.y, globalMin.z);
+
+							glm::vec3 p5 = glm::vec3(globalMin.x, globalMin.y, globalMax.z);
+							glm::vec3 p6 = glm::vec3(globalMax.x, globalMin.y, globalMax.z);
+							glm::vec3 p7 = glm::vec3(globalMin.x, globalMax.y, globalMax.z);
+							glm::vec3 p8 = globalMax;
+
+							render->DrawLine(p1, p2, color);
+							render->DrawLine(p2, p4, color);
+							render->DrawLine(p4, p3, color);
+							render->DrawLine(p3, p1, color);
+
+							render->DrawLine(p5, p6, color);
+							render->DrawLine(p6, p8, color);
+							render->DrawLine(p8, p7, color);
+							render->DrawLine(p7, p5, color);
+
+							render->DrawLine(p1, p5, color);
+							render->DrawLine(p2, p6, color);
+							render->DrawLine(p3, p7, color);
+							render->DrawLine(p4, p8, color);
+						}
+					}
+				}
+			}
+			if (debugCamera)
+			{
+				Camera* selectedCamera = nullptr;
+				selectedCamera = (Camera*)selectedGameObject->GetComponent(ComponentType::Camera);
+				if (selectedCamera)
+				{
+					glm::vec4 corners[8] = {
+					{-1, -1, -1, 1}, { 1, -1, -1, 1}, { 1,  1, -1, 1}, {-1,  1, -1, 1},
+					{-1, -1,  1, 1}, { 1, -1,  1, 1}, { 1,  1,  1, 1}, {-1,  1,  1, 1}
 					};
 
-					glm::mat4 modelMatrix = transform->GetGlobalMatrix();
+					glm::mat4 inverseViewProj = glm::inverse(selectedCamera->GetLens()->GetProjectionMatrix() * selectedCamera->GetLens()->GetViewMatrix());
 
-					glm::vec3 globalMin = glm::vec3(FLT_MAX);
-					glm::vec3 globalMax = glm::vec3(-FLT_MAX);
-
-					for (int i = 0; i < 8; i++)
+					for (int i = 0; i < 8; ++i)
 					{
-						glm::vec4 transformed = modelMatrix * glm::vec4(localCorners[i], 1.0f);
-						glm::vec3 worldPos = glm::vec3(transformed);
-
-						globalMin = glm::min(globalMin, worldPos);
-						globalMax = glm::max(globalMax, worldPos);
+						corners[i] = inverseViewProj * corners[i];
+						corners[i] /= corners[i].w;
 					}
 
+					glm::vec4 color = glm::vec4(CAMERA_COLOR);
 					Render* render = Engine::GetInstance().render;
-					glm::vec4 color = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
 
-					glm::vec3 p1 = globalMin;
-					glm::vec3 p2 = glm::vec3(globalMax.x, globalMin.y, globalMin.z);
-					glm::vec3 p3 = glm::vec3(globalMin.x, globalMax.y, globalMin.z);
-					glm::vec3 p4 = glm::vec3(globalMax.x, globalMax.y, globalMin.z);
+					render->DrawLine(corners[0], corners[1], color);
+					render->DrawLine(corners[1], corners[2], color);
+					render->DrawLine(corners[2], corners[3], color);
+					render->DrawLine(corners[3], corners[0], color);
 
-					glm::vec3 p5 = glm::vec3(globalMin.x, globalMin.y, globalMax.z);
-					glm::vec3 p6 = glm::vec3(globalMax.x, globalMin.y, globalMax.z);
-					glm::vec3 p7 = glm::vec3(globalMin.x, globalMax.y, globalMax.z);
-					glm::vec3 p8 = globalMax;
+					render->DrawLine(corners[4], corners[5], color);
+					render->DrawLine(corners[5], corners[6], color);
+					render->DrawLine(corners[6], corners[7], color);
+					render->DrawLine(corners[7], corners[4], color);
 
-					render->DrawLine(p1, p2, color);
-					render->DrawLine(p2, p4, color);
-					render->DrawLine(p4, p3, color);
-					render->DrawLine(p3, p1, color);
-
-					render->DrawLine(p5, p6, color);
-					render->DrawLine(p6, p8, color);
-					render->DrawLine(p8, p7, color);
-					render->DrawLine(p7, p5, color);
-
-					render->DrawLine(p1, p5, color);
-					render->DrawLine(p2, p6, color);
-					render->DrawLine(p3, p7, color);
-					render->DrawLine(p4, p8, color);
+					render->DrawLine(corners[0], corners[4], color);
+					render->DrawLine(corners[1], corners[5], color);
+					render->DrawLine(corners[2], corners[6], color);
+					render->DrawLine(corners[3], corners[7], color);
 				}
 			}
 		}
@@ -285,32 +372,46 @@ void Editor::TestMouseRay(int mouseX, int mouseY, int width, int height)
 
 	if (closestHit) {
 		SetSelected(closestHit);
-	}	
+	}
+	else SetSelected(nullptr);
 }
 
 void Editor::SetSelected(GameObject* gameObject)
 {
-	if (selectedGameObject)
+	bool ctrlPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
+	bool shiftPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
+	bool multiSelect = ctrlPressed || shiftPressed;
+
+	if (!multiSelect && gameObject != nullptr)
 	{
-		Component* meshComp = nullptr;
-		if (selectedGameObject->TryGetComponent(ComponentType::Mesh, meshComp))
-		{
-			Mesh* mesh = static_cast<Mesh*>(meshComp);
-			mesh->drawStencil = false;
-			mesh->drawNormals = false;
-			mesh->drawMesh = false;
+		for (GameObject* go : selectedGameObjects) {
+			Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
+			if (mesh) { mesh->drawStencil = false; mesh->drawNormals = false; mesh->drawMesh = false; }
 		}
+		selectedGameObjects.clear();
+	}
+	if (gameObject == nullptr)
+	{
+		if (!multiSelect) {
+		}
+		return;
 	}
 
-	if (gameObject)
+	auto it = std::find(selectedGameObjects.begin(), selectedGameObjects.end(), gameObject);
+
+	if (it != selectedGameObjects.end())
 	{
-		selectedGameObject = gameObject;
-		Component* meshComp = nullptr;
-		if (gameObject->TryGetComponent(ComponentType::Mesh, meshComp))
-		{
-			Mesh* mesh = static_cast<Mesh*>(meshComp);
-			mesh->drawStencil = true;
+		if (multiSelect) {
+			Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
+			if (mesh) mesh->drawStencil = false;
+			selectedGameObjects.erase(it);
 		}
+	}
+	else
+	{
+		selectedGameObjects.push_back(gameObject);
+		Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
+		if (mesh) mesh->drawStencil = true;
 	}
 }
 
@@ -345,12 +446,19 @@ void Editor::OnEvent(const Event& event)
 		}
 		case Event::Type::SceneCleared:
 		{
-			selectedGameObject = nullptr;
+			selectedGameObjects.clear();
 			break;
 		}
 		case Event::Type::GameObjectDestroyed:
 		{
-			if (selectedGameObject == event.data.gameObject.gameObject) selectedGameObject = nullptr;
+			GameObject* destroyedGO = event.data.gameObject.gameObject;
+
+			auto it = std::remove(selectedGameObjects.begin(), selectedGameObjects.end(), destroyedGO);
+
+			if (it != selectedGameObjects.end())
+			{
+				selectedGameObjects.erase(it, selectedGameObjects.end());
+			}
 			break;
 		}
 		default:

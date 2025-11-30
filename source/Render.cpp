@@ -100,8 +100,8 @@ bool Render::Awake()
 
 	Engine::GetInstance().events->Subscribe(Event::Type::WindowResize, this);
 
-	debugColor = glm::vec4(DEBUG_R, DEBUG_G, DEBUG_B, DEBUG_A);
-	stencilColor = glm::vec4(STENCIL_R, STENCIL_G, STENCIL_B, STENCIL_A);
+	debugColor = glm::vec4(DEBUG_COLOR);
+	stencilColor = glm::vec4(STENCIL_COLOR);
 	
 	mainCamera = nullptr;
 	mainCameras = 0;
@@ -348,7 +348,7 @@ void Render::DrawLinesList(const CameraLens* camera)
 		glUniformMatrix4fv(lineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
 		glUniformMatrix4fv(lineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 
-		glUniform4fv(lineColorLoc, 1, glm::value_ptr(debugColor));
+		glUniform4fv(lineColorLoc, 1, glm::value_ptr(line.color));
 
 		glm::vec3 vertices[2] = { line.startPoint, line.endPoint };
 		glBindBuffer(GL_ARRAY_BUFFER, lineVBO);

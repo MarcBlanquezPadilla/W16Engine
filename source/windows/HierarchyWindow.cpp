@@ -89,7 +89,7 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* go)
 {
     if (go == nullptr) return;
 
-    GameObject* selected_go = Engine::GetInstance().editor->GetSelectedGameObject();
+    const std::vector<GameObject*>& selectedObjects = Engine::GetInstance().editor->GetSelectedGameObjects();
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
 
@@ -98,7 +98,9 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* go)
         flags |= ImGuiTreeNodeFlags_Leaf;
     }
 
-    if (go == selected_go)
+    bool isSelected = std::find(selectedObjects.begin(), selectedObjects.end(), go) != selectedObjects.end();
+
+    if (isSelected)
     {
         flags |= ImGuiTreeNodeFlags_Selected;
     }
@@ -114,9 +116,10 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* go)
     {
         ImGui::SetDragDropPayload("HIERARCHY_NODE", &go, sizeof(GameObject*));
 
-        ImGui::Text("Moving %s", go->name.c_str());
-
-        draggedGameObject = go;
+        if (isSelected && selectedObjects.size() > 1)
+            ImGui::Text("Moving %d objects", selectedObjects.size());
+        else
+            ImGui::Text("Moving %s", go->name.c_str());
 
         ImGui::EndDragDropSource();
     }
@@ -126,10 +129,6 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* go)
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_NODE"))
         {
             GameObject* droppedGO = *(GameObject**)payload->Data;
-
-            draggedGameObject = droppedGO;
-            targetGameObject = go;
-            toRoot = false;
         }
         ImGui::EndDragDropTarget();
     }

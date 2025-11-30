@@ -191,6 +191,7 @@ void Transform::SetQuaternionRotation(glm::quat _rotationQuat)
 {
     dirtyLocalMatrix = true;
     rotation = _rotationQuat;
+    eulerRotation = glm::degrees(glm::eulerAngles(rotation));
     OnTransformChanged();
 }
 
@@ -252,4 +253,11 @@ void Transform::SetLocalMatrix(const glm::mat4& newLocalMatrix)
     }
 
     InvalidateGlobalMatrix();
+}
+
+glm::vec3 Transform::GetGlobalPosition()
+{
+    glm::mat4 globalMatrix = GetGlobalMatrix();
+
+    return glm::vec3(globalMatrix[3]);
 }

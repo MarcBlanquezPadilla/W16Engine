@@ -32,6 +32,7 @@ public:
     void OnTransformChanged();
 
     glm::vec3 GetPosition();
+    glm::vec3 GetGlobalPosition();
     glm::vec3 GetEulerRotation();
     glm::quat GetQuaterionRotation();
     glm::vec3 GetScale();

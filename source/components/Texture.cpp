@@ -65,7 +65,6 @@ void Texture::OnEditor()
         ImGui::Text("Texture ID (GPU):");
         ImGui::SameLine();
         ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%u", textureID);
-        ImGui::Separator();
         ImGui::Checkbox("Use Checker Texture", &use_checker);
         ImGui::Checkbox("Transparent", &transparent);
     }
