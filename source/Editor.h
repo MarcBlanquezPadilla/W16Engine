@@ -34,7 +34,7 @@ public:
 
 	void HandleInput(SDL_Event* event);
 
-	void SetSelected(GameObject* gameObject);
+	void SetSelected(GameObject* gameObject, bool eraseSelecteds = true);
 	
 	std::vector<GameObject*> GetSelectedGameObjects() { return selectedGameObjects; };
 

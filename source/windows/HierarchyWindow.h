@@ -12,11 +12,8 @@ public:
     void Draw() override;
     void DrawGameObjectNode(GameObject* go);
 
-private: 
-    void DrawHierarchyNode(GameObject* gameObject);
-
 private:
-    GameObject* draggedGameObject = nullptr;
-    GameObject* targetGameObject = nullptr;
-    bool toRoot = false;
+    GameObject* objectToDrop = nullptr;
+    GameObject* objectToSelect = nullptr;
+    bool dragging = false;
 };

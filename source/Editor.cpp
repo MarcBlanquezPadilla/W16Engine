@@ -370,19 +370,20 @@ void Editor::TestMouseRay(int mouseX, int mouseY, int width, int height)
 		}
 	}
 
-	if (closestHit) {
-		SetSelected(closestHit);
-	}
-	else SetSelected(nullptr);
-}
-
-void Editor::SetSelected(GameObject* gameObject)
-{
 	bool ctrlPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
 	bool shiftPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
-	bool multiSelect = ctrlPressed || shiftPressed;
+	bool eraseSelecteds = !(ctrlPressed || shiftPressed);
 
-	if (!multiSelect && gameObject != nullptr)
+	if (closestHit) {
+		SetSelected(closestHit, eraseSelecteds);
+	}
+	else SetSelected(nullptr, eraseSelecteds);
+}
+
+void Editor::SetSelected(GameObject* gameObject, bool eraseSelecteds)
+{
+
+	if (eraseSelecteds && gameObject != nullptr)
 	{
 		for (GameObject* go : selectedGameObjects) {
 			Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
@@ -392,7 +393,8 @@ void Editor::SetSelected(GameObject* gameObject)
 	}
 	if (gameObject == nullptr)
 	{
-		if (!multiSelect) {
+		if (eraseSelecteds) {
+
 		}
 		return;
 	}
@@ -401,7 +403,7 @@ void Editor::SetSelected(GameObject* gameObject)
 
 	if (it != selectedGameObjects.end())
 	{
-		if (multiSelect) {
+		if (!eraseSelecteds) {
 			Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
 			if (mesh) mesh->drawStencil = false;
 			selectedGameObjects.erase(it);

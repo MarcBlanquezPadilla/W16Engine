@@ -83,6 +83,10 @@ void SceneWindow::Draw()
 		int mouseX = (int)(mousePos.x - winPos.x);
 		int mouseY = (int)(mousePos.y - winPos.y);
 
+		bool ctrlPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
+		bool shiftPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
+		bool multiSelect = ctrlPressed || shiftPressed;
+
 		Engine::GetInstance().editor->TestMouseRay(mouseX, mouseY, (int)viewportSize.x, (int)viewportSize.y);
 	}
 

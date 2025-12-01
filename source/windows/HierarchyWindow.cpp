@@ -3,6 +3,7 @@
 #include "../Scene.h"
 #include "../Loader.h"
 #include "../Editor.h"
+#include "../Input.h"
 #include "../Global.h"
 #include "../GameObject.h"
 #include "imgui.h"
@@ -24,12 +25,15 @@ void HierarchyWindow::Draw()
 
     if (!ImGui::Begin(name, &is_active))
     {
+        dragging = false;
         ImGui::End();
         return;
     }
 
     Scene* scene = Engine::GetInstance().scene;
     Loader* loader = Engine::GetInstance().loader;
+
+    objectToDrop = nullptr;
 
     for (GameObject* go : scene->GetGameObjects())
     {
@@ -50,36 +54,56 @@ void HierarchyWindow::Draw()
     }
 
     ImVec2 contentSize = ImGui::GetContentRegionAvail();
-
+    ImVec2 p_min = ImGui::GetCursorScreenPos();
+    ImVec2 p_max = ImVec2(p_min.x + contentSize.x, p_min.y + contentSize.y);
     ImGui::Dummy(contentSize);
 
-    if (ImGui::BeginDragDropTarget())
-    {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_NODE"))
-        {
-            GameObject* droppedGO = *(GameObject**)payload->Data;
+    const std::vector<GameObject*>& selectedObjects = Engine::GetInstance().editor->GetSelectedGameObjects();
 
-            draggedGameObject = droppedGO;
-            targetGameObject = nullptr;
-            toRoot = true;
-        }
-        ImGui::EndDragDropTarget();
+    if (dragging && ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly))
+    {
+        ImGui::GetWindowDrawList()->AddRect(
+            p_min,
+            p_max,
+            IM_COL32(0, 255, 255, 255),
+            0.0f,
+            0,
+            1.0f
+        );
     }
 
-    if (draggedGameObject != nullptr)
+    if (dragging && ImGui::IsMouseReleased(0))
     {
-        if (toRoot)
+        if (objectToDrop != nullptr)
         {
-            draggedGameObject->SetParent(nullptr);
+            for (GameObject* movingObj : selectedObjects)
+            {
+                if (movingObj != objectToDrop && !objectToDrop->IsDescendant(movingObj))
+                {
+                    movingObj->SetParent(objectToDrop);
+                }
+            }
         }
-        else if (targetGameObject != nullptr)
+        else if (ImGui::IsWindowHovered())
         {
-            draggedGameObject->SetParent(targetGameObject);
+            for (GameObject* movingObj : selectedObjects)
+            {
+                movingObj->SetParent(nullptr);
+            }
         }
 
-        draggedGameObject = nullptr;
-        targetGameObject = nullptr;
-        toRoot = false;
+        dragging = false;
+        objectToDrop = nullptr;
+    }
+
+    if (dragging && !selectedObjects.empty())
+    {
+        ImGui::SetTooltip("Moving %d objects", selectedObjects.size());
+    }
+    else if (dragging && selectedObjects.empty())
+    {
+        dragging = false;
+        objectToDrop = nullptr;
     }
 
     ImGui::End();
@@ -107,30 +131,41 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* go)
 
     bool node_open = ImGui::TreeNodeEx((void*)go, flags, go->name.c_str());
 
-    if (ImGui::IsItemClicked(ImGuiMouseButton_Left) || ImGui::IsItemClicked(ImGuiMouseButton_Right))
+    if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0))
     {
-        Engine::GetInstance().editor->SetSelected(go);
+        objectToSelect = go;
     }
 
-    if (ImGui::BeginDragDropSource())
+    if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(0) && !dragging)
     {
-        ImGui::SetDragDropPayload("HIERARCHY_NODE", &go, sizeof(GameObject*));
+        bool ctrlPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
+        bool shiftPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
+        bool eraseSelecteds = !(ctrlPressed || shiftPressed);
 
-        if (isSelected && selectedObjects.size() > 1)
-            ImGui::Text("Moving %d objects", selectedObjects.size());
-        else
-            ImGui::Text("Moving %s", go->name.c_str());
-
-        ImGui::EndDragDropSource();
+        if (objectToSelect == go) Engine::GetInstance().editor->SetSelected(go, eraseSelecteds);
+        objectToSelect = nullptr;
     }
 
-    if (ImGui::BeginDragDropTarget())
+    if (ImGui::IsItemHovered() && ImGui::IsMouseDragging(0) && !dragging)
     {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_NODE"))
-        {
-            GameObject* droppedGO = *(GameObject**)payload->Data;
-        }
-        ImGui::EndDragDropTarget();
+        bool ctrlPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
+        bool shiftPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
+        bool eraseSelecteds = !(ctrlPressed || shiftPressed);
+        if (!isSelected) Engine::GetInstance().editor->SetSelected(go, eraseSelecteds);
+        dragging = true;
+    }
+
+    if (dragging && ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly))
+    {
+        objectToDrop = go;
+        ImGui::GetWindowDrawList()->AddRect(
+            ImGui::GetItemRectMin(),
+            ImGui::GetItemRectMax(),
+            IM_COL32(0, 255, 255, 255),
+            0.0f,
+            0,
+            1.0f
+        );
     }
 
     if (node_open)
