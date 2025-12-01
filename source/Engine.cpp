@@ -6,6 +6,7 @@
 #include "Scene.h"
 #include "Editor.h"
 #include "Loader.h"
+#include "Resources.h"
 #include "EventSystem.h"
 
 
@@ -26,6 +27,7 @@ Engine::Engine() {
     render = new Render(true);
     scene = new Scene(true);
     loader = new Loader(true);
+    resources = new Resources(true);
     editor = new Editor(true);
     
     AddModule(events);
@@ -34,6 +36,7 @@ Engine::Engine() {
     AddModule(render);
     AddModule(scene);
     AddModule(loader);
+    AddModule(resources);
     AddModule(editor);
 }
 

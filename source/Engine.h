@@ -23,6 +23,7 @@ class Camera;
 class Scene;
 class Editor;
 class Loader;
+class Resources;
 class EventSystem;
 
 
@@ -65,6 +66,7 @@ public:
 	Scene* scene;
 	Editor* editor;
 	Loader* loader;
+	Resources* resources;
 	EventSystem* events;
 
 

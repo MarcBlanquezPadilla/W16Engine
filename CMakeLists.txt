@@ -42,6 +42,9 @@ add_executable(W16Engine
 	source/Editor.h
 	source/Interface.cpp
 	source/Interface.h
+	source/Resources.h
+	source/Resources.cpp
+	source/Interface.h
 	source/Event.h
 	source/EventListener.h
 	source/EventSystem.cpp
@@ -87,6 +90,15 @@ add_executable(W16Engine
 	source/utils/FileUtils.h
 	source/geometry/Plane.h
 	source/geometry/Plane.cpp
+	source/resources/Resource.cpp
+	source/resources/Resource.h
+	source/resources/ResourceMesh.cpp
+	source/resources/ResourceMesh.h
+	source/importers/Importer.h
+	source/importers/ModelImporter.cpp
+	source/importers/ModelImporter.h
+	source/importers/MeshImporter.cpp
+	source/importers/MeshImporter.h
 )
 
 target_link_libraries(W16Engine PRIVATE 

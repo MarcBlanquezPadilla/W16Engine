@@ -90,7 +90,6 @@ bool DoesFileExist(const std::string& filePath)
 
 std::string GetPreviousPath(const std::string& directoryPath)
 {
-
     std::filesystem::path path(directoryPath);
 
     if (path.has_parent_path())
@@ -99,4 +98,13 @@ std::string GetPreviousPath(const std::string& directoryPath)
     }
 
     return path.string();
+}
+
+bool CreateDirectory(const std::string& directoryPath)
+{
+    if (!std::filesystem::exists(directoryPath))
+    {
+        return std::filesystem::create_directories(directoryPath);   
+    }
+    return true;
 }

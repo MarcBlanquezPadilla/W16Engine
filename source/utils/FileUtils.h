@@ -18,3 +18,5 @@ std::vector<std::string> GetListDirectoryContents(const std::string& directoryPa
 bool IsFileDirectory(const std::string& directoryPath);
 
 bool DoesFileExist(const std::string& filePath);
+
+bool CreateDirectory(const std::string& directoryPath);
