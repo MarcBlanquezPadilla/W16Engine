@@ -4,29 +4,29 @@
 #include <SDL3/sdl.h>
 #include <algorithm>
 
-#include "EventSystem.h"
-#include "Render.h"
+#include "ModuleEvents.h"
+#include "ModuleRender.h"
 #include "CameraLens.h"
-#include "Window.h"
+#include "ModuleWindow.h"
 #include "Engine.h"
 #include "utils/Frustum.h"
-#include "Scene.h"
+#include "ModuleScene.h"
 #include "GameObject.h"
 #include "components/Mesh.h"
 #include "components/Texture.h"
 #include "utils/Log.h"
 
-Render::Render(bool startEnabled) : Module(startEnabled)
+ModuleRender::ModuleRender(bool startEnabled) : Module(startEnabled)
 {
 	name = "Render";
 }
 
-Render::~Render()
+ModuleRender::~ModuleRender()
 {
 
 }
 
-bool Render::Awake()
+bool ModuleRender::Awake()
 {
 	bool ret = true;
 
@@ -98,7 +98,7 @@ bool Render::Awake()
 		return false;
 	}
 
-	Engine::GetInstance().events->Subscribe(Event::Type::WindowResize, this);
+	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::WindowResize, this);
 
 	debugColor = glm::vec4(DEBUG_COLOR);
 	stencilColor = glm::vec4(STENCIL_COLOR);
@@ -109,7 +109,7 @@ bool Render::Awake()
 	return ret;
 }
 
-bool Render::PreUpdate()
+bool ModuleRender::PreUpdate()
 {
 	bool ret = true;
 
@@ -123,7 +123,7 @@ bool Render::PreUpdate()
 	return ret;
 }
 
-bool Render::PostUpdate()
+bool ModuleRender::PostUpdate()
 {
 	bool ret = true;
 
@@ -138,7 +138,7 @@ bool Render::PostUpdate()
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, Engine::GetInstance().window->width, Engine::GetInstance().window->height);
+	glViewport(0, 0, Engine::GetInstance().moduleWindow->width, Engine::GetInstance().moduleWindow->height);
 
 	glDisable(GL_SCISSOR_TEST);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -147,12 +147,12 @@ bool Render::PostUpdate()
 	return ret;
 }
 
-bool Render::CleanUp()
+bool ModuleRender::CleanUp()
 {
 	bool ret = true;
 
 	activeCameras.clear();
-	Engine::GetInstance().events->UnsubscribeAll(this);
+	Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
 
 	glDeleteProgram(shaderProgram);
 	glDeleteProgram(normalShaderProgram);
@@ -164,7 +164,7 @@ bool Render::CleanUp()
 
 #pragma region Draw
 
-bool Render::RenderScene(const CameraLens* camera)
+bool ModuleRender::RenderScene(const CameraLens* camera)
 {
 	if (!camera) return false;
 
@@ -177,7 +177,7 @@ bool Render::RenderScene(const CameraLens* camera)
 	else
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, Engine::GetInstance().window->width, Engine::GetInstance().window->height);
+		glViewport(0, 0, Engine::GetInstance().moduleWindow->width, Engine::GetInstance().moduleWindow->height);
 	}
 
 	//CLEAN BUFFERS
@@ -193,7 +193,7 @@ bool Render::RenderScene(const CameraLens* camera)
 	opaqueList.clear();
 	transparentList.clear();
 
-	for (GameObject* gameObject : Engine::GetInstance().scene->GetGameObjects())
+	for (GameObject* gameObject : Engine::GetInstance().moduleScene->GetGameObjects())
 	{
 		BuildRenderListsRecursive(gameObject, camera);
 	}
@@ -243,7 +243,7 @@ bool Render::RenderScene(const CameraLens* camera)
 	return true;
 }
 
-void Render::BuildRenderListsRecursive(GameObject* gameObject, const CameraLens* camera)
+void ModuleRender::BuildRenderListsRecursive(GameObject* gameObject, const CameraLens* camera)
 {
 	glm::mat4 globalModelMatrix;
 	if (gameObject && gameObject->GetEnabled())
@@ -295,7 +295,7 @@ void Render::BuildRenderListsRecursive(GameObject* gameObject, const CameraLens*
 	}
 }
 
-void Render::DrawRenderList(const std::multimap<float, RenderObject>& map, const CameraLens* camera)
+void ModuleRender::DrawRenderList(const std::multimap<float, RenderObject>& map, const CameraLens* camera)
 {
 	for (auto pair = map.rbegin(); pair != map.rend(); ++pair)
 	{
@@ -326,13 +326,13 @@ void Render::DrawRenderList(const std::multimap<float, RenderObject>& map, const
 	}
 }
 
-void Render::DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color)
+void ModuleRender::DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color)
 {
 	RenderLine line = { start, end, color };
 	linesList.push_back(line);
 }
 
-void Render::DrawLinesList(const CameraLens* camera)
+void ModuleRender::DrawLinesList(const CameraLens* camera)
 {
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
@@ -363,7 +363,7 @@ void Render::DrawLinesList(const CameraLens* camera)
 	}
 }
 
-void Render::DrawNormalsList(const CameraLens* camera)
+void ModuleRender::DrawNormalsList(const CameraLens* camera)
 {
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
@@ -387,7 +387,7 @@ void Render::DrawNormalsList(const CameraLens* camera)
 	}
 }
 
-void Render::DrawStencilList(const CameraLens* camera)
+void ModuleRender::DrawStencilList(const CameraLens* camera)
 {
 	glEnable(GL_STENCIL_TEST);
 	glEnable(GL_DEPTH_TEST);
@@ -438,7 +438,7 @@ void Render::DrawStencilList(const CameraLens* camera)
 	glDisable(GL_STENCIL_TEST);
 }
 
-void Render::DrawMeshLinesList(const CameraLens* camera)
+void ModuleRender::DrawMeshLinesList(const CameraLens* camera)
 {
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
@@ -473,7 +473,7 @@ void Render::DrawMeshLinesList(const CameraLens* camera)
 
 #pragma region Shaders
 
-bool Render::CreateShaderFromSources(unsigned int& shaderID, int type, const char* source, const int soruceLength)
+bool ModuleRender::CreateShaderFromSources(unsigned int& shaderID, int type, const char* source, const int soruceLength)
 {
 	shaderID = glCreateShader(type);
 	glShaderSource(shaderID, 1, &source, &soruceLength);
@@ -499,7 +499,7 @@ bool Render::CreateShaderFromSources(unsigned int& shaderID, int type, const cha
 
 
 
-bool Render::CreateDefaultShader()
+bool ModuleRender::CreateDefaultShader()
 {
 	unsigned int vShader = 0;
 	const char* vertexShaderSource = "#version 460 core\n"
@@ -570,7 +570,7 @@ bool Render::CreateDefaultShader()
 	return true;
 }
 
-bool Render::CreateNormalShader()
+bool ModuleRender::CreateNormalShader()
 {
 	unsigned int vShader = 0;
 	const char* vertexSource = "#version 460 core\n"
@@ -629,7 +629,7 @@ bool Render::CreateNormalShader()
 	return true;
 }
 
-bool Render::CreateOutlineShader()
+bool ModuleRender::CreateOutlineShader()
 {
 	unsigned int vShader = 0;
 	const char* vertexShaderSource = "#version 460 core\n"
@@ -695,7 +695,7 @@ bool Render::CreateOutlineShader()
 	return true;
 }
 
-bool Render::CreateLineShader()
+bool ModuleRender::CreateLineShader()
 {
 	const char* vsSource = "#version 460 core\n"
 		"layout (location = 0) in vec3 position;\n"
@@ -746,7 +746,7 @@ bool Render::CreateLineShader()
 	return true;
 }
 
-bool Render::CreateMeshLinesShader()
+bool ModuleRender::CreateMeshLinesShader()
 {
 	unsigned int vShader = 0;
 	const char* vertexShaderSource = "#version 460 core\n"
@@ -798,7 +798,7 @@ bool Render::CreateMeshLinesShader()
 #pragma endregion
 
 #pragma region Matrix
-void Render::UpdateProjectionMatix(glm::mat4 pm)
+void ModuleRender::UpdateProjectionMatix(glm::mat4 pm)
 {
 	//UPDATE DEFAULT SHADER
 	glUseProgram(shaderProgram);
@@ -818,7 +818,7 @@ void Render::UpdateProjectionMatix(glm::mat4 pm)
 	glUseProgram(shaderProgram);
 }
 
-void Render::UpdateViewMatix(glm::mat4 vm)
+void ModuleRender::UpdateViewMatix(glm::mat4 vm)
 {
 	//UPDATE DEFAULT SHADER
 	glUseProgram(shaderProgram);
@@ -842,7 +842,7 @@ void Render::UpdateViewMatix(glm::mat4 vm)
 
 #pragma region GPU
 
-bool Render::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
+bool ModuleRender::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
 
 {
 	//CREATE VAO
@@ -880,7 +880,7 @@ bool Render::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vert
 
 }
 
-bool Render::UploadSmoothedMeshToGPU(unsigned int& vao, unsigned int& vbo, unsigned int& sharedEbo, const std::vector<Vertex>& vertices)
+bool ModuleRender::UploadSmoothedMeshToGPU(unsigned int& vao, unsigned int& vbo, unsigned int& sharedEbo, const std::vector<Vertex>& vertices)
 {
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
@@ -903,7 +903,7 @@ bool Render::UploadSmoothedMeshToGPU(unsigned int& vao, unsigned int& vbo, unsig
 	return true;
 }
 
-bool Render::UploadLinesToGPU(unsigned int& vao, unsigned int& vbo, const std::vector<glm::vec3>& lines)
+bool ModuleRender::UploadLinesToGPU(unsigned int& vao, unsigned int& vbo, const std::vector<glm::vec3>& lines)
 {
 	//CREATE VAO
 	glGenVertexArrays(1, &vao);
@@ -924,7 +924,7 @@ bool Render::UploadLinesToGPU(unsigned int& vao, unsigned int& vbo, const std::v
 	return true;
 }
 
-void Render::DeleteMeshFromGPU(MeshData& meshData)
+void ModuleRender::DeleteMeshFromGPU(MeshData& meshData)
 {
 	LOG("Mesh removed from GPU. VAO: %d, EBO: %d, VBO: %d", meshData.VAO, meshData.EBO, meshData.VBO);
 	if (meshData.VBO != 0) glDeleteBuffers(1, &meshData.VBO);
@@ -935,7 +935,7 @@ void Render::DeleteMeshFromGPU(MeshData& meshData)
 
 
 
-unsigned int Render::UploadTextureToGPU(unsigned char* data, int width, int height)
+unsigned int ModuleRender::UploadTextureToGPU(unsigned char* data, int width, int height)
 {
 	unsigned int textureID = 0;
 
@@ -958,7 +958,7 @@ unsigned int Render::UploadTextureToGPU(unsigned char* data, int width, int heig
 	return textureID;
 }
 
-void Render::DeleteTextureFromGPU(unsigned int textureID)
+void ModuleRender::DeleteTextureFromGPU(unsigned int textureID)
 {
 	if (textureID != 0)
 	{
@@ -971,18 +971,18 @@ void Render::DeleteTextureFromGPU(unsigned int textureID)
 
 #pragma region Cameras
 
-void Render::AddCamera(CameraLens* camera)
+void ModuleRender::AddCamera(CameraLens* camera)
 {
 	activeCameras.push_back(camera);
 }
 
-void Render::RemoveCamera(CameraLens* camera)
+void ModuleRender::RemoveCamera(CameraLens* camera)
 {
 	auto it = std::remove(activeCameras.begin(), activeCameras.end(), camera);
 	activeCameras.erase(it, activeCameras.end());
 }
 
-CameraLens* Render::GetMainCamera()
+CameraLens* ModuleRender::GetMainCamera()
 {
 	if (mainCamera != nullptr && mainCamera->GetActiveCamera() && mainCamera->depth == 0)
 	{
@@ -1021,7 +1021,7 @@ CameraLens* Render::GetMainCamera()
 
 #pragma endregion
 
-bool Render::CreateCheckerTexture()
+bool ModuleRender::CreateCheckerTexture()
 {
 	GLubyte checkerImage[CHECKERS_HEIGHT][CHECKERS_WIDTH][4];
 	for (int i = 0; i < CHECKERS_HEIGHT; i++) {
@@ -1051,12 +1051,12 @@ bool Render::CreateCheckerTexture()
 	return true;
 }
 
-void Render::ChangeWindowSize(int x, int y)
+void ModuleRender::ChangeWindowSize(int x, int y)
 {
 	glViewport(0, 0, x, y);
 }
 
-void Render::OnEvent(const Event& event)
+void ModuleRender::OnEvent(const Event& event)
 {
 	switch (event.type)
 	{

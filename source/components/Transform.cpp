@@ -1,7 +1,7 @@
 #include "Transform.h"
 #include "Component.h"
 
-#include "../EventSystem.h"
+#include "../ModuleEvents.h"
 #include "../Engine.h"
 #include "../utils/Log.h"
 #include "../GameObject.h"
@@ -205,7 +205,7 @@ void Transform::SetScale(glm::vec3 _scale)
 void Transform::OnTransformChanged()
 {
     InvalidateGlobalMatrix();
-    Engine::GetInstance().events->PublishImmediate(Event(Event::Type::TransformChanged, owner));
+    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::TransformChanged, owner));
 }
 
 void Transform::OnEditor()

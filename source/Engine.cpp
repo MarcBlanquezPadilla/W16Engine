@@ -1,12 +1,12 @@
 #include "Engine.h"
 #include "utils/Log.h"
-#include "Window.h"
-#include "input.h"
-#include "Render.h"
-#include "Scene.h"
-#include "Editor.h"
-#include "Loader.h"
-#include "EventSystem.h"
+#include "ModuleWindow.h"
+#include "ModuleInput.h"
+#include "ModuleRender.h"
+#include "ModuleScene.h"
+#include "ModuleEditor.h"
+#include "ModuleLoader.h"
+#include "ModuleEvents.h"
 
 
 Engine& Engine::GetInstance() {
@@ -20,21 +20,21 @@ Engine::Engine() {
     startTime = Timer();
     frameTime = PerfTimer();
 
-    events = new EventSystem(true);
-    window = new Window(true);
-    input = new Input(true);
-    render = new Render(true);
-    scene = new Scene(true);
-    loader = new Loader(true);
-    editor = new Editor(true);
+    moduleEvents = new ModuleEvents(true);
+    moduleWindow = new ModuleWindow(true);
+    moduleInput = new ModuleInput(true);
+    moduleRender = new ModuleRender(true);
+    moduleScene = new ModuleScene(true);
+    moduleLoader = new ModuleLoader(true);
+    moduleEditor = new ModuleEditor(true);
     
-    AddModule(events);
-    AddModule(window);
-    AddModule(input);
-    AddModule(render);
-    AddModule(scene);
-    AddModule(loader);
-    AddModule(editor);
+    AddModule(moduleEvents);
+    AddModule(moduleWindow);
+    AddModule(moduleInput);
+    AddModule(moduleRender);
+    AddModule(moduleScene);
+    AddModule(moduleLoader);
+    AddModule(moduleEditor);
 }
 
 bool Engine::Awake() {
@@ -103,7 +103,7 @@ bool Engine::Update() {
     }
 
     //QUIT CONDITION
-    if (input->GetWindowEvent(WE_QUIT) == true)
+    if (moduleInput->GetWindowEvent(WE_QUIT) == true)
         quit = true;
 
     if (quit) ret = false;
@@ -128,7 +128,7 @@ bool Engine::PostUpdate() {
         }
     }
 
-    window->Swap();
+    moduleWindow->Swap();
 
     return ret;
 }

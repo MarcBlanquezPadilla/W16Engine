@@ -6,7 +6,7 @@
 #include <vector>
 #include <assimp/scene.h>
 #include "../Engine.h"
-#include "../Render.h"
+#include "../ModuleRender.h"
 #include <fstream>
 #include <cmath>
 #include <unordered_map>
@@ -32,7 +32,7 @@ Mesh::~Mesh()
 
 void Mesh::CleanUp()
 {
-	Engine::GetInstance().render->DeleteMeshFromGPU(this->meshData);
+	Engine::GetInstance().moduleRender->DeleteMeshFromGPU(this->meshData);
 }
     
 bool Mesh::LoadModel(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
@@ -94,7 +94,7 @@ bool Mesh::LoadToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> ind
         return false;
     }
 
-    bool success = Engine::GetInstance().render->UploadMeshToGPU(meshData, vertices, indices);
+    bool success = Engine::GetInstance().moduleRender->UploadMeshToGPU(meshData, vertices, indices);
 
     if (!success)
     {
@@ -121,7 +121,7 @@ bool Mesh::LoadNormalsToGpu(std::vector<Vertex> vertices, std::vector<unsigned i
 
     if (!normal_lines.empty())
     {
-        Engine::GetInstance().render->UploadLinesToGPU(
+        Engine::GetInstance().moduleRender->UploadLinesToGPU(
             this->normalData.VAO,
             this->normalData.VBO,
             normal_lines
@@ -157,7 +157,7 @@ bool Mesh::LoadSmothedNormalsToGpu(std::vector<Vertex> vertices, std::vector<uns
 
     if (!smothedVertices.empty())
     {
-        Engine::GetInstance().render->UploadSmoothedMeshToGPU(
+        Engine::GetInstance().moduleRender->UploadSmoothedMeshToGPU(
             stencilData.VAO,
             stencilData.VBO,
             meshData.EBO,

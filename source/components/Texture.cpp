@@ -4,8 +4,8 @@
 #include <vector>
 #include <assimp/scene.h>
 #include "../Engine.h"
-#include "../Render.h"
-#include "../Loader.h"
+#include "../ModuleRender.h"
+#include "../ModuleLoader.h"
 #include "imgui.h"
 
 Texture::Texture(GameObject* owner) : Component(owner)
@@ -22,7 +22,7 @@ void Texture::CleanUp()
 {
     if (textureID != 0)
     {
-        Engine::GetInstance().render->DeleteTextureFromGPU(textureID);
+        Engine::GetInstance().moduleRender->DeleteTextureFromGPU(textureID);
         textureID = 0;
     }
 
@@ -40,7 +40,7 @@ void Texture::Load(pugi::xml_node componentNode)
     path = componentNode.attribute("path").as_string();
     use_checker = componentNode.attribute("useChecker").as_bool();
     transparent = componentNode.attribute("transparent").as_bool();
-    Engine::GetInstance().loader->LoadTextureToGameObject(path, this->owner);
+    Engine::GetInstance().moduleLoader->LoadTextureToGameObject(path, this->owner);
 }
 
 void Texture::SetTexture(const std::string p, unsigned int t, int w, int h)

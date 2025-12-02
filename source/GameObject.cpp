@@ -1,7 +1,7 @@
 #include "GameObject.h"
-#include "Scene.h"
+#include "ModuleScene.h"
 #include "Engine.h"
-#include "EventSystem.h"
+#include "ModuleEvents.h"
 #include "components/Component.h"
 #include "components/Mesh.h"
 #include "components/Transform.h"
@@ -59,7 +59,7 @@ bool GameObject::Update(float dt)
 
 bool GameObject::CleanUp()
 {
-	Engine::GetInstance().events->PublishImmediate(Event(Event::Type::GameObjectDestroyed, this));
+	Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::GameObjectDestroyed, this));
 
 	for (auto const& pair : components)
 	{
@@ -275,7 +275,7 @@ bool GameObject::TryGetGlobalAABB(AABB& globalAABB)
 void GameObject::SetStatic(bool _static)
 {
 	isStatic = _static;
-	Engine::GetInstance().events->PublishImmediate(Event(Event::Type::StaticChanged, this));
+	Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::StaticChanged, this));
 }
 
 void GameObject::SetEnabled(bool _enabled)
@@ -402,7 +402,7 @@ void GameObject::SetParent(GameObject* newParent)
 	}
 	else
 	{
-		Engine::GetInstance().scene->RemoveGameObject(this);
+		Engine::GetInstance().moduleScene->RemoveGameObject(this);
 	}
 
 	parent = newParent;
@@ -413,7 +413,7 @@ void GameObject::SetParent(GameObject* newParent)
 	}
 	else
 	{
-		Engine::GetInstance().scene->AddGameObject(this);
+		Engine::GetInstance().moduleScene->AddGameObject(this);
 	}
 
 	if (parent != nullptr)
@@ -440,5 +440,5 @@ void GameObject::SetParent(GameObject* newParent)
 
 void GameObject::Destroy()
 {
-	Engine::GetInstance().scene->DestroyGameObject(this);
+	Engine::GetInstance().moduleScene->DestroyGameObject(this);
 }

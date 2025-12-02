@@ -1,3 +1,4 @@
+
 #pragma once
 #include "Module.h"
 #include "EventListener.h"
@@ -11,13 +12,13 @@ struct aiMaterial;
 struct aiScene;
 struct aiNode;
 
-class Loader : public Module, public EventListener
+class ModuleLoader : public Module, public EventListener
 {
 public:
 
-	Loader(bool startEnabled);
+	ModuleLoader(bool startEnabled);
 
-	virtual ~Loader();
+	virtual ~ModuleLoader();
 
 	bool Awake();
 	bool Start();

@@ -8,13 +8,13 @@ class Tree;
 class AABB;
 struct Ray;
 
-class Scene : public Module, public EventListener
+class ModuleScene : public Module, public EventListener
 {
 public:
 
-	Scene(bool startEnabled) ;
+	ModuleScene(bool startEnabled) ;
 
-	virtual ~Scene();
+	virtual ~ModuleScene();
 
 	bool Awake();
 	bool Start();

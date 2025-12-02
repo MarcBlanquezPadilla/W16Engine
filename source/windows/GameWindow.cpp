@@ -3,8 +3,8 @@
 #include "ImGuizmo.h"
 #include "../Engine.h"
 #include "../CameraLens.h"
-#include "../Render.h"
-#include "../Scene.h"
+#include "../ModuleRender.h"
+#include "../ModuleScene.h"
 #include "../GameObject.h"
 
 GameWindow::GameWindow(bool active) : UIWindow("Game", active)
@@ -32,8 +32,8 @@ void GameWindow::Draw()
 
 	ImGui::PopStyleVar();
 
-    CameraLens* cam = Engine::GetInstance().render->GetMainCamera();
-    int camNum = Engine::GetInstance().render->GetMainCamerasNum();
+    CameraLens* cam = Engine::GetInstance().moduleRender->GetMainCamera();
+    int camNum = Engine::GetInstance().moduleRender->GetMainCamerasNum();
     ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 
     const char* text = "";

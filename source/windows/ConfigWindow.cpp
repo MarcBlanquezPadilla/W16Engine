@@ -1,8 +1,8 @@
 #include "ConfigWindow.h"
 #include "imgui.h"
 #include "../Engine.h"
-#include "../Render.h"
-#include "../Window.h"
+#include "../ModuleRender.h"
+#include "../ModuleWindow.h"
 
 ConfigWindow::ConfigWindow(bool active) : UIWindow("Configuration", active)
 {
@@ -81,12 +81,12 @@ void ConfigWindow::Draw()
 
     if (ImGui::CollapsingHeader("Hardware & Versions"))
     {
-        ImGui::TextWrapped("SDL Version: %s", Engine::GetInstance().window->GetSDLVersion().c_str());
-        ImGui::TextWrapped("OpenGL Version: %s", Engine::GetInstance().render->GetGLVersion().c_str());
-        ImGui::TextWrapped("GLSL Version: %s", Engine::GetInstance().render->GetGLSLVersion().c_str());
-        ImGui::TextWrapped("CPU: %s", Engine::GetInstance().window->GetCPU().c_str());
-        ImGui::TextWrapped("RAM: %s", Engine::GetInstance().window->GetRAM().c_str());
-        ImGui::TextWrapped("GPU: %s", Engine::GetInstance().render->GetGPU().c_str());
+        ImGui::TextWrapped("SDL Version: %s", Engine::GetInstance().moduleWindow->GetSDLVersion().c_str());
+        ImGui::TextWrapped("OpenGL Version: %s", Engine::GetInstance().moduleRender->GetGLVersion().c_str());
+        ImGui::TextWrapped("GLSL Version: %s", Engine::GetInstance().moduleRender->GetGLSLVersion().c_str());
+        ImGui::TextWrapped("CPU: %s", Engine::GetInstance().moduleWindow->GetCPU().c_str());
+        ImGui::TextWrapped("RAM: %s", Engine::GetInstance().moduleWindow->GetRAM().c_str());
+        ImGui::TextWrapped("GPU: %s", Engine::GetInstance().moduleRender->GetGPU().c_str());
     }
 
     ImGui::End();

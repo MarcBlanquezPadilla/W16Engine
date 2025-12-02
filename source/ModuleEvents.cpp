@@ -1,32 +1,32 @@
 #pragma once
-#include "EventSystem.h"
+#include "ModuleEvents.h"
 #include "EventListener.h"
 #include "utils/Log.h"
 
-EventSystem::EventSystem(bool startEnabled) : Module(startEnabled)
+ModuleEvents::ModuleEvents(bool startEnabled) : Module(startEnabled)
 {
-    name = "EventSystem";
+    name = "ModuleEvents";
     
 }
 
-EventSystem::~EventSystem()
+ModuleEvents::~ModuleEvents()
 {
 
 }
 
-bool EventSystem::Awake()
+bool ModuleEvents::Awake()
 {
     processingEvents = false;
     return true;
 }
 
-bool EventSystem::CleanUp()
+bool ModuleEvents::CleanUp()
 {
     ClearQueue();
     return true;
 }
 
-void EventSystem::Subscribe(Event::Type eventType, EventListener* listener)
+void ModuleEvents::Subscribe(Event::Type eventType, EventListener* listener)
 {
 	if (!listener) return;
 
@@ -37,7 +37,7 @@ void EventSystem::Subscribe(Event::Type eventType, EventListener* listener)
     }
 }
 
-void EventSystem::Unsubscribe(Event::Type eventType, EventListener* listener)
+void ModuleEvents::Unsubscribe(Event::Type eventType, EventListener* listener)
 {
     if (!listener) return;
 
@@ -47,7 +47,7 @@ void EventSystem::Unsubscribe(Event::Type eventType, EventListener* listener)
     );
 }
 
-void EventSystem::UnsubscribeAll(EventListener* listener)
+void ModuleEvents::UnsubscribeAll(EventListener* listener)
 {
     if (!listener) return;
 
@@ -61,7 +61,7 @@ void EventSystem::UnsubscribeAll(EventListener* listener)
     }
 }
 
-void EventSystem::PublishImmediate(const Event& event)
+void ModuleEvents::PublishImmediate(const Event& event)
 {
     if (listeners.find(event.type) == listeners.end())
     {
@@ -79,14 +79,14 @@ void EventSystem::PublishImmediate(const Event& event)
     }
 }
 
-void EventSystem::Publish(std::shared_ptr<Event> event)
+void ModuleEvents::Publish(std::shared_ptr<Event> event)
 {
     if (!event) return;
 
     eventQueue.push(event);
 }
 
-void EventSystem::ProcessEvents()
+void ModuleEvents::ProcessEvents()
 {
     if (processingEvents)
     {
@@ -110,7 +110,7 @@ void EventSystem::ProcessEvents()
     processingEvents = false;
 }
 
-void EventSystem::ClearQueue()
+void ModuleEvents::ClearQueue()
 {
     while (!eventQueue.empty())
     {
@@ -118,7 +118,7 @@ void EventSystem::ClearQueue()
     }
 }
 
-int EventSystem::GetListenerCount(Event::Type eventType) const
+int ModuleEvents::GetListenerCount(Event::Type eventType) const
 {
     auto it = listeners.find(eventType);
     if (it != listeners.end())

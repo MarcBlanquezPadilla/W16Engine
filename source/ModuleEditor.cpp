@@ -1,14 +1,14 @@
 #include "Engine.h"
-#include "Editor.h"
-#include "Render.h"
+#include "ModuleEditor.h"
+#include "ModuleRender.h"
 #include "Interface.h"
 #include "Global.h"
 #include "EditorCamera.h"
 #include "CameraLens.h"
-#include "EventSystem.h"
+#include "ModuleEvents.h"
 
-#include "Input.h"
-#include "Scene.h"
+#include "ModuleInput.h"
+#include "ModuleScene.h"
 #include "GameObject.h"
 #include "components/Transform.h"
 #include "components/Camera.h"
@@ -24,22 +24,22 @@
 #include "Imgui.h"
 #include <algorithm>
 
-Editor::Editor(bool startEnabled) : Module(startEnabled)
+ModuleEditor::ModuleEditor(bool startEnabled) : Module(startEnabled)
 {
 	name = "Editor";
 }
 
-Editor::~Editor() {}
+ModuleEditor::~ModuleEditor() {}
 
-bool Editor::Awake()
+bool ModuleEditor::Awake()
 {
 	bool ret = true;
 
 	//SUBSCRIBE TO INPUT EVENT
-	Engine::GetInstance().events->Subscribe(Event::Type::EventSDL, this);
-	Engine::GetInstance().events->Subscribe(Event::Type::CastRay, this);
-	Engine::GetInstance().events->Subscribe(Event::Type::SceneCleared, this);
-	Engine::GetInstance().events->Subscribe(Event::Type::GameObjectDestroyed, this);
+	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::EventSDL, this);
+	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::CastRay, this);
+	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::SceneCleared, this);
+	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::GameObjectDestroyed, this);
 
 	//INIT INTERFACE
 	userInterface = new Interface();
@@ -69,7 +69,7 @@ bool Editor::Awake()
 	return ret;
 }
 
-bool Editor::PreUpdate()
+bool ModuleEditor::PreUpdate()
 {
 	userInterface->PreUpdate();
 	editorCamera->PreUpdate();
@@ -77,9 +77,9 @@ bool Editor::PreUpdate()
 	return true;
 }
 
-bool Editor::Update(float dt)
+bool ModuleEditor::Update(float dt)
 {
-	if (!selectedGameObjects.empty() && Engine::GetInstance().input->GetKey(SDL_SCANCODE_DELETE) == KEY_DOWN)
+	if (!selectedGameObjects.empty() && Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_DELETE) == KEY_DOWN)
 	{
 		for (GameObject* selectedGameObject : selectedGameObjects)
 		{
@@ -89,12 +89,12 @@ bool Editor::Update(float dt)
 
 	if (debugRay)
 	{
-		Engine::GetInstance().render->DrawLine(startLastRay, endLastRay, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+		Engine::GetInstance().moduleRender->DrawLine(startLastRay, endLastRay, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 	}
 
 	if (debugTree)
 	{
-		Tree* tree = Engine::GetInstance().scene->GetTree();
+		Tree* tree = Engine::GetInstance().moduleScene->GetTree();
 		if (tree)
 		{
 			std::vector<AABB> allNodesAABB;
@@ -102,7 +102,7 @@ bool Editor::Update(float dt)
 			glm::vec4 color = glm::vec4(DEBUG_COLOR);
 
 
-			Render* render = Engine::GetInstance().render;
+			ModuleRender* render = Engine::GetInstance().moduleRender;
 
 			for (const AABB& box : allNodesAABB)
 			{
@@ -145,7 +145,7 @@ bool Editor::Update(float dt)
 		int currentX;
 		int currentZ;
 		
-		Render* render = Engine::GetInstance().render;
+		ModuleRender* render = Engine::GetInstance().moduleRender;
 
 		glm::vec4 gridColor = glm::vec4(GRID_COLOR);
 
@@ -221,7 +221,7 @@ bool Editor::Update(float dt)
 								globalMax = glm::max(globalMax, worldPos);
 							}
 
-							Render* render = Engine::GetInstance().render;
+							ModuleRender* render = Engine::GetInstance().moduleRender;
 							glm::vec4 color = glm::vec4(DEBUG_COLOR);
 
 							glm::vec3 p1 = globalMin;
@@ -272,7 +272,7 @@ bool Editor::Update(float dt)
 					}
 
 					glm::vec4 color = glm::vec4(CAMERA_COLOR);
-					Render* render = Engine::GetInstance().render;
+					ModuleRender* render = Engine::GetInstance().moduleRender;
 
 					render->DrawLine(corners[0], corners[1], color);
 					render->DrawLine(corners[1], corners[2], color);
@@ -298,17 +298,17 @@ bool Editor::Update(float dt)
 	return true;
 }
 
-bool Editor::PostUpdate()
+bool ModuleEditor::PostUpdate()
 {
 	userInterface->PostUpdate();
 
 	return true;
 }
 
-bool Editor::CleanUp()
+bool ModuleEditor::CleanUp()
 {
 
-	Engine::GetInstance().events->UnsubscribeAll(this);
+	Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
 
 	userInterface->CleanUp();
 	editorCamera->CleanUp();
@@ -319,13 +319,13 @@ bool Editor::CleanUp()
 	return true;
 }
 
-void Editor::TestMouseRay(int mouseX, int mouseY, int width, int height)
+void ModuleEditor::TestMouseRay(int mouseX, int mouseY, int width, int height)
 {
 	Ray ray = editorCamera->GetCameraLens()->GetRayFromMouse(mouseX, mouseY, width, height);
 
 	std::vector <GameObject*> candidates;
 
-	Engine::GetInstance().scene->QueryRay(ray, candidates);
+	Engine::GetInstance().moduleScene->QueryRay(ray, candidates);
 
 	GameObject* closestHit = nullptr;
 	float minDistance = FLT_MAX;
@@ -370,8 +370,8 @@ void Editor::TestMouseRay(int mouseX, int mouseY, int width, int height)
 		}
 	}
 
-	bool ctrlPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
-	bool shiftPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
+	bool ctrlPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
+	bool shiftPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
 	bool eraseSelecteds = !(ctrlPressed || shiftPressed);
 
 	if (closestHit) {
@@ -380,7 +380,7 @@ void Editor::TestMouseRay(int mouseX, int mouseY, int width, int height)
 	else SetSelected(nullptr, eraseSelecteds);
 }
 
-void Editor::SetSelected(GameObject* gameObject, bool eraseSelecteds)
+void ModuleEditor::SetSelected(GameObject* gameObject, bool eraseSelecteds)
 {
 
 	if (eraseSelecteds && gameObject != nullptr)
@@ -417,21 +417,21 @@ void Editor::SetSelected(GameObject* gameObject, bool eraseSelecteds)
 	}
 }
 
-void Editor::HandleInput(SDL_Event* event)
+void ModuleEditor::HandleInput(SDL_Event* event)
 {
 	userInterface->HandleInput(event);
 }
 
-EditorCamera* Editor::GetEditorCamera()
+EditorCamera* ModuleEditor::GetEditorCamera()
 {
 	return editorCamera;
 }
-CameraLens* Editor::GetEditorCameraLens()
+CameraLens* ModuleEditor::GetEditorCameraLens()
 {
 	return editorCamera->GetCameraLens();
 }
 
-void Editor::OnEvent(const Event& event)
+void ModuleEditor::OnEvent(const Event& event)
 {
 	switch (event.type)
 	{

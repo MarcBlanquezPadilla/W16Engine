@@ -4,7 +4,7 @@
 #include "Ray.h"
 #include "../GameObject.h"
 #include "../Engine.h"
-#include "../Render.h"
+#include "../ModuleRender.h"
 
 TreeNode::TreeNode(const AABB& bounds, int depth, int numChildren)
     : limits(bounds), depth(depth), isLeaf(true)
@@ -315,7 +315,7 @@ void Tree::DrawDebug(glm::vec4 _color)
     glm::vec4 color = _color;
 
 
-    Render* render = Engine::GetInstance().render;
+    ModuleRender* render = Engine::GetInstance().moduleRender;
 
     for (const AABB& box : allNodesAABB)
     {

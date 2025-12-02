@@ -1,5 +1,5 @@
 #include "ProjectWindow.h"
-#include "../Loader.h"
+#include "../ModuleLoader.h"
 #include "../Engine.h"
 #include "../utils/Log.h"
 #include "../utils/FileUtils.h"
@@ -19,22 +19,22 @@ ProjectWindow::~ProjectWindow()
 void ProjectWindow::Awake()
 {
     int width = 0, height = 0;
-    Engine::GetInstance().loader->LoadTexture("Resources/folder.png", folderIconTextureID, width, height, true);
+    Engine::GetInstance().moduleLoader->LoadTexture("Resources/folder.png", folderIconTextureID, width, height, true);
     
     width = 0, height = 0;
-    Engine::GetInstance().loader->LoadTexture("Resources/file.png", fileIconTextureID, width, height, true);
+    Engine::GetInstance().moduleLoader->LoadTexture("Resources/file.png", fileIconTextureID, width, height, true);
 
     width = 0, height = 0;
-    Engine::GetInstance().loader->LoadTexture("Resources/model.png", modelIconTextureID, width, height, true);
+    Engine::GetInstance().moduleLoader->LoadTexture("Resources/model.png", modelIconTextureID, width, height, true);
 
     width = 0, height = 0;
-    Engine::GetInstance().loader->LoadTexture("Resources/image.png", imageIconTextureID, width, height, true);
+    Engine::GetInstance().moduleLoader->LoadTexture("Resources/image.png", imageIconTextureID, width, height, true);
 
     width = 0, height = 0;
-    Engine::GetInstance().loader->LoadTexture("Resources/scene.png", sceneIconTextureID, width, height, true);
+    Engine::GetInstance().moduleLoader->LoadTexture("Resources/scene.png", sceneIconTextureID, width, height, true);
 
     width = 0, height = 0;
-    Engine::GetInstance().loader->LoadTexture("Resources/script.png", scriptIconTextureID, width, height, true);
+    Engine::GetInstance().moduleLoader->LoadTexture("Resources/script.png", scriptIconTextureID, width, height, true);
 }
 
 void ProjectWindow::Draw()

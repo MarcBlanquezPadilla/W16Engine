@@ -1,24 +1,24 @@
-#include "Window.h"
+#include "ModuleWindow.h"
 #include "Engine.h"
-#include "EventSystem.h"
+#include "ModuleEvents.h"
 #include "utils/Log.h"
 #include "Global.h"
-#include "Input.h"
+#include "ModuleInput.h"
 #include "SDL3/SDL.h"
 #include <windows.h>
 
-Window::Window(bool startEnabled) : Module(startEnabled)
+ModuleWindow::ModuleWindow(bool startEnabled) : Module(startEnabled)
 {
 	window = NULL;
 	name = "window";
 }
 
-Window::~Window()
+ModuleWindow::~ModuleWindow()
 {
 
 }
 
-bool Window::Awake()
+bool ModuleWindow::Awake()
 {
 
 	bool ret = true;
@@ -104,14 +104,14 @@ bool Window::Awake()
 	}
 
 	//EVENTS
-	Engine::GetInstance().events->Subscribe(Event::Type::WindowResize, this);
+	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::WindowResize, this);
 
 	return ret;
 }
 
-bool Window::CleanUp()
+bool ModuleWindow::CleanUp()
 {
-	Engine::GetInstance().events->UnsubscribeAll(this);
+	Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
 	LOG("Destroying SDL window and quitting all SDL systems");
 
 	if (context != NULL)
@@ -128,33 +128,33 @@ bool Window::CleanUp()
 	return true;
 }
 
-void Window::SetTitle(const char* new_title)
+void ModuleWindow::SetTitle(const char* new_title)
 {
 	SDL_SetWindowTitle(window, new_title);
 }
 
-void Window::GetWindowSize(int& width, int& height) const
+void ModuleWindow::GetWindowSize(int& width, int& height) const
 {
 	width = this->width;
 	height = this->height;
 }
 
-int Window::GetScale() const
+int ModuleWindow::GetScale() const
 {
 	return scale;
 }
 
-std::string Window::GetRAM()
+std::string ModuleWindow::GetRAM()
 {
 	return ram;
 }
 
-std::string Window::GetCPU()
+std::string ModuleWindow::GetCPU()
 {
 	return cpu_brand;
 }
 
-void Window::OnEvent(const Event& event)
+void ModuleWindow::OnEvent(const Event& event)
 {
 	switch (event.type)
 	{

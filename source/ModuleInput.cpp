@@ -1,14 +1,14 @@
-#include "Input.h"
+#include "ModuleInput.h"
 #include "Engine.h"
 #include "Global.h"
-#include "EventSystem.h"
+#include "ModuleEvents.h"
 
 #include "utils/Log.h"
 
 
 #define MAX_KEYS 300
 
-Input::Input(bool startEnabled) : Module(startEnabled)
+ModuleInput::ModuleInput(bool startEnabled) : Module(startEnabled)
 {
 	name = "input";
 
@@ -17,12 +17,12 @@ Input::Input(bool startEnabled) : Module(startEnabled)
 	memset(mouseButtons, KEY_IDLE, sizeof(KeyState) * NUM_MOUSE_BUTTONS);
 }
 
-Input::~Input()
+ModuleInput::~ModuleInput()
 {
 
 }
 
-bool Input::Awake()
+bool ModuleInput::Awake()
 {
 	bool ret = true;
 	SDL_Init(0);
@@ -64,12 +64,12 @@ bool Input::Awake()
 	return ret;
 }
 
-bool Input::Start()
+bool ModuleInput::Start()
 {
 	return true;
 }
 
-bool Input::PreUpdate()
+bool ModuleInput::PreUpdate()
 {
 	static SDL_Event event;
 	const bool* keys = SDL_GetKeyboardState(NULL);
@@ -103,7 +103,7 @@ bool Input::PreUpdate()
 
 	while (SDL_PollEvent(&event) != 0)
 	{
-		Engine::GetInstance().events->PublishImmediate(Event(Event::Type::EventSDL, &event));
+		Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::EventSDL, &event));
 
 		switch (event.type)
 		{
@@ -125,7 +125,7 @@ bool Input::PreUpdate()
 			windowEvents[WE_SHOW] = true;
 			break;
 		case SDL_EVENT_WINDOW_RESIZED:
-			Engine::GetInstance().events->PublishImmediate(Event(Event::Type::WindowResize, event.window.data1, event.window.data2));
+			Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::WindowResize, event.window.data1, event.window.data2));
 			windowEvents[WE_SHOW] = true;
 			break;
 
@@ -158,7 +158,7 @@ bool Input::PreUpdate()
 			std::string filePathStr(filePath);
 			std::string extension = filePathStr.substr(filePathStr.find_last_of(".") + 1);
 
-			Engine::GetInstance().events->PublishImmediate(Event(Event::Type::FileDropped, filePath));
+			Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::FileDropped, filePath));
 			}
 			break;
 
@@ -199,7 +199,7 @@ bool Input::PreUpdate()
 	return true;
 }
 
-bool Input::CleanUp()
+bool ModuleInput::CleanUp()
 {
 	LOG("Quitting SDL event subsystem");
 	SDL_QuitSubSystem(SDL_INIT_EVENTS);
@@ -213,27 +213,27 @@ bool Input::CleanUp()
 }
 
 
-bool Input::GetWindowEvent(EventWindow ev)
+bool ModuleInput::GetWindowEvent(EventWindow ev)
 {
 	return windowEvents[ev];
 }
 
-Vector2D Input::GetMousePosition()
+Vector2D ModuleInput::GetMousePosition()
 {
 	return Vector2D(mouseX, mouseY);
 }
 
-Vector2D Input::GetMouseMotion()
+Vector2D ModuleInput::GetMouseMotion()
 {
 	return Vector2D(mouseMotionX, mouseMotionY);
 }
 
-KeyState Input::GetGamepadButton(SDL_GamepadButton button) const
+KeyState ModuleInput::GetGamepadButton(SDL_GamepadButton button) const
 {
 	return gamepadButtons[button];
 }
 
-float Input::GetMouseWheelY()
+float ModuleInput::GetMouseWheelY()
 {
 	return mouseWheelY;
 }

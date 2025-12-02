@@ -3,8 +3,8 @@
 #include "../CameraLens.h"
 #include "../components/Transform.h"
 #include "../Engine.h"
-#include "../EventSystem.h"
-#include "../Render.h"
+#include "../ModuleEvents.h"
+#include "../ModuleRender.h"
 
 #include "imgui.h"
 
@@ -25,17 +25,17 @@ void Camera::Start()
     UpdateTransform();
 
     lens->SetPerspective(60.0f, 16.0f / 9.0f, 0.1f, 100.0f);
-    Engine::GetInstance().events->Subscribe(Event::Type::ChangeActiveCamera, this);
+    Engine::GetInstance().moduleEvents->Subscribe(Event::Type::ChangeActiveCamera, this);
 }
 
 void Camera::OnEnable()
 {
-    Engine::GetInstance().render->AddCamera(lens);
+    Engine::GetInstance().moduleRender->AddCamera(lens);
 }
 
 void Camera::OnDisable()
 {
-    Engine::GetInstance().render->RemoveCamera(lens);
+    Engine::GetInstance().moduleRender->RemoveCamera(lens);
 }
 
 void Camera::Update(float dt)
@@ -60,13 +60,13 @@ void Camera::UpdateTransform()
 void Camera::SetMainCamera(bool mainCamera)
 {
     if (!owner->GetEnabled()) return;
-    Engine::GetInstance().events->PublishImmediate(Event(Event::Type::ChangeActiveCamera, owner->UUID));
+    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::ChangeActiveCamera, owner->UUID));
 }
 
 void Camera::CleanUp()
 {
-    Engine::GetInstance().events->UnsubscribeAll(this);
-    Engine::GetInstance().render->RemoveCamera(lens);
+    Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
+    Engine::GetInstance().moduleRender->RemoveCamera(lens);
     lens->CleanUp();
     delete lens;
 }

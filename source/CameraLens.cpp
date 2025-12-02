@@ -1,7 +1,8 @@
 #include "CameraLens.h"
 #include "Engine.h"
-#include "EventSystem.h"
-#include "Window.h"
+#include "ModuleScene.h"
+#include "ModuleWindow.h"
+#include "ModuleEvents.h"
 #include "utils/Frustum.h"
 #include "utils/Ray.h"
 #include "utils/Log.h"
@@ -129,7 +130,7 @@ Ray CameraLens::GetRayFromMouse(int mouseX, int mouseY, int width, int height)
     ray.origin = position;
     ray.direction = glm::normalize(ray_wor);
 
-    Engine::GetInstance().events->PublishImmediate(Event(Event::Type::CastRay, &ray));
+    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::CastRay, &ray));
 
     return ray;
 }

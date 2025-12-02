@@ -2,9 +2,9 @@
 #include "imgui.h"
 
 #include "Engine.h"
-#include "Window.h"
-#include "Scene.h"
-#include "Loader.h"
+#include "ModuleWindow.h"
+#include "ModuleScene.h"
+#include "ModuleLoader.h"
 
 #include "windows/UIWindow.h"
 #include "windows/ConfigWindow.h"
@@ -51,8 +51,8 @@ bool Interface::Awake()
 
 	ApplyTheme(Theme::Dark);
 
-	SDL_Window* window = Engine::GetInstance().window->window;
-	SDL_GLContext gl_context = Engine::GetInstance().window->context;
+	SDL_Window* window = Engine::GetInstance().moduleWindow->window;
+	SDL_GLContext gl_context = Engine::GetInstance().moduleWindow->context;
 	const char* glsl_version = "#version 460";
 
 	if (!ImGui_ImplSDL3_InitForOpenGL(window, gl_context))
@@ -125,15 +125,15 @@ bool Interface::Update(float dt)
 			}
 			if (ImGui::MenuItem("New Scene"))
 			{
-				Engine::GetInstance().scene->NewScene();
+				Engine::GetInstance().moduleScene->NewScene();
 			}
 			if (ImGui::MenuItem("Save Scene"))
 			{
-				Engine::GetInstance().loader->SaveScene();
+				Engine::GetInstance().moduleLoader->SaveScene();
 			}
 			if (ImGui::MenuItem("Load Scene"))
 			{
-				Engine::GetInstance().loader->LoadScene();
+				Engine::GetInstance().moduleLoader->LoadScene();
 			}
 			ImGui::EndMenu();
 		}

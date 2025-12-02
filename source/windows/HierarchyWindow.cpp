@@ -1,9 +1,9 @@
 #include "HierarchyWindow.h"
 #include "../Engine.h"
-#include "../Scene.h"
-#include "../Loader.h"
-#include "../Editor.h"
-#include "../Input.h"
+#include "../ModuleScene.h"
+#include "../ModuleLoader.h"
+#include "../ModuleEditor.h"
+#include "../ModuleInput.h"
 #include "../Global.h"
 #include "../GameObject.h"
 #include "imgui.h"
@@ -30,8 +30,8 @@ void HierarchyWindow::Draw()
         return;
     }
 
-    Scene* scene = Engine::GetInstance().scene;
-    Loader* loader = Engine::GetInstance().loader;
+    ModuleScene* scene = Engine::GetInstance().moduleScene;
+    ModuleLoader* loader = Engine::GetInstance().moduleLoader;
 
     objectToDrop = nullptr;
 
@@ -58,7 +58,7 @@ void HierarchyWindow::Draw()
     ImVec2 p_max = ImVec2(p_min.x + contentSize.x, p_min.y + contentSize.y);
     ImGui::Dummy(contentSize);
 
-    const std::vector<GameObject*>& selectedObjects = Engine::GetInstance().editor->GetSelectedGameObjects();
+    const std::vector<GameObject*>& selectedObjects = Engine::GetInstance().moduleEditor->GetSelectedGameObjects();
 
     if (dragging && ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly))
     {
@@ -113,7 +113,7 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* go)
 {
     if (go == nullptr) return;
 
-    const std::vector<GameObject*>& selectedObjects = Engine::GetInstance().editor->GetSelectedGameObjects();
+    const std::vector<GameObject*>& selectedObjects = Engine::GetInstance().moduleEditor->GetSelectedGameObjects();
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
 
@@ -138,20 +138,20 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* go)
 
     if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(0) && !dragging)
     {
-        bool ctrlPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
-        bool shiftPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
+        bool ctrlPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
+        bool shiftPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
         bool eraseSelecteds = !(ctrlPressed || shiftPressed);
 
-        if (objectToSelect == go) Engine::GetInstance().editor->SetSelected(go, eraseSelecteds);
+        if (objectToSelect == go) Engine::GetInstance().moduleEditor->SetSelected(go, eraseSelecteds);
         objectToSelect = nullptr;
     }
 
     if (ImGui::IsItemHovered() && ImGui::IsMouseDragging(0) && !dragging)
     {
-        bool ctrlPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
-        bool shiftPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
+        bool ctrlPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
+        bool shiftPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
         bool eraseSelecteds = !(ctrlPressed || shiftPressed);
-        if (!isSelected) Engine::GetInstance().editor->SetSelected(go, eraseSelecteds);
+        if (!isSelected) Engine::GetInstance().moduleEditor->SetSelected(go, eraseSelecteds);
         dragging = true;
     }
 

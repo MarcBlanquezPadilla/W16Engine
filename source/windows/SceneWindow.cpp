@@ -2,12 +2,12 @@
 #include "imgui.h"
 #include "ImGuizmo.h"
 #include "../Engine.h"
-#include "../Editor.h"
+#include "../ModuleEditor.h"
 #include "../CameraLens.h"
 #include "../EditorCamera.h"
-#include "../Render.h"
-#include "../Window.h"
-#include "../Input.h"
+#include "../ModuleRender.h"
+#include "../ModuleWindow.h"
+#include "../ModuleInput.h"
 #include "../utils/Log.h"
 #include "../components/Transform.h"
 #include "../GameObject.h"
@@ -46,13 +46,13 @@ void SceneWindow::Draw()
 	{
 		if (ImGui::BeginMenu("Debug"))
 		{
-			ImGui::MenuItem("Grid", NULL, &Engine::GetInstance().editor->debugGrid);
-			ImGui::MenuItem("Camera", NULL, &Engine::GetInstance().editor->debugCamera);
-			ImGui::MenuItem("Mesh", NULL, &Engine::GetInstance().editor->debugMesh);
-			ImGui::MenuItem("Normals", NULL, &Engine::GetInstance().editor->debugNormal);
-			ImGui::MenuItem("AABB", NULL, &Engine::GetInstance().editor->debugAABB);
-			ImGui::MenuItem("Ray", NULL, &Engine::GetInstance().editor->debugRay);
-			ImGui::MenuItem("Tree", NULL, &Engine::GetInstance().editor->debugTree);
+			ImGui::MenuItem("Grid", NULL, &Engine::GetInstance().moduleEditor->debugGrid);
+			ImGui::MenuItem("Camera", NULL, &Engine::GetInstance().moduleEditor->debugCamera);
+			ImGui::MenuItem("Mesh", NULL, &Engine::GetInstance().moduleEditor->debugMesh);
+			ImGui::MenuItem("Normals", NULL, &Engine::GetInstance().moduleEditor->debugNormal);
+			ImGui::MenuItem("AABB", NULL, &Engine::GetInstance().moduleEditor->debugAABB);
+			ImGui::MenuItem("Ray", NULL, &Engine::GetInstance().moduleEditor->debugRay);
+			ImGui::MenuItem("Tree", NULL, &Engine::GetInstance().moduleEditor->debugTree);
 
 			ImGui::EndMenu();
 		}
@@ -60,7 +60,7 @@ void SceneWindow::Draw()
 		ImGui::EndMenuBar();
 	}
 
-	CameraLens* cam = Engine::GetInstance().editor->GetEditorCameraLens();
+	CameraLens* cam = Engine::GetInstance().moduleEditor->GetEditorCameraLens();
 	ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 
 	//TEXTURE 
@@ -83,21 +83,21 @@ void SceneWindow::Draw()
 		int mouseX = (int)(mousePos.x - winPos.x);
 		int mouseY = (int)(mousePos.y - winPos.y);
 
-		bool ctrlPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
-		bool shiftPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
+		bool ctrlPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
+		bool shiftPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
 		bool multiSelect = ctrlPressed || shiftPressed;
 
-		Engine::GetInstance().editor->TestMouseRay(mouseX, mouseY, (int)viewportSize.x, (int)viewportSize.y);
+		Engine::GetInstance().moduleEditor->TestMouseRay(mouseX, mouseY, (int)viewportSize.x, (int)viewportSize.y);
 	}
 
-	const std::vector<GameObject*>& selectedObjects = Engine::GetInstance().editor->GetSelectedGameObjects();
+	const std::vector<GameObject*>& selectedObjects = Engine::GetInstance().moduleEditor->GetSelectedGameObjects();
 
 	// GUIZMO
 	if (!selectedObjects.empty())
 	{
-		if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_W) == KEY_DOWN) Engine::GetInstance().editor->currentGizmoOperation = ImGuizmo::TRANSLATE;
-		else if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_E) == KEY_DOWN) Engine::GetInstance().editor->currentGizmoOperation = ImGuizmo::SCALE;
-		else if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_R) == KEY_DOWN) Engine::GetInstance().editor->currentGizmoOperation = ImGuizmo::ROTATE;
+		if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_W) == KEY_DOWN) Engine::GetInstance().moduleEditor->currentGizmoOperation = ImGuizmo::TRANSLATE;
+		else if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_E) == KEY_DOWN) Engine::GetInstance().moduleEditor->currentGizmoOperation = ImGuizmo::SCALE;
+		else if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_R) == KEY_DOWN) Engine::GetInstance().moduleEditor->currentGizmoOperation = ImGuizmo::ROTATE;
 
 		ImGuizmo::SetOrthographic(false);
 		ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
@@ -128,7 +128,7 @@ void SceneWindow::Draw()
 		ImGuizmo::Manipulate(
 			glm::value_ptr(viewMatrix),
 			glm::value_ptr(projectionMatrix),
-			Engine::GetInstance().editor->currentGizmoOperation,
+			Engine::GetInstance().moduleEditor->currentGizmoOperation,
 			ImGuizmo::WORLD,
 			glm::value_ptr(groupMatrix)
 		);
@@ -159,7 +159,7 @@ void SceneWindow::Draw()
 		if (canUseGuizmo && ImGuizmo::IsUsing())
 		{
 			//SCALE
-			if (Engine::GetInstance().editor->currentGizmoOperation == ImGuizmo::SCALE)
+			if (Engine::GetInstance().moduleEditor->currentGizmoOperation == ImGuizmo::SCALE)
 			{
 				glm::vec3 newPos, newEulerRot, newScale;
 				ImGuizmo::DecomposeMatrixToComponents(
@@ -248,7 +248,7 @@ void SceneWindow::Draw()
 		}
 	}
 
-	Engine::GetInstance().editor->GetEditorCamera()->LockCamera(ImGuizmo::IsUsing() || !ImGui::IsWindowHovered());
+	Engine::GetInstance().moduleEditor->GetEditorCamera()->LockCamera(ImGuizmo::IsUsing() || !ImGui::IsWindowHovered());
 
 	ImGui::End();
 }

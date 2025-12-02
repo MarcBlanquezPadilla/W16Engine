@@ -5,13 +5,13 @@
 #include "SDL3/SDL.h"
 #include <string>
 
-class Window : public Module, public EventListener
+class ModuleWindow : public Module, public EventListener
 {
 public:
 
-	Window(bool startEnabled);
+	ModuleWindow(bool startEnabled);
 
-	virtual ~Window();
+	virtual ~ModuleWindow();
 
 	bool Awake();
 

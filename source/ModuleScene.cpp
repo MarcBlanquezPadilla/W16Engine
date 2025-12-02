@@ -1,6 +1,6 @@
-#include "Scene.h"
+#include "ModuleScene.h"
 #include "GameObject.h"
-#include "EventSystem.h"
+#include "ModuleEvents.h"
 #include "Engine.h"
 
 #include "utils/Log.h"
@@ -11,44 +11,44 @@
 #include <cmath>
 #include "glm/glm.hpp"
 
-Scene::Scene(bool startEnabled) : Module(startEnabled)
+ModuleScene::ModuleScene(bool startEnabled) : Module(startEnabled)
 {
 	
 }
 
-Scene::~Scene()
+ModuleScene::~ModuleScene()
 {
 
 }
 
-bool Scene::Awake()
+bool ModuleScene::Awake()
 {
 	bool ret = true;
 	
 	staticTree = new Tree(TreeType::Octree, 6, 8);
 	staticTreeDirty = true;
 
-	Engine::GetInstance().events->Subscribe(Event::Type::TransformChanged, this);
-	Engine::GetInstance().events->Subscribe(Event::Type::StaticChanged, this);
+	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::TransformChanged, this);
+	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::StaticChanged, this);
 
 	return ret;
 }
 
-bool Scene::Start()
+bool ModuleScene::Start()
 {
 	bool ret = true;
 
 	return ret;
 }
 
-bool Scene::PreUpdate()
+bool ModuleScene::PreUpdate()
 {
 	bool ret = true;
 
 	return ret;
 }
 
-bool Scene::Update(float dt)
+bool ModuleScene::Update(float dt)
 {
 	bool ret = true;
 
@@ -61,7 +61,7 @@ bool Scene::Update(float dt)
 	return ret;
 }
 
-bool Scene::PostUpdate()
+bool ModuleScene::PostUpdate()
 {
 	if (!objectsPendingToDelete.empty())
 	{
@@ -101,12 +101,12 @@ bool Scene::PostUpdate()
 
 }
 
-bool Scene::CleanUp()
+bool ModuleScene::CleanUp()
 {
 	bool ret = true;
 
 	LOG("Cleaning Scene");
-	Engine::GetInstance().events->UnsubscribeAll(this);
+	Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
 
 	objectsPendingToDelete.clear();
 
@@ -130,12 +130,12 @@ bool Scene::CleanUp()
 	staticGameObjects.clear();
 	dynamicGameObjects.clear();
 
-	Engine::GetInstance().events->UnsubscribeAll(this);
+	Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
 
 	return ret;
 }
 
-bool Scene::NewScene()
+bool ModuleScene::NewScene()
 {
 	bool ret = true;
 	LOG("Creating New Scene");
@@ -154,14 +154,14 @@ bool Scene::NewScene()
 	if (staticTree) staticTree->Clear();
 	staticTreeDirty = true;
 
-	Engine::GetInstance().events->PublishImmediate(Event(Event::Type::SceneCleared));
+	Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::SceneCleared));
 
 	return ret;
 }
 
 #pragma region GameObjects
 
-void Scene::AddGameObject(GameObject* gameObject)
+void ModuleScene::AddGameObject(GameObject* gameObject)
 {
 	std::string baseName = gameObject->name;
 	std::string newName = baseName;
@@ -199,13 +199,13 @@ void Scene::AddGameObject(GameObject* gameObject)
 }
 
 
-void Scene::RemoveGameObject(GameObject* go)
+void ModuleScene::RemoveGameObject(GameObject* go)
 {
 	auto it = std::remove(gameObjects.begin(), gameObjects.end(), go);
 	if (it != gameObjects.end()) gameObjects.erase(it, gameObjects.end());
 }
 
-void Scene::DestroyGameObject(GameObject* gameObject)
+void ModuleScene::DestroyGameObject(GameObject* gameObject)
 {
 	if (!gameObject || gameObject->pendingToDelete) return;
 
@@ -222,7 +222,7 @@ void Scene::DestroyGameObject(GameObject* gameObject)
 
 #pragma region Tree
 
-void Scene::RebuildTree()
+void ModuleScene::RebuildTree()
 {
 	std::vector<GameObject*> staticObjects;
 	std::vector<GameObject*> dynamicObjects;
@@ -246,13 +246,13 @@ void Scene::RebuildTree()
 
 #pragma region Ray
 
-void Scene::QueryRay(Ray ray, std::vector<GameObject*>& results)
+void ModuleScene::QueryRay(Ray ray, std::vector<GameObject*>& results)
 {
 	QueryRayToStatic(ray, results);
 	QueryRayToDynamic(ray, results);
 }
 
-void Scene::QueryRayToStatic(Ray ray, std::vector<GameObject*>& results)
+void ModuleScene::QueryRayToStatic(Ray ray, std::vector<GameObject*>& results)
 {
 	std::vector<GameObject*> staticResults;
 
@@ -262,7 +262,7 @@ void Scene::QueryRayToStatic(Ray ray, std::vector<GameObject*>& results)
 	results.insert(results.end(), staticResults.begin(), staticResults.end());
 }
 
-void Scene::QueryRayToDynamic(Ray ray, std::vector<GameObject*>& results)
+void ModuleScene::QueryRayToDynamic(Ray ray, std::vector<GameObject*>& results)
 {
 	std::vector<GameObject*> dynamicResults;
 
@@ -286,7 +286,7 @@ void Scene::QueryRayToDynamic(Ray ray, std::vector<GameObject*>& results)
 
 #pragma region Getters
 
-void Scene::CollectGameObjectsRecursive(GameObject* go, std::vector<GameObject*>& list)
+void ModuleScene::CollectGameObjectsRecursive(GameObject* go, std::vector<GameObject*>& list)
 {
 	list.push_back(go);
 
@@ -296,7 +296,7 @@ void Scene::CollectGameObjectsRecursive(GameObject* go, std::vector<GameObject*>
 	}
 }
 
-std::vector<GameObject*> Scene::GetAllGameObjects()
+std::vector<GameObject*> ModuleScene::GetAllGameObjects()
 {
 	std::vector<GameObject*> allGameObjects;
 
@@ -308,7 +308,7 @@ std::vector<GameObject*> Scene::GetAllGameObjects()
 	return allGameObjects;
 }
 
-AABB Scene::GetWorldLimits()
+AABB ModuleScene::GetWorldLimits()
 {
 	AABB mapLimits;
 	mapLimits.min = glm::vec3(INFINITY);
@@ -337,7 +337,7 @@ AABB Scene::GetWorldLimits()
 
 #pragma endregion
 
-void Scene::OnEvent(const Event& event)
+void ModuleScene::OnEvent(const Event& event)
 {
 	switch (event.type)
 	{

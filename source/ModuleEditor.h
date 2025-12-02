@@ -14,13 +14,13 @@ class GameObject;
 class EditorCamera;
 class CameraLens;
 
-class Editor : public Module, public EventListener
+class ModuleEditor : public Module, public EventListener
 {
 public:
 
-	Editor(bool startEnabled);
+	ModuleEditor(bool startEnabled);
 
-	virtual ~Editor();
+	virtual ~ModuleEditor();
 
 	bool Awake();
 

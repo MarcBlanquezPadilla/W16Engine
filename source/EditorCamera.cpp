@@ -4,19 +4,19 @@
 #include "glm/glm.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include "Global.h"
-#include "Input.h"
+#include "ModuleInput.h"
 #include "Engine.h"
 #include "CameraLens.h"
-#include "Editor.h"
-#include "Render.h"
-#include "Scene.h"
-#include "Window.h"
+#include "ModuleEditor.h"
+#include "ModuleRender.h"
+#include "ModuleScene.h"
+#include "ModuleWindow.h"
 #include "GameObject.h"
 #include "components/Component.h"
 #include "components/Transform.h"
 #include "utils/Frustum.h"
 #include "utils/Ray.h"
-#include "EventSystem.h"
+#include "ModuleEvents.h"
 
 EditorCamera::EditorCamera()
 {
@@ -34,10 +34,10 @@ bool EditorCamera::Awake()
 	
 	cameraLens = new CameraLens();
 	cameraLens->SetDebugCamera(true);
-	Engine::GetInstance().render->AddCamera(cameraLens);
+	Engine::GetInstance().moduleRender->AddCamera(cameraLens);
 
 	int w, h;
-	Engine::GetInstance().window->GetWindowSize(w, h);
+	Engine::GetInstance().moduleWindow->GetWindowSize(w, h);
 	cameraLens->SetRenderTarget(w, h);
 	cameraLens->depth = -1;
 
@@ -68,7 +68,7 @@ bool EditorCamera::Awake()
 	lockCamera = false;
 
 	//EVENTS
-	Engine::GetInstance().events->Subscribe(Event::Type::WindowResize, this);
+	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::WindowResize, this);
 
 	return ret;
 }
@@ -85,30 +85,30 @@ bool EditorCamera::PreUpdate()
 
 	
 
-	std::vector<GameObject*> gameObjects = Engine::GetInstance().editor->GetSelectedGameObjects();
+	std::vector<GameObject*> gameObjects = Engine::GetInstance().moduleEditor->GetSelectedGameObjects();
 
 	bool shouldBeRelative = (
-		(Engine::GetInstance().input->GetMouseButtonDown(3) == KEY_REPEAT) ||
-		(Engine::GetInstance().input->GetKey(SDL_SCANCODE_LALT) == KEY_REPEAT && Engine::GetInstance().input->GetMouseButtonDown(1) == KEY_REPEAT && !gameObjects.empty()));
+		(Engine::GetInstance().moduleInput->GetMouseButtonDown(3) == KEY_REPEAT) ||
+		(Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LALT) == KEY_REPEAT && Engine::GetInstance().moduleInput->GetMouseButtonDown(1) == KEY_REPEAT && !gameObjects.empty()));
 
 	if (shouldBeRelative && !mouseCaptured)
 	{
 
 		float tempX, tempY;
 		SDL_GetRelativeMouseState(&tempX, &tempY);
-		SDL_SetWindowRelativeMouseMode(Engine::GetInstance().window->window, true);
+		SDL_SetWindowRelativeMouseMode(Engine::GetInstance().moduleWindow->window, true);
 		mouseCaptured = true;
 	}
 	else if (mouseCaptured && !shouldBeRelative)
 	{
-		SDL_SetWindowRelativeMouseMode(Engine::GetInstance().window->window, false);
+		SDL_SetWindowRelativeMouseMode(Engine::GetInstance().moduleWindow->window, false);
 		mouseCaptured = false;
 	}
 
-	orbit = Engine::GetInstance().input->GetMouseButtonDown(1) == KEY_REPEAT && Engine::GetInstance().input->GetKey(SDL_SCANCODE_LALT) == KEY_REPEAT && !gameObjects.empty();
-	move = Engine::GetInstance().input->GetMouseButtonDown(3) == KEY_REPEAT;
-	focus = Engine::GetInstance().input->GetKey(SDL_SCANCODE_F) == KEY_DOWN && !gameObjects.empty();
-	zoom = Engine::GetInstance().input->GetMouseWheelY() != 0;
+	orbit = Engine::GetInstance().moduleInput->GetMouseButtonDown(1) == KEY_REPEAT && Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LALT) == KEY_REPEAT && !gameObjects.empty();
+	move = Engine::GetInstance().moduleInput->GetMouseButtonDown(3) == KEY_REPEAT;
+	focus = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_F) == KEY_DOWN && !gameObjects.empty();
+	zoom = Engine::GetInstance().moduleInput->GetMouseWheelY() != 0;
 
 	//FOCUS
 	if (focus)
@@ -176,12 +176,12 @@ bool EditorCamera::PreUpdate()
 	{
 		CalcMouseVectors();
 
-		bool wPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_W) == KEY_REPEAT;
-		bool sPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_S) == KEY_REPEAT;
-		bool aPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_A) == KEY_REPEAT;
-		bool dPressed = Engine::GetInstance().input->GetKey(SDL_SCANCODE_D) == KEY_REPEAT;
-		bool shift = (Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT ||
-			Engine::GetInstance().input->GetKey(SDL_SCANCODE_RSHIFT) == KEY_REPEAT);
+		bool wPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_W) == KEY_REPEAT;
+		bool sPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_S) == KEY_REPEAT;
+		bool aPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_A) == KEY_REPEAT;
+		bool dPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_D) == KEY_REPEAT;
+		bool shift = (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT ||
+			Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_RSHIFT) == KEY_REPEAT);
 
 
 		int xMovement = 0;
@@ -209,7 +209,7 @@ bool EditorCamera::PreUpdate()
 	//ZOOM
 	if (zoom)
 	{
-		float mouseWheel = Engine::GetInstance().input->GetMouseWheelY();
+		float mouseWheel = Engine::GetInstance().moduleInput->GetMouseWheelY();
 		if (mouseWheel < 0)
 		{
 			fieldOfView += zoomSpeed;
@@ -232,7 +232,7 @@ bool EditorCamera::PreUpdate()
 
 	if (windowChanged)
 	{
-		cameraLens->SetPerspective(fieldOfView, (float)Engine::GetInstance().window->width / (float)Engine::GetInstance().window->height, 0.1f, 1000.0f);
+		cameraLens->SetPerspective(fieldOfView, (float)Engine::GetInstance().moduleWindow->width / (float)Engine::GetInstance().moduleWindow->height, 0.1f, 1000.0f);
 		windowChanged = false;
 	}
 
@@ -272,7 +272,7 @@ bool EditorCamera::CleanUp()
 {
 	bool ret = true;
 
-	Engine::GetInstance().events->UnsubscribeAll(this);
+	Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
 	cameraLens->CleanUp();
 	delete cameraLens;
 

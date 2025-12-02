@@ -32,13 +32,13 @@ struct RenderLine
 	glm::vec4 color;
 };
 
-class Render : public Module, public EventListener
+class ModuleRender : public Module, public EventListener
 {
 public:
 
-	Render(bool startEnabled);
+	ModuleRender(bool startEnabled);
 
-	virtual ~Render();
+	virtual ~ModuleRender();
 
 	bool Awake();
 

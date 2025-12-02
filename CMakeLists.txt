@@ -20,32 +20,32 @@ add_executable(W16Engine
 	source/Engine.cpp 
 	source/Engine.h 
 	source/Module.h
-	source/Input.cpp
-	source/Input.h
-	source/Window.cpp
-	source/Window.h
+	source/ModuleInput.cpp
+	source/ModuleInput.h
+	source/ModuleWindow.cpp
+	source/ModuleWindow.h
 	source/Vector2D.cpp
 	source/Vector2D.h
-	source/Render.cpp
-	source/Render.h
+	source/ModuleRender.cpp
+	source/ModuleRender.h
 	source/EditorCamera.cpp
 	source/EditorCamera.h
 	source/CameraLens.cpp
 	source/CameraLens.h
-	source/Scene.cpp
-	source/Scene.h
+	source/ModuleScene.cpp
+	source/ModuleScene.h
 	source/GameObject.cpp
 	source/GameObject.h
-	source/Loader.cpp
-	source/Loader.h
-	source/Editor.cpp
-	source/Editor.h
+	source/ModuleLoader.cpp
+	source/ModuleLoader.h
+	source/ModuleEditor.cpp
+	source/ModuleEditor.h
 	source/Interface.cpp
 	source/Interface.h
 	source/Event.h
 	source/EventListener.h
-	source/EventSystem.cpp
-	source/EventSystem.h
+	source/ModuleEvents.cpp
+	source/ModuleEvents.h
 	source/components/Component.h
 	source/components/Mesh.cpp
 	source/components/Mesh.h

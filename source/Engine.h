@@ -15,15 +15,13 @@ enum EngineState
 };
 
 class Module;
-class Window;
-class OpenGL;
-class Input;
-class Render;
-class Camera;
-class Scene;
-class Editor;
-class Loader;
-class EventSystem;
+class ModuleWindow;
+class ModuleInput;
+class ModuleRender;
+class ModuleScene;
+class ModuleEditor;
+class ModuleLoader;
+class ModuleEvents;
 
 
 class Engine
@@ -58,14 +56,13 @@ private:
 
 public: 
 	
-	Window* window;
-	Input* input;
-	OpenGL* openGL;
-	Render* render;
-	Scene* scene;
-	Editor* editor;
-	Loader* loader;
-	EventSystem* events;
+	ModuleWindow* moduleWindow;
+	ModuleInput* moduleInput;
+	ModuleRender* moduleRender;
+	ModuleScene* moduleScene;
+	ModuleEditor* moduleEditor;
+	ModuleLoader* moduleLoader;
+	ModuleEvents* moduleEvents;
 
 
 private:

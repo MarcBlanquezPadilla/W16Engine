@@ -10,11 +10,11 @@
 
 class EventListener;
 
-class EventSystem : public Module
+class ModuleEvents : public Module
 {
 public:
-    EventSystem(bool startEnabled);
-    virtual ~EventSystem();
+    ModuleEvents(bool startEnabled);
+    virtual ~ModuleEvents();
     
     bool Awake();
 

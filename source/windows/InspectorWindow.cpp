@@ -1,13 +1,13 @@
 #include "InspectorWindow.h"
 #include "../Engine.h"
-#include "../Scene.h"
+#include "../ModuleScene.h"
 #include "../GameObject.h"
 #include "../components/Component.h"
 #include "../components/Transform.h"
 #include "../components/Mesh.h"
 #include "../components/Texture.h"
 #include "../utils/Log.h"
-#include "../Editor.h"
+#include "../ModuleEditor.h"
 
 #include "imgui.h"
 #include "ImGuizmo.h"
@@ -34,7 +34,7 @@ void InspectorWindow::Draw()
     }
 
     // 1. Obtener la lista de seleccionados
-    const std::vector<GameObject*>& selectedObjects = Engine::GetInstance().editor->GetSelectedGameObjects();
+    const std::vector<GameObject*>& selectedObjects = Engine::GetInstance().moduleEditor->GetSelectedGameObjects();
 
     if (selectedObjects.empty())
     {

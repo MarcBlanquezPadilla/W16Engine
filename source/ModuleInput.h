@@ -26,14 +26,14 @@ enum KeyState
 	KEY_UP
 };
 
-class Input : public Module
+class ModuleInput : public Module
 {
 
 public:
 
-	Input(bool startEnabled);
+	ModuleInput(bool startEnabled);
 
-	virtual ~Input();
+	virtual ~ModuleInput();
 
 	bool Awake();
 

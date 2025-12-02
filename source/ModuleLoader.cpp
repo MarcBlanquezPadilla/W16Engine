@@ -1,11 +1,11 @@
 #pragma once
-#include "Loader.h"
-#include "Scene.h"
+#include "ModuleLoader.h"
+#include "ModuleScene.h"
 #include "Engine.h"
-#include "Render.h"
-#include "Input.h"
+#include "ModuleRender.h"
+#include "ModuleInput.h"
 #include "GameObject.h"
-#include "EventSystem.h"
+#include "ModuleEvents.h"
 
 #include "components/Component.h"
 #include "components/Mesh.h"
@@ -19,31 +19,31 @@
 #include <vector>
 
 #include <assimp/Importer.hpp>
-#include <assimp/scene.h>
+#include <assimp/Scene.h>
 #include <assimp/postprocess.h>
 #include <IL/il.h>
 #include <IL/ilu.h>
 
 #include "pugixml.hpp"
 
-Loader::Loader(bool startEnabled) : Module(startEnabled)
+ModuleLoader::ModuleLoader(bool startEnabled) : Module(startEnabled)
 {
 	name = "loader";
 }
 
-Loader::~Loader()
+ModuleLoader::~ModuleLoader()
 {
 
 }
 
-bool Loader::Awake()
+bool ModuleLoader::Awake()
 {
-	Engine::GetInstance().events->Subscribe(Event::Type::FileDropped, this);
+	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::FileDropped, this);
 	return true;
 }
 
 
-bool Loader::Start()
+bool ModuleLoader::Start()
 {
 	bool ret = true;
 
@@ -60,14 +60,14 @@ bool Loader::Start()
 	return ret;
 }
 
-bool Loader::CleanUp()
+bool ModuleLoader::CleanUp()
 {
-	Engine::GetInstance().events->UnsubscribeAll(this);
+	Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
 	return true;
 }
 
 
-void Loader::HandleAssetDrop(const std::string& path)
+void ModuleLoader::HandleAssetDrop(const std::string& path)
 {
 	std::string extension = GetFileExtension(path);
 
@@ -87,7 +87,7 @@ void Loader::HandleAssetDrop(const std::string& path)
 
 #pragma region Models
 
-bool Loader::LoadModel(const std::string& filePath)
+bool ModuleLoader::LoadModel(const std::string& filePath)
 {
 	std::string modelDirectory = GetDirectoryFromPath(filePath);
 
@@ -111,12 +111,12 @@ bool Loader::LoadModel(const std::string& filePath)
 	}
 
 	//ADD GAMEOBJECT TO SCENE
-	Engine::GetInstance().scene->AddGameObject(rootGameObject);
+	Engine::GetInstance().moduleScene->AddGameObject(rootGameObject);
 
 	return true;
 }
 
-GameObject* Loader::ProcessNode(aiNode* node, const aiScene* scene, const std::string& modelDirectory)
+GameObject* ModuleLoader::ProcessNode(aiNode* node, const aiScene* scene, const std::string& modelDirectory)
 {
 	GameObject* nodeGameObject = new GameObject(true, node->mName.C_Str());
 
@@ -172,7 +172,7 @@ GameObject* Loader::ProcessNode(aiNode* node, const aiScene* scene, const std::s
 	return nodeGameObject;
 }
 
-bool Loader::AddMeshAndTextureFromAssimp(GameObject* target, aiMesh* assimpMesh, const aiScene* scene, const std::string& modelDirectory)
+bool ModuleLoader::AddMeshAndTextureFromAssimp(GameObject* target, aiMesh* assimpMesh, const aiScene* scene, const std::string& modelDirectory)
 {
 	if (target)
 	{
@@ -198,7 +198,7 @@ bool Loader::AddMeshAndTextureFromAssimp(GameObject* target, aiMesh* assimpMesh,
 	return false;
 }
 
-bool Loader::LoadFromAssimpMesh(aiMesh* assimpMesh, Mesh* mesh)
+bool ModuleLoader::LoadFromAssimpMesh(aiMesh* assimpMesh, Mesh* mesh)
 {
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
@@ -253,7 +253,7 @@ bool Loader::LoadFromAssimpMesh(aiMesh* assimpMesh, Mesh* mesh)
 
 #pragma region Textures
 
-bool Loader::LoadTextureToGameObject(const std::string& filePath, GameObject* gameObject)
+bool ModuleLoader::LoadTextureToGameObject(const std::string& filePath, GameObject* gameObject)
 {
 	if (gameObject)
 	{
@@ -282,7 +282,7 @@ bool Loader::LoadTextureToGameObject(const std::string& filePath, GameObject* ga
 
 }
 
-bool Loader::LoadFromAssimpMaterial(aiMaterial* material, const std::string& modelDirectory, GameObject* obj)
+bool ModuleLoader::LoadFromAssimpMaterial(aiMaterial* material, const std::string& modelDirectory, GameObject* obj)
 {
 	if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
 	{
@@ -328,7 +328,7 @@ bool Loader::LoadFromAssimpMaterial(aiMaterial* material, const std::string& mod
 	}
 }
 
-bool Loader::LoadTexture(const std::string& path, unsigned int& textureID, int& width, int& height, bool flip)
+bool ModuleLoader::LoadTexture(const std::string& path, unsigned int& textureID, int& width, int& height, bool flip)
 {
 	unsigned int ilImageID = 0;
 	ilGenImages(1, &ilImageID);
@@ -359,7 +359,7 @@ bool Loader::LoadTexture(const std::string& path, unsigned int& textureID, int& 
 		ilBindImage(ilImageID);
 		unsigned char* data = ilGetData();
 
-		textureID = Engine::GetInstance().render->UploadTextureToGPU(
+		textureID = Engine::GetInstance().moduleRender->UploadTextureToGPU(
 			data,
 			width,
 			height
@@ -385,7 +385,7 @@ bool Loader::LoadTexture(const std::string& path, unsigned int& textureID, int& 
 
 #pragma region Basics
 
-void Loader::CreateBasic(int basic)
+void ModuleLoader::CreateBasic(int basic)
 {
 	switch (basic)
 	{
@@ -404,17 +404,17 @@ void Loader::CreateBasic(int basic)
 	}
 }
 
-void Loader::CreateEmpty()
+void ModuleLoader::CreateEmpty()
 {
 	GameObject* gameObject = new GameObject(true, "Empty");
 
 	if (gameObject)
 	{
-		Engine::GetInstance().scene->AddGameObject(gameObject);
+		Engine::GetInstance().moduleScene->AddGameObject(gameObject);
 	}
 }
 
-void Loader::CreateCube()
+void ModuleLoader::CreateCube()
 {
 	GameObject* gameObject = new GameObject(true, "Cube");
 	Mesh* mesh = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
@@ -468,11 +468,11 @@ void Loader::CreateCube()
 
 	if (gameObject)
 	{
-		Engine::GetInstance().scene->AddGameObject(gameObject);
+		Engine::GetInstance().moduleScene->AddGameObject(gameObject);
 	}
 }
 
-void Loader::CreateSphere()
+void ModuleLoader::CreateSphere()
 {
 	GameObject* gameObject = new GameObject(true, "Sphere");
 	Mesh* mesh = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
@@ -525,11 +525,11 @@ void Loader::CreateSphere()
 
 	if (gameObject)
 	{
-		Engine::GetInstance().scene->AddGameObject(gameObject);
+		Engine::GetInstance().moduleScene->AddGameObject(gameObject);
 	}
 }
 
-void Loader::CreatePyramid()
+void ModuleLoader::CreatePyramid()
 {
 	GameObject* gameObject = new GameObject(true, "Pyramid");
 	Mesh* mesh = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
@@ -574,7 +574,7 @@ void Loader::CreatePyramid()
 
 	if (gameObject)
 	{
-		Engine::GetInstance().scene->AddGameObject(gameObject);
+		Engine::GetInstance().moduleScene->AddGameObject(gameObject);
 	}
 }
 
@@ -582,7 +582,7 @@ void Loader::CreatePyramid()
 
 #pragma region Load&Save
 
-bool Loader::SaveScene()
+bool ModuleLoader::SaveScene()
 {
 	std::string savePath = "Assets/Scenes/scene.wscene";
 	LOG("Saving scene in: %s", savePath.c_str());
@@ -593,7 +593,7 @@ bool Loader::SaveScene()
 
 	pugi::xml_node gameObjectsNode = sceneNode.append_child("GameObjects");
 
-	for (GameObject* gameObject : Engine::GetInstance().scene->GetGameObjects())
+	for (GameObject* gameObject : Engine::GetInstance().moduleScene->GetGameObjects())
 	{
 		pugi::xml_node currentGameObjectNode = gameObjectsNode.append_child("GameObject");
 		gameObject->Save(currentGameObjectNode);
@@ -607,7 +607,7 @@ bool Loader::SaveScene()
 	return true;
 }
 
-bool Loader::LoadScene()
+bool ModuleLoader::LoadScene()
 {
 	std::string loadPath = "Assets/Scenes/scene.wscene";
 	LOG("Loading scene with path: %s", loadPath.c_str());
@@ -635,7 +635,7 @@ bool Loader::LoadScene()
 		return false;
 	}
 
-	//Engine::GetInstance().scene->ClearGameObjects(); // O algo similar
+	//Engine::GetInstance().moduleScene->ClearGameObjects(); // O algo similar
 
 	for (pugi::xml_node gameObjectNode = gameObjectsNode.child("GameObject"); gameObjectNode; gameObjectNode = gameObjectNode.next_sibling("GameObject"))
 	{
@@ -647,7 +647,7 @@ bool Loader::LoadScene()
 			continue;
 		}
 		gameObject->Load(gameObjectNode);
-		Engine::GetInstance().scene->AddGameObject(gameObject);
+		Engine::GetInstance().moduleScene->AddGameObject(gameObject);
 	}
 
 	LOG("Scene loaded successfully.");
@@ -656,7 +656,7 @@ bool Loader::LoadScene()
 
 #pragma endregion
 
-void Loader::OnEvent(const Event& event)
+void ModuleLoader::OnEvent(const Event& event)
 {
 	switch (event.type)
 	{
