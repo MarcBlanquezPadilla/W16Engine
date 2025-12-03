@@ -23,10 +23,9 @@ public:
 
 	bool CleanUp() override;
 
-	UID Find(const std::string& assetPath) const;
+	UID Find(const std::string& assetPath);
 	
-	bool ImportFile(const std::string& assetPath, const std::string& libraryPath, const UID uid);
-	bool LoadFile(const std::string& assetPath, const std::string& libraryPath, const UID uid);
+	bool ImportFile(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type);
 	
 	UID GenerateNewUID();
 	
@@ -36,15 +35,16 @@ public:
 	void ReleaseResource(UID uid);
 
 private:
+	
 	bool CheckChangesInAssets();
 	bool CheckFileLoaded(const std::string& assetPath);
-
-	Resource* CreateNewResource(const std::string& assetPath, Resource::Type type);
 	
-	bool GetMetaInfo(const std::string& metaPath, UID& uid, int64_t& lastModificationTime);
+	bool GetMetaInfo(const std::string& assetPath, UID& uid, int64_t& lastModificationTime);
+	bool GetMetaInfo(const std::string& assetPath, UID& uid);
 
 	Resource::Type GetTypeFromExtension(const std::string& path);
-
+	
+	bool CreateResource(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type);
 	bool SaveMeta(const std::string& assetPath, UID uid);
 		
 private:

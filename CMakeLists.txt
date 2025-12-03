@@ -93,6 +93,8 @@ add_executable(W16Engine
 	source/geometry/Plane.cpp
 	source/resources/Resource.h
 	source/resources/Resource.cpp
+	source/resources/ResourceTexture.h
+	source/resources/ResourceTexture.cpp
 	source/importers/Importer.h
 	source/importers/ImporterTexture.h
 	source/importers/ImporterTexture.cpp

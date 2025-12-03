@@ -8,6 +8,9 @@
 #include "importers/ImporterTexture.h"
 #include "importers/ImporterScene.h"
 
+#include "resources/Resource.h"
+#include "resources/ResourceTexture.h"
+
 #include <vector>
 #include <string>
 #include <random>
@@ -96,13 +99,14 @@ bool ModuleResources::CheckFileLoaded(const std::string& assetPath)
 	UID uid = 0;
 	std::string libraryPath;
 	int64_t lastModificationTime;
+	Resource::Type type = GetTypeFromExtension(assetPath);
 
 	//IF NEW FILE
 	if (!DoesFileHasMeta(assetPath))
 	{
 		uid = GenerateNewUID();
 		libraryPath = GetLibraryPath(uid);
-		return ImportFile(assetPath, libraryPath, uid);
+		return ImportFile(assetPath, libraryPath, uid, type);
 	}
 
 	GetMetaInfo(assetPath, uid, lastModificationTime);
@@ -111,7 +115,7 @@ bool ModuleResources::CheckFileLoaded(const std::string& assetPath)
 	//IF LIBRARY MISSING
 	if (!DoesFileExist(libraryPath))
 	{
-		return ImportFile(assetPath, libraryPath, uid);
+		return ImportFile(assetPath, libraryPath, uid, type);
 	}
 
 	//IF FILE MODIFICATED
@@ -119,24 +123,22 @@ bool ModuleResources::CheckFileLoaded(const std::string& assetPath)
 	int64_t metaTime = lastModificationTime;
 	if (assetTime > metaTime)
 	{
-		return ImportFile(assetPath, libraryPath,uid) != 0;
+		return ImportFile(assetPath, libraryPath, uid, type);
 	}
 
-	//IF NOT LOADED
+	//IF IMPORTED BUT NOT CREATED
 	if (resources.find(uid) == resources.end())
 	{
-		return LoadFile(assetPath, libraryPath, uid);
+		return CreateResource(assetPath, libraryPath, uid, type);
 	}
 
 	return false;
 }
 
-bool ModuleResources::ImportFile(const std::string& assetPath, const std::string& libraryPath, const UID uid)
+bool ModuleResources::ImportFile(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type)
 {
-	const Resource::Type type = GetTypeFromExtension(assetPath);
-
 	Importer* importer = nullptr;
-	bool succes = false;
+	bool success = false;
 
 	switch (type)
 	{
@@ -149,32 +151,83 @@ bool ModuleResources::ImportFile(const std::string& assetPath, const std::string
 		break;
 
 	case Resource::unknown:
-		//LOG("File not supported: %s", assetPath.c_str());
+		LOG("Trying to import file but not supported: %s", assetPath.c_str());
 		break;
 	}
 
 	if (importer)
 	{
-		succes = importer->Import(assetPath, libraryPath, uid, type);
+		success = importer->Import(assetPath, libraryPath, uid, type);
 		delete importer;
 	}
 
-	if (succes)
+	if (success)
 	{
-		LOG("Asset imported: %s", assetPath.c_str());
-		if(SaveMeta(assetPath, uid)) LOG("Failed saving meta of: %s", assetPath.c_str());
-		LoadFile(assetPath, libraryPath, uid);
-		return true;
+		if (!SaveMeta(assetPath, uid)) LOG("Failed saving meta");
+
+		if (resources.find(uid) != resources.end())
+		{
+			Resource* res = resources[uid];
+
+			if (res->IsLoadedToMemory())
+			{
+				res->UnloadFromMemory_Internal();
+				res->LoadToMemory_Internal();
+			}
+
+			LOG("Resource re-imported and reloaded: %s", assetPath.c_str());
+			return true;
+		}
+		else
+		{
+			return CreateResource(assetPath, libraryPath, uid, type);
+		}
 	}
-	
-	LOG("Failed on asset import: %s", assetPath.c_str());
+
 	return false;
 }
 
-bool ModuleResources::LoadFile(const std::string& assetPath, const std::string& libraryPath, const UID uid)
-{
+bool ModuleResources::CreateResource(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type)
+{	
+	if (resources.find(uid) != resources.end())
+	{
+		return false;
+	}
 
-	return false;
+	Resource* ret = nullptr;
+	switch (type) {
+	case Resource::texture: ret = new ResourceTexture(uid); break;
+		//case Resource::mesh: ret = (Resource*) new ResourceMesh(uid); break;
+		//case Resource::scene: ret = (Resource*) new ResourceScene(uid); break;
+		//case Resource::bone: ret = (Resource*) new ResourceBone(uid); break;
+		//case Resource::animation: ret = (Resource*) new ResourceAnimation(uid); break;
+	}
+	if (ret != nullptr)
+	{
+		resources[uid] = ret;
+		ret->assetPath = assetPath;
+		ret->libraryPath = libraryPath;
+	}
+	else
+	{
+		LOG("Failed in resource creation from %s", assetPath.c_str());
+		return false;
+	}
+
+	return true;
+}
+
+
+UID ModuleResources::Find(const std::string& assetPath)
+{
+	UID uid = 0;
+
+	if (GetMetaInfo(assetPath, uid))
+	{
+		return uid; 
+	}
+
+	return 0;
 }
 
 bool ModuleResources::GetMetaInfo(const std::string& assetPath, UID& uid, int64_t& lastModificationTime)
@@ -189,6 +242,12 @@ bool ModuleResources::GetMetaInfo(const std::string& assetPath, UID& uid, int64_
 		return true;
 	}
 	return false;
+}
+
+bool ModuleResources::GetMetaInfo(const std::string& assetPath, UID& uid)
+{
+	int64_t ignoredTime;
+	return GetMetaInfo(assetPath, uid, ignoredTime);
 }
 
 bool ModuleResources::SaveMeta(const std::string& assetPath, UID uid)
@@ -231,4 +290,44 @@ Resource::Type ModuleResources::GetTypeFromExtension(const std::string& path)
 	}
 
 	return  Resource::Type::unknown;
+}
+
+Resource* ModuleResources::RequestResource(UID uid)
+{
+	auto it = resources.find(uid);
+
+	if (it != resources.end())
+	{
+		Resource* res = it->second;
+
+		res->LoadToMemory();
+
+		return res;
+	}
+
+	return nullptr;
+}
+
+const Resource* ModuleResources::RequestResource(UID uid) const
+{
+	std::map<UID, Resource*>::const_iterator it = resources.find(uid);
+
+	if (it != resources.end())
+	{
+		return it->second;
+	}
+
+	return nullptr;
+}
+
+void ModuleResources::ReleaseResource(UID uid)
+{
+	auto it = resources.find(uid);
+
+	if (it != resources.end())
+	{
+		Resource* res = it->second;
+
+		res->UnloadFromMemory();
+	}
 }

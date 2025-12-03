@@ -1,8 +1,10 @@
 #pragma once
 #include "Component.h"
+#include "../Global.h"
 #include <string>
 
 struct aiMaterial;
+class ResourceTexture;
 
 class Texture : public Component
 {
@@ -21,18 +23,24 @@ public:
     void Save(pugi::xml_node componentNode) override;
     void Load(pugi::xml_node componentNode) override;
 
-    void SetTexture(const std::string path, unsigned int textureID, int width, int height);
-
-    unsigned int GetTextureID() const { return textureID; }
-
     void OnEditor() override;
+
+    void SetResource(UID uid);
+   
+    ResourceTexture* GetResource() const;
+
+    unsigned int GetTextureID() const;
+    unsigned int GetTextureWidth() const;
+    unsigned int GetTextureHeight() const;
 
 public:
 
-    std::string path;
-    unsigned int textureID = 0;
-    int width = 0;
-    int height = 0;
+    UID textureUID = 0;
+
     bool use_checker = false;
     bool transparent = false;
+
+private:
+    
+    mutable ResourceTexture* resource = nullptr;
 };

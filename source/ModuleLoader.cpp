@@ -4,6 +4,7 @@
 #include "Engine.h"
 #include "ModuleRender.h"
 #include "ModuleInput.h"
+#include "ModuleResources.h"
 #include "GameObject.h"
 #include "ModuleEvents.h"
 
@@ -264,15 +265,7 @@ bool ModuleLoader::LoadTextureToGameObject(const std::string& filePath, GameObje
 			texture = (Texture*)gameObject->AddComponent(ComponentType::Texture);
 		}
 
-		unsigned int textureID = 0;
-		int width = 0;
-		int height = 0;
-		if (LoadTexture(filePath, textureID, width, height))
-		{
-			texture->SetTexture(filePath, textureID, width, height);
-			LOG("Texture %s applied to GameObject: %s", filePath.c_str(), gameObject->name.c_str());
-			return true;
-		}
+		texture->SetResource(Engine::GetInstance().moduleResources->Find(filePath));
 	}
 	else
 	{

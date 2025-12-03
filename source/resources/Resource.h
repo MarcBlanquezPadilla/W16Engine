@@ -4,9 +4,12 @@
 #include <string>
 
 class Config;
+class ModuleResources;
 
 class Resource
 {
+	friend class ModuleResources;
+
 public:
 	enum Type {
 		texture,
@@ -27,13 +30,20 @@ public:
 	const char* GetLibraryFile() const { return libraryPath.c_str(); };
 	unsigned int GetReferenceCount() const { return referenceCount; };
 	bool IsLoadedToMemory()  const { return referenceCount > 0; }
+	bool LoadToMemory();
+	bool UnloadFromMemory();
+
 
 	void SaveBasicData(Config& config);
 	virtual void Save(Config& config) const {};
 	virtual void Load(const Config& config) {};
-	virtual bool LoadInMemory() = 0;
+
 
 protected:
+
+	virtual bool LoadToMemory_Internal() = 0;
+	virtual bool UnloadFromMemory_Internal() = 0;
+
 	UID uid = 0;
 	std::string assetPath;
 	std::string libraryPath;
