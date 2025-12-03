@@ -72,31 +72,9 @@ bool ModuleResources::CheckChangesInAssets()
 
 	for (std::string assetPath : assetsPaths)
 	{
-		UID uid = DoesFileHasMeta(assetPath) ? GetUIDFromMeta(GetMetaPath(assetPath)) : 0;
-
-		if (uid == 0)
+		if (CheckFileLoaded(assetPath))
 		{
-			uid = GenerateNewUID();
-			if (ImportFile(assetPath.c_str(), uid));
-				dirtyAssets = true;
-			
-			continue;
-		}
-
-		if (!DoesFileExist(GetLibraryPath(uid)))
-		{
-			if(ImportFile(assetPath.c_str(), uid));
-				dirtyAssets = true;
-			
-			continue;
-		}
-
-		if (resources.find(uid) == resources.end())
-		{
-			if (LoadFile(assetPath.c_str(), uid));
-				dirtyAssets = true;
-			
-			continue;
+			dirtyAssets = true;
 		}
 	}
 
@@ -107,13 +85,39 @@ bool ModuleResources::CheckChangesInAssets()
 	return true;
 }
 
-bool ModuleResources::ImportFile(const char* new_file_in_assets, const UID uid)
+bool ModuleResources::CheckFileLoaded(const std::string& assetPath)
+{
+	UID uid = DoesFileHasMeta(assetPath) ? GetUIDFromMeta(GetMetaPath(assetPath)) : 0;
+
+	//IF NEW FILE
+	if (uid == 0)
+	{
+		uid = GenerateNewUID();
+		return ImportFile(assetPath, uid);
+	}
+
+	//IF NEEDS REIMPORT
+	if (!DoesFileExist(GetLibraryPath(uid)))
+	{
+		return ImportFile(assetPath, uid);
+	}
+
+	//IF NEEDS LOAD
+	if (resources.find(uid) == resources.end())
+	{
+		return LoadFile(assetPath, uid);
+	}
+
+	return false;
+}
+
+bool ModuleResources::ImportFile(const std::string& assetPath, const UID uid)
 {
 	
 	return true;
 }
 
-bool ModuleResources::LoadFile(const char* new_file_in_assets, const UID uid)
+bool ModuleResources::LoadFile(const std::string& assetPath, const UID uid)
 {
 
 	return true;

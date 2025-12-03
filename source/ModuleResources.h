@@ -21,16 +21,18 @@ public:
 
 	bool CleanUp() override;
 
-	UID Find(const char* file_in_assets) const;
-	bool ImportFile(const char* new_file_in_assets, const UID uid);
-	bool LoadFile(const char* new_file_in_assets, const UID uid);
+	UID Find(const std::string& assetPath) const;
+	bool ImportFile(const std::string& assetPath, const UID uid);
+	bool LoadFile(const std::string& assetPath, const UID uid);
 	UID GenerateNewUID();
 	const Resource* RequestResource(UID uid) const;
 	Resource* RequestResource(UID uid);
 	void ReleaseResource(UID uid);
 private:
-	Resource* CreateNewResource(const char* assetsFile, Resource::Type type);
+	Resource* CreateNewResource(const std::string& assetPath, Resource::Type type);
+	
 	bool CheckChangesInAssets();
+	bool CheckFileLoaded(const std::string& assetPath);
 
 	UID GetUIDFromMeta(const std::string& assetPath);
 		
