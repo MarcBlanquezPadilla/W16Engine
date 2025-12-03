@@ -6,6 +6,7 @@
 
 #include "importers/Importer.h"
 #include "importers/ImporterTexture.h"
+#include "importers/ImporterScene.h"
 
 #include <vector>
 #include <string>
@@ -63,6 +64,7 @@ bool ModuleResources::CheckChangesInAssets()
 	std::vector<std::string> assetsPaths;
 	assetsPaths.clear();
 
+	//SEPARATE ASSETS FROM OTHER FILES
 	for (std::string path : allPaths)
 	{
 		if (IsFileDirectory(path)) continue;
@@ -73,6 +75,7 @@ bool ModuleResources::CheckChangesInAssets()
 
 	bool dirtyAssets = false;
 
+	//CHECK ASSETS
 	for (std::string assetPath : assetsPaths)
 	{
 		if (CheckFileLoaded(assetPath))
@@ -141,6 +144,10 @@ bool ModuleResources::ImportFile(const std::string& assetPath, const std::string
 		importer = new ImporterTexture();
 		break;
 
+	case Resource::scene:
+		importer = new ImporterScene();
+		break;
+
 	case Resource::unknown:
 		//LOG("File not supported: %s", assetPath.c_str());
 		break;
@@ -167,7 +174,7 @@ bool ModuleResources::ImportFile(const std::string& assetPath, const std::string
 bool ModuleResources::LoadFile(const std::string& assetPath, const std::string& libraryPath, const UID uid)
 {
 
-	return true;
+	return false;
 }
 
 bool ModuleResources::GetMetaInfo(const std::string& assetPath, UID& uid, int64_t& lastModificationTime)

@@ -96,6 +96,8 @@ add_executable(W16Engine
 	source/importers/Importer.h
 	source/importers/ImporterTexture.h
 	source/importers/ImporterTexture.cpp
+	source/importers/ImporterScene.h
+	source/importers/ImporterScene.cpp
 )
 
 target_link_libraries(W16Engine PRIVATE 

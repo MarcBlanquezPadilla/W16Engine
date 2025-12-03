@@ -55,7 +55,7 @@ bool ImporterTexture::Import(const std::string assetPath, const std::string libr
     }
     else
     {
-        LOG("Error saving texture binary: %s", libraryPath.c_str());
+        LOG("Error importing texture binary: %s", libraryPath.c_str());
         ilDeleteImages(1, &ilImageID);
         return false;
     }
