@@ -93,6 +93,9 @@ add_executable(W16Engine
 	source/geometry/Plane.cpp
 	source/resources/Resource.h
 	source/resources/Resource.cpp
+	source/importers/Importer.h
+	source/importers/ImporterTexture.h
+	source/importers/ImporterTexture.cpp
 )
 
 target_link_libraries(W16Engine PRIVATE 

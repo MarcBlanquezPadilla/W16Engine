@@ -22,6 +22,7 @@ public:
     bool IsValid() const;
 
     void SetInt(const char* name, int value);
+    void SetInt64(const char* name, int64_t value);
     void SetUInt(const char* name, unsigned int value);
     void SetFloat(const char* name, float value);
     void SetBool(const char* name, bool value);
@@ -29,6 +30,7 @@ public:
     void SetVector3(const char* name, const glm::vec3& value);
 
     int GetInt(const char* name, int defaultValue = 0) const;
+    int64_t GetInt64(const char* name, int64_t defaultValue = 0) const;
     unsigned int GetUInt(const char* name, unsigned int defaultValue = 0) const;
     float GetFloat(const char* name, float defaultValue = 0.0f) const;
     bool GetBool(const char* name, bool defaultValue = false) const;

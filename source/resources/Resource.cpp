@@ -1,4 +1,5 @@
 #include "Resource.h"
+#include "../utils/Config.h"
 
 Resource::Resource(UID uid, Resource::Type type)
 {
@@ -10,13 +11,15 @@ Resource::~Resource()
 
 }
 
-bool LoadToMemory()
+bool Resource::LoadInMemory()
 {
 	return true;
 }
 
-
-bool LoadInMemory()
+void Resource::SaveBasicData(Config& config)
 {
-	return true;
+	config.SetUInt("UID", uid);
+	config.SetInt("type", type);
+	config.SetString("assetPath", assetPath);
+	config.SetString("libraryPath", libraryPath);
 }

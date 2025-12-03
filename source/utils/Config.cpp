@@ -69,6 +69,11 @@ void Config::SetInt(const char* name, int value)
     node.append_attribute(name).set_value(value);
 }
 
+void Config::SetInt64(const char* name, int64_t value)
+{
+    node.append_attribute(name).set_value((long long)value);
+}
+
 void Config::SetUInt(const char* name, unsigned int value)
 {
     node.append_attribute(name).set_value(value);
@@ -100,6 +105,11 @@ void Config::SetVector3(const char* name, const glm::vec3& value)
 int Config::GetInt(const char* name, int defaultValue) const
 {
     return node.attribute(name).as_int(defaultValue);
+}
+
+int64_t Config::GetInt64(const char* name, int64_t defaultValue) const
+{
+    return node.attribute(name).as_llong(defaultValue);
 }
 
 unsigned int Config::GetUInt(const char* name, unsigned int defaultValue) const

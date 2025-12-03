@@ -119,10 +119,22 @@ std::string GetLibraryPath(const UID uid)
 
     std::string directoryPath = "Library/" + folder;
 
+    if (!std::filesystem::exists(directoryPath)) CreateDirectory(directoryPath);
+
     return directoryPath + "/" + uidStr + ".bin";
 }
 
 bool CreateDirectory(const std::string& directoryPath)
 {
     return std::filesystem::create_directory(directoryPath);
+}
+
+int64_t GetLastModificationTime(const std::string& path)
+{
+    if (!std::filesystem::exists(path)) return 0;
+
+    auto fileTime = std::filesystem::last_write_time(path);
+
+    auto duration = fileTime.time_since_epoch();
+    return std::chrono::duration_cast<std::chrono::seconds>(duration).count();
 }
