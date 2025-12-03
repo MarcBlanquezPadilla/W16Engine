@@ -20,10 +20,10 @@ public:
 
 	virtual ~ModuleLoader();
 
-	bool Awake();
-	bool Start();
+	bool Awake() override;
+	bool Start() override;
 
-	bool CleanUp();
+	bool CleanUp() override;
 
 	void HandleAssetDrop(const std::string& path);
 

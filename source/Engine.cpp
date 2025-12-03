@@ -7,6 +7,7 @@
 #include "ModuleEditor.h"
 #include "ModuleLoader.h"
 #include "ModuleEvents.h"
+#include "ModuleResources.h"
 
 
 Engine& Engine::GetInstance() {
@@ -24,6 +25,7 @@ Engine::Engine() {
     moduleWindow = new ModuleWindow(true);
     moduleInput = new ModuleInput(true);
     moduleRender = new ModuleRender(true);
+    moduleResources = new ModuleResources(true);
     moduleScene = new ModuleScene(true);
     moduleLoader = new ModuleLoader(true);
     moduleEditor = new ModuleEditor(true);
@@ -32,6 +34,7 @@ Engine::Engine() {
     AddModule(moduleWindow);
     AddModule(moduleInput);
     AddModule(moduleRender);
+    AddModule(moduleResources);
     AddModule(moduleScene);
     AddModule(moduleLoader);
     AddModule(moduleEditor);

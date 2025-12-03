@@ -100,3 +100,29 @@ std::string GetPreviousPath(const std::string& directoryPath)
 
     return path.string();
 }
+
+bool DoesFileHasMeta(const std::string& directoryPath)
+{
+    return std::filesystem::exists(directoryPath + ".meta");
+}
+
+std::string GetMetaPath(const std::string& directoryPath)
+{
+    return directoryPath + ".meta";
+}
+
+std::string GetLibraryPath(const UID uid)
+{
+    std::string uidStr = std::to_string(uid);
+
+    std::string folder = (uidStr.length() >= 2) ? uidStr.substr(0, 2) : "00";
+
+    std::string directoryPath = "Library/" + folder;
+
+    return directoryPath + "/" + uidStr + ".bin";
+}
+
+bool CreateDirectory(const std::string& directoryPath)
+{
+    return std::filesystem::create_directory(directoryPath);
+}

@@ -24,6 +24,16 @@ add_executable(W16Engine
 	source/ModuleInput.h
 	source/ModuleWindow.cpp
 	source/ModuleWindow.h
+	source/ModuleLoader.cpp
+	source/ModuleLoader.h
+	source/ModuleEditor.cpp
+	source/ModuleEditor.h
+	source/ModuleScene.cpp
+	source/ModuleScene.h
+	source/ModuleEvents.cpp
+	source/ModuleEvents.h
+	source/ModuleResources.cpp
+	source/ModuleResources.h
 	source/Vector2D.cpp
 	source/Vector2D.h
 	source/ModuleRender.cpp
@@ -32,20 +42,12 @@ add_executable(W16Engine
 	source/EditorCamera.h
 	source/CameraLens.cpp
 	source/CameraLens.h
-	source/ModuleScene.cpp
-	source/ModuleScene.h
 	source/GameObject.cpp
 	source/GameObject.h
-	source/ModuleLoader.cpp
-	source/ModuleLoader.h
-	source/ModuleEditor.cpp
-	source/ModuleEditor.h
 	source/Interface.cpp
 	source/Interface.h
 	source/Event.h
 	source/EventListener.h
-	source/ModuleEvents.cpp
-	source/ModuleEvents.h
 	source/components/Component.h
 	source/components/Mesh.cpp
 	source/components/Mesh.h
@@ -85,8 +87,12 @@ add_executable(W16Engine
 	source/utils/Tree.h
 	source/utils/FileUtils.cpp
 	source/utils/FileUtils.h
+	source/utils/Config.cpp
+	source/utils/Config.h
 	source/geometry/Plane.h
 	source/geometry/Plane.cpp
+	source/resources/Resource.h
+	source/resources/Resource.cpp
 )
 
 target_link_libraries(W16Engine PRIVATE 

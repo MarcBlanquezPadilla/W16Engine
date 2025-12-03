@@ -1,4 +1,7 @@
 #pragma once
+#include <cstdint>
+
+using UID = uint32_t;
 
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720

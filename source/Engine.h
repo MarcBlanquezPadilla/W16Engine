@@ -22,6 +22,7 @@ class ModuleScene;
 class ModuleEditor;
 class ModuleLoader;
 class ModuleEvents;
+class ModuleResources;
 
 
 class Engine
@@ -63,6 +64,7 @@ public:
 	ModuleEditor* moduleEditor;
 	ModuleLoader* moduleLoader;
 	ModuleEvents* moduleEvents;
+	ModuleResources* moduleResources;
 
 
 private:
