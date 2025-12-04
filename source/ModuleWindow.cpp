@@ -20,7 +20,6 @@ ModuleWindow::~ModuleWindow()
 
 bool ModuleWindow::Awake()
 {
-
 	bool ret = true;
 
 	width = WINDOW_WIDTH;

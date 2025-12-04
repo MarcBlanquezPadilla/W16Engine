@@ -1,4 +1,6 @@
+#include "Engine.h"
 #include "ModuleResources.h"
+#include "ModuleEvents.h"
 
 #include "utils/FileUtils.h"
 #include "utils/Log.h"
@@ -88,7 +90,7 @@ bool ModuleResources::CheckChangesInAssets()
 		}
 	}
 
-	if (dirtyAssets) LOG("dirty");
+	if (dirtyAssets) Engine::GetInstance().moduleEvents->PublishImmediate(Event::Type::AssetsChanged);
 
 	checkAssetsTimer.Start();
 	

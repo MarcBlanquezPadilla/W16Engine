@@ -1,5 +1,6 @@
 #include "ProjectWindow.h"
 #include "../ModuleLoader.h"
+#include "../ModuleEvents.h"
 #include "../Engine.h"
 #include "../utils/Log.h"
 #include "../utils/FileUtils.h"
@@ -8,13 +9,15 @@
 
 ProjectWindow::ProjectWindow(bool active) : UIWindow("Project", active)
 {
-    currentPath = "Assets";
+    
 }
 
 ProjectWindow::~ProjectWindow()
 {
     
 }
+
+
 
 void ProjectWindow::Awake()
 {
@@ -35,6 +38,17 @@ void ProjectWindow::Awake()
 
     width = 0, height = 0;
     Engine::GetInstance().moduleLoader->LoadTexture("Resources/script.png", scriptIconTextureID, width, height, true);
+
+    rootPath = "Assets";
+    RefreshTree();
+
+    //EVENTS
+    Engine::GetInstance().moduleEvents->Subscribe(Event::Type::AssetsChanged, this);
+}
+
+void ProjectWindow::CleanUp()
+{
+    Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
 }
 
 void ProjectWindow::Draw()
@@ -51,19 +65,18 @@ void ProjectWindow::Draw()
 
     //FOLDERS
     ImGui::BeginChild("FolderTree", ImVec2(0, 0), true);
-    DrawFolderTree("Assets");
+    DrawFolderTree();
     ImGui::EndChild();
 
     //FOLDER CONTENT
     ImGui::NextColumn();
     ImGui::BeginChild("FolderContent", ImVec2(0, 0), true);
-    if (ImGui::Button("Back"))
+    if (ImGui::Button("Back") && currentNode->parent)
     {
-        currentPath = GetPreviousPath(currentPath);
-        updateScrollToSelection = true;
+        currentNode = currentNode->parent;
     }
     ImGui::SameLine();
-    ImGui::Text("| Current: %s", currentPath.c_str());
+    ImGui::Text("| Current: %s", currentNode->path.c_str());
     ImGui::Separator();
 
     DrawFolderContent();
@@ -73,74 +86,61 @@ void ProjectWindow::Draw()
     ImGui::End();
 }
 
-void ProjectWindow::DrawFolderTreeRecursive(const std::string& path)
+
+void ProjectWindow::DrawFolderTree()
 {
-    std::vector<std::string> contents = GetListDirectoryContents(path);
-
-    for (const std::string& itemPath : contents)
+    if (rootNode)
     {
-        if (!IsFileDirectory(itemPath)) continue;
-
-        std::string folderName = GetFileName(itemPath);
-
-        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-
-        if (itemPath == currentPath)
-            flags |= ImGuiTreeNodeFlags_Selected;
-
-        bool hasChilds = false;
-
-        for (const std::string& subItem : GetListDirectoryContents(itemPath)) {
-            if (IsFileDirectory(subItem)) { hasChilds = true; break; }
-        }
-        if (!hasChilds) flags |= ImGuiTreeNodeFlags_Leaf;
-
-        if (currentPath.find(itemPath) == 0 && itemPath.size() < currentPath.size())
-        {
-            ImGui::SetNextItemOpen(true, ImGuiCond_Always);
-        }
-
-        bool nodeOpen = ImGui::TreeNodeEx(folderName.c_str(), flags);
-
-        if (itemPath == currentPath && updateScrollToSelection)
-        {
-            ImGui::SetScrollHereY();
-            updateScrollToSelection = false;
-        }
-
-        if (ImGui::IsItemClicked())
-        {
-            currentPath = itemPath; 
-        }
-
-        if (nodeOpen)
-        {
-            DrawFolderTreeRecursive(itemPath);
-            ImGui::TreePop();
-        }
+        DrawTreeNodeRecursive(rootNode);
     }
+    expandTreeToSelection = false;
 }
 
-void ProjectWindow::DrawFolderTree(const std::string& rootPath)
+void ProjectWindow::DrawTreeNodeRecursive(DirectoryNode* node)
 {
-    std::string rootName = GetFileName(rootPath);
-    ImGuiTreeNodeFlags rootFlags = ImGuiTreeNodeFlags_OpenOnArrow |
-        ImGuiTreeNodeFlags_SpanAvailWidth |
-        ImGuiTreeNodeFlags_DefaultOpen;
+    if (!node->isDirectory) return;
 
-    if (rootPath == currentPath)
-        rootFlags |= ImGuiTreeNodeFlags_Selected;
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
 
-    bool rootOpen = ImGui::TreeNodeEx(rootName.c_str(), rootFlags);
+    if (node == currentNode)
+        flags |= ImGuiTreeNodeFlags_Selected;
+
+    if (node->children.empty())
+    {
+        bool hasSubDirs = false;
+        for (auto c : node->children) if (c->isDirectory) hasSubDirs = true;
+
+        if (!hasSubDirs) flags |= ImGuiTreeNodeFlags_Leaf;
+    }
+
+    if (expandTreeToSelection)
+    {
+        DirectoryNode* p = currentNode;
+        while (p != nullptr)
+        {
+            if (p == node)
+            {
+                ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+                break;
+            }
+            p = p->parent; // Subimos un nivel
+        }
+    }
+
+    bool isOpen = ImGui::TreeNodeEx(node->name.c_str(), flags);
 
     if (ImGui::IsItemClicked())
     {
-        currentPath = rootPath;
+        ChangeCurrentNode(node);
     }
 
-    if (rootOpen)
+    if (isOpen)
     {
-        DrawFolderTreeRecursive(rootPath);
+        for (DirectoryNode* child : node->children)
+        {
+            if (child->isDirectory)
+                DrawTreeNodeRecursive(child);
+        }
         ImGui::TreePop();
     }
 }
@@ -158,31 +158,30 @@ void ProjectWindow::DrawFolderContent()
     ImGui::Columns(columnCount, 0, false);
 
     int i = 0;
-    for (const std::string& path : GetListDirectoryContents(currentPath))
+    for (DirectoryNode* child : currentNode->children)
     {
         ImGui::PushID(i++);
         
         ImGui::BeginGroup();
-        ImTextureID iconTexture = GetIconTextureWithExtension(GetFileExtension(path));
+        ImTextureID iconTexture = GetIconTextureWithExtension(child->extension);
 
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
 
         if (ImGui::ImageButton("##icon", iconTexture, ImVec2(thumbnailSize, thumbnailSize)))
         {
-            selectedPath = path;
+            selectedNode = child;
         }
 
         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
         {
-            if (IsFileDirectory(path))
+            if (IsFileDirectory(child->path))
             {
-                currentPath = path;
-                updateScrollToSelection;
+                ChangeCurrentNode(child);
             }
         }
         ImGui::PopStyleColor();
 
-        float textWidth = ImGui::CalcTextSize(GetFileName(path).c_str()).x;
+        float textWidth = ImGui::CalcTextSize(GetFileName(child->name).c_str()).x;
 
         if (textWidth < thumbnailSize)
         {
@@ -190,7 +189,7 @@ void ProjectWindow::DrawFolderContent()
         }
 
         ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + thumbnailSize);
-        ImGui::Text(GetFileName(path).c_str());
+        ImGui::Text(child->name.c_str());
         ImGui::PopTextWrapPos();
 
         ImGui::EndGroup();
@@ -201,6 +200,12 @@ void ProjectWindow::DrawFolderContent()
     }
 
     ImGui::Columns(1);
+}
+
+void ProjectWindow::ChangeCurrentNode(DirectoryNode* directoryNode)
+{
+    currentNode = directoryNode;
+    expandTreeToSelection = true;
 }
 
 unsigned int ProjectWindow::GetIconTextureWithExtension(const std::string& extension)
@@ -248,4 +253,58 @@ unsigned int ProjectWindow::GetIconTextureWithExtension(const std::string& exten
 
 
     return fileIconTextureID;
+}
+
+void ProjectWindow::RefreshTree()
+{
+    if (rootNode)
+    {
+        delete rootNode;
+        rootNode = nullptr;
+    }
+
+    rootNode = new DirectoryNode(rootPath, rootPath, true);
+    currentNode = rootNode;
+
+    BuildTreeRecursive(rootPath, rootNode);
+}
+
+void ProjectWindow::BuildTreeRecursive(const std::string& path, DirectoryNode* parentNode)
+{
+    for (const auto& entry : GetListDirectoryContents(path))
+    {
+        std::string entryPath = entry;
+        std::string entryName = GetFileName(entry);
+        std::string extension = GetFileExtension(entry);
+        bool isDir = IsFileDirectory(entry);
+
+        if (GetFileExtension(entry) == "meta") continue;
+
+        DirectoryNode* newNode = new DirectoryNode(entryName, entryPath, isDir);
+        newNode->parent = parentNode;
+        newNode->extension = extension;
+        parentNode->children.push_back(newNode);
+
+        if (isDir)
+        {
+            BuildTreeRecursive(entryPath, newNode);
+        }
+    }
+}
+
+void ProjectWindow::OnEvent(const Event& event)
+{
+    switch (event.type)
+    {
+    case Event::Type::AssetsChanged:
+    {
+        {
+            RefreshTree();
+        }
+        break;
+    }
+
+    default:
+        break;
+    }
 }

@@ -1,28 +1,62 @@
 #pragma once
 #include "UIWindow.h"
+#include "../EventListener.h"
 #include "imgui.h"
 #include <string>
+#include <vector>
 
-class ProjectWindow : public UIWindow
+class ProjectWindow : public UIWindow, public EventListener
 {
+
+    struct DirectoryNode
+    {
+        std::string name;
+        std::string path;
+        std::string extension;
+        bool isDirectory;
+
+        std::vector<DirectoryNode*> children;
+        DirectoryNode* parent = nullptr;
+
+        DirectoryNode(std::string _name, std::string _path, bool _isDir)
+            : name(_name), path(_path), isDirectory(_isDir) {
+        }
+
+        ~DirectoryNode() {
+            for (auto child : children) delete child;
+            children.clear();
+        }
+    };
+
 public:
     ProjectWindow(bool active);
     virtual ~ProjectWindow();
 
-    void Awake();
+    void Awake() override;
+    void CleanUp() override;
 
     void Draw() override;
-    void DrawFolderTree(const std::string& rootPath);
-    void DrawFolderTreeRecursive(const std::string& path);
+    void DrawFolderTree();
+    void DrawTreeNodeRecursive(DirectoryNode* node);
     void DrawFolderContent();
 
 private:
+    void RefreshTree();
+    void BuildTreeRecursive(const std::string& path, DirectoryNode* parent);
+
+    void ChangeCurrentNode(DirectoryNode* direcoryNode);
+
     unsigned int GetIconTextureWithExtension(const std::string& extension);
+   
+    void OnEvent(const Event& event);
 
 private:
 
-    std::string currentPath;
-    std::string selectedPath;
+    std::string rootPath;
+
+    DirectoryNode* rootNode = nullptr;
+    DirectoryNode* currentNode = nullptr;
+    DirectoryNode* selectedNode = nullptr;
 
     unsigned int folderIconTextureID = 0;
     unsigned int fileIconTextureID = 0;
@@ -31,5 +65,5 @@ private:
     unsigned int scriptIconTextureID = 0;
     unsigned int sceneIconTextureID = 0;
 
-    bool updateScrollToSelection = false;
+    bool expandTreeToSelection = false;
 };

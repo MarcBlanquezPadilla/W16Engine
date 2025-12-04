@@ -52,6 +52,7 @@ std::string FindFileInDirectory(const std::string& directoryPath, const std::str
 std::vector<std::string> GetListDirectoryContents(const std::string& directoryPath, bool recursive)
 {
     std::vector<std::string> allContent;
+    allContent.clear();
 
     try
     {

@@ -49,6 +49,9 @@ struct Event
         Stop,
         TimeScaleChanged,
 
+        //ASSETS
+        AssetsChanged,
+
         //OTHERS
         Custom,
         Invalid
