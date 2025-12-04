@@ -137,18 +137,18 @@ void Camera::OnEvent(const Event& event)
     }
 }
 
-void Camera::Save(pugi::xml_node componentNode)
+void Camera::Save(Config componentNode)
 {
-    componentNode.append_attribute("fov") = lens->GetFov();
-    componentNode.append_attribute("farPlane") = lens->GetFarPlane();
-    componentNode.append_attribute("nearPlane") = lens->GetNearPlane();
-    componentNode.append_attribute("depth") = lens->depth;
+    componentNode.SetFloat("fov", lens->GetFov());
+    componentNode.SetFloat("farPlane", lens->GetFarPlane());
+    componentNode.SetFloat("nearPlane", lens->GetNearPlane());
+    componentNode.SetInt("depth", lens->depth);
 }
 
-void Camera::Load(pugi::xml_node componentNode)
+void Camera::Load(Config componentNode)
 {
-    lens->SetFov(componentNode.attribute("fov").as_float());
-    lens->SetFarPlane(componentNode.attribute("farPlane").as_float());
-    lens->SetNearPlane(componentNode.attribute("nearPlane").as_float());
-    lens->depth = componentNode.attribute("depth").as_int();
+    lens->SetFov(componentNode.GetFloat("fov"));
+    lens->SetFarPlane(componentNode.GetFloat("farPlane"));
+    lens->SetNearPlane(componentNode.GetFloat("nearPlane"));
+    lens->depth = componentNode.GetInt("depth");
 }

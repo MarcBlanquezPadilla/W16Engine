@@ -63,8 +63,8 @@ public:
         return ComponentType::Mesh;
     }
 
-    void Save(pugi::xml_node componentNode) override;
-    void Load(pugi::xml_node componentNode) override;
+    void Save(Config componentNode) override;
+    void Load(Config componentNode) override;
 
     bool SaveToLibrary(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
     bool LoadFromLibrary(std::string path);

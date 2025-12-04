@@ -129,11 +129,11 @@ bool Interface::Update(float dt)
 			}
 			if (ImGui::MenuItem("Save Scene"))
 			{
-				Engine::GetInstance().moduleLoader->SaveScene();
+				Engine::GetInstance().moduleLoader->SaveScene("Assets/Scenes/scene.wscene");
 			}
 			if (ImGui::MenuItem("Load Scene"))
 			{
-				Engine::GetInstance().moduleLoader->LoadScene();
+				Engine::GetInstance().moduleLoader->LoadScene("Assets/Scenes/scene.wscene");
 			}
 			ImGui::EndMenu();
 		}

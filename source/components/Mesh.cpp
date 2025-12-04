@@ -239,14 +239,14 @@ bool Mesh::LoadFromLibrary(std::string path)
 }
 
 
-void Mesh::Save(pugi::xml_node componentNode)
+void Mesh::Save(Config componentNode)
 {
-    componentNode.append_attribute("path") = libraryPath.c_str();
+    componentNode.SetString("path", libraryPath);
 }
 
-void Mesh::Load(pugi::xml_node componentNode)
+void Mesh::Load(Config componentNode)
 {
-    LoadFromLibrary(componentNode.attribute("path").as_string());
+    LoadFromLibrary(componentNode.GetString("path"));
 }
 
 

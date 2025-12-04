@@ -10,6 +10,7 @@
 
 #include "resources/Resource.h"
 #include "resources/ResourceTexture.h"
+#include "resources/ResourceScene.h"
 
 #include <vector>
 #include <string>
@@ -196,9 +197,9 @@ bool ModuleResources::CreateResource(const std::string& assetPath, const std::st
 
 	Resource* ret = nullptr;
 	switch (type) {
-	case Resource::texture: ret = new ResourceTexture(uid); break;
+		case Resource::texture: ret = new ResourceTexture(uid); break;
 		//case Resource::mesh: ret = (Resource*) new ResourceMesh(uid); break;
-		//case Resource::scene: ret = (Resource*) new ResourceScene(uid); break;
+		case Resource::scene: ret = new ResourceScene(uid); break;
 		//case Resource::bone: ret = (Resource*) new ResourceBone(uid); break;
 		//case Resource::animation: ret = (Resource*) new ResourceAnimation(uid); break;
 	}

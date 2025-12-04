@@ -39,6 +39,30 @@ bool Config::Load(const char* path)
     }
 }
 
+bool Config::LoadFromBuffer(const char* buffer, size_t size)
+{
+    if (rootDocument)
+    {
+        delete rootDocument;
+        rootDocument = nullptr;
+    }
+
+    rootDocument = new pugi::xml_document();
+    pugi::xml_parse_result result = rootDocument->load_buffer(buffer, size);
+
+    if (result)
+    {
+        node = rootDocument->document_element();
+
+        return true;
+    }
+    else
+    {
+        LOG("XML Error: %s", result.description());
+        return false;
+    }
+}
+
 bool Config::Save(const char* path)
 {
     if (rootDocument)
@@ -47,6 +71,16 @@ bool Config::Save(const char* path)
     }
 
     return false;
+}
+
+void Config::CleanUp()
+{
+    if (rootDocument)
+    {
+        delete rootDocument;
+        rootDocument = nullptr; // IMPORTANTÍSIMO: Ponerlo a null
+    }
+    node = pugi::xml_node(); // Nodo nulo
 }
 
 Config Config::AddChild(const char* name)
@@ -102,6 +136,15 @@ void Config::SetVector3(const char* name, const glm::vec3& value)
     vecNode.append_attribute("z").set_value(value.z);
 }
 
+void Config::SetQuat(const char* name, const glm::quat& value)
+{
+    pugi::xml_node vecNode = node.append_child(name);
+    vecNode.append_attribute("w").set_value(value.w);
+    vecNode.append_attribute("x").set_value(value.x);
+    vecNode.append_attribute("y").set_value(value.y);
+    vecNode.append_attribute("z").set_value(value.z);
+}
+
 int Config::GetInt(const char* name, int defaultValue) const
 {
     return node.attribute(name).as_int(defaultValue);
@@ -142,4 +185,23 @@ glm::vec3 Config::GetVector3(const char* name, const glm::vec3& defaultValue) co
         vecNode.attribute("y").as_float(defaultValue.y),
         vecNode.attribute("z").as_float(defaultValue.z)
     );
+}
+
+glm::quat Config::GetQuat(const char* name, const glm::quat& defaultValue) const
+{
+    pugi::xml_node quatNode = node.child(name);
+
+    if (!quatNode) return defaultValue;
+
+    return glm::quat(
+        quatNode.attribute("w").as_float(defaultValue.w),
+        quatNode.attribute("x").as_float(defaultValue.x),
+        quatNode.attribute("y").as_float(defaultValue.y),
+        quatNode.attribute("z").as_float(defaultValue.z)
+    );
+}
+
+Config Config::GetNextSibling(const char* name) const
+{
+    return Config(node.next_sibling(name));
 }

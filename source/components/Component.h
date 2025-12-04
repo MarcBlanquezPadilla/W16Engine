@@ -1,5 +1,5 @@
 #pragma once
-#include "pugixml.hpp"
+#include "../utils/Config.h"
 class GameObject;
 
 enum class ComponentType {
@@ -30,9 +30,9 @@ public:
     
     virtual ComponentType GetType() { return ComponentType::None; };
 
-    virtual void Save(pugi::xml_node componentNode) {}
+    virtual void Save(Config componentNode) {}
 
-    virtual void Load(pugi::xml_node componentNode) {}
+    virtual void Load(Config componentNode) {}
 
     virtual void OnEditor() {}
 

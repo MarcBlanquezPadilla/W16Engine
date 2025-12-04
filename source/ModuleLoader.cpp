@@ -16,6 +16,8 @@
 #include "utils/FileUtils.h"
 #include "Global.h"
 
+#include "resources/ResourceScene.h"
+
 #include <list>
 #include <vector>
 
@@ -575,76 +577,97 @@ void ModuleLoader::CreatePyramid()
 
 #pragma region Load&Save
 
-bool ModuleLoader::SaveScene()
+bool ModuleLoader::SaveScene(const std::string& savePath)
 {
-	std::string savePath = "Assets/Scenes/scene.wscene";
+	//SAVE SCENE
 	LOG("Saving scene in: %s", savePath.c_str());
 
-	pugi::xml_document doc;
+	Config sceneFile;
 
-	pugi::xml_node sceneNode = doc.append_child("Scene");
+	Config sceneNode = sceneFile.AddChild("Scene");
+	Config gameObjectsList = sceneNode.AddChild("GameObjects");
 
-	pugi::xml_node gameObjectsNode = sceneNode.append_child("GameObjects");
+	//SAVE EACH GAMEOBJECT RECURSIVE
+	const std::vector<GameObject*>& gameObjects = Engine::GetInstance().moduleScene->GetGameObjects();
 
-	for (GameObject* gameObject : Engine::GetInstance().moduleScene->GetGameObjects())
+	if (gameObjects.size() > 0)
 	{
-		pugi::xml_node currentGameObjectNode = gameObjectsNode.append_child("GameObject");
-		gameObject->Save(currentGameObjectNode);
+		for (GameObject* gameObject : gameObjects)
+		{
+			if (gameObject->parent == nullptr)
+			{
+				Config goNode = gameObjectsList.AddChild("GameObject");
+
+				gameObject->Save(goNode);
+			}
+		}
 	}
 
-	if (!doc.save_file(savePath.c_str()))
+	if (!sceneFile.Save(savePath.c_str()))
 	{
 		LOG("Error saving the scene file.");
 		return false;
 	}
+
+	LOG("Scene saved successfully.");
 	return true;
 }
 
-bool ModuleLoader::LoadScene()
+bool ModuleLoader::LoadScene(const std::string& assetPath)
 {
-	std::string loadPath = "Assets/Scenes/scene.wscene";
-	LOG("Loading scene with path: %s", loadPath.c_str());
+	//GET RESOURCE
+	UID sceneUID = Engine::GetInstance().moduleResources->Find(assetPath);
 
-	pugi::xml_document doc;
-	pugi::xml_parse_result result = doc.load_file(loadPath.c_str());
-
-	if (!result)
+	if (sceneUID == 0)
 	{
-		LOG("Error loading scene file '%s': %s", loadPath.c_str(), result.description());
+		LOG("Error: Scene not found at %s", assetPath.c_str());
 		return false;
 	}
 
-	pugi::xml_node sceneNode = doc.child("Scene");
-	if (!sceneNode)
+	ResourceScene* sceneRes = (ResourceScene*)Engine::GetInstance().moduleResources->RequestResource(sceneUID);
+
+	if (sceneRes && sceneRes->IsLoadedToMemory())
 	{
-		LOG("Error: <Scene> node not found in %s", loadPath.c_str());
-		return false;
-	}
 
-	pugi::xml_node gameObjectsNode = sceneNode.child("GameObjects");
-	if (!gameObjectsNode)
-	{
-		LOG("Error: <GameObjects> node not found in %s", loadPath.c_str());
-		return false;
-	}
+		//SCENE CLEANUP
+		Engine::GetInstance().moduleScene->NewScene();
 
-	//Engine::GetInstance().moduleScene->ClearGameObjects(); // O algo similar
+		Config sceneNode = sceneRes->sceneConfig.GetChild("Scene");
 
-	for (pugi::xml_node gameObjectNode = gameObjectsNode.child("GameObject"); gameObjectNode; gameObjectNode = gameObjectNode.next_sibling("GameObject"))
-	{
-		GameObject* gameObject = new GameObject(true, gameObjectNode.attribute("Name").as_string());
-
-		if (!gameObject)
-		{
-			LOG("Error: Could not create new GameObject while loading scene.");
-			continue;
+		if (!sceneNode.IsValid()) {
+			LOG("Error: Still invalid. XML structure is unexpected.");
+			return false;
 		}
-		gameObject->Load(gameObjectNode);
-		Engine::GetInstance().moduleScene->AddGameObject(gameObject);
+
+		Config gameObjectsNode = sceneNode.GetChild("GameObjects");
+		if (!gameObjectsNode.IsValid())
+		{
+			LOG("Error loading scene: gameObjects node invalid.");
+			return false;
+		}
+
+		Config gameObjectNode = gameObjectsNode.GetChild("GameObject");
+
+		while (gameObjectNode.IsValid())
+		{
+			GameObject* gameObject = new GameObject(true, gameObjectNode.GetString("Name"));
+			if (gameObject)
+			{
+				gameObject->Load(gameObjectNode);
+				Engine::GetInstance().moduleScene->AddGameObject(gameObject);
+			}
+			gameObjectNode = gameObjectNode.GetNextSibling("GameObject");
+		}
+		
+		LOG("Scene loaded successfully: %s", assetPath.c_str());
+
+		//RELEASE RESOURCE
+		Engine::GetInstance().moduleResources->ReleaseResource(sceneUID);
+
+		return true;
 	}
 
-	LOG("Scene loaded successfully.");
-	return true;
+	return false;
 }
 
 #pragma endregion

@@ -20,8 +20,8 @@ public:
         return ComponentType::Texture;
     };
 
-    void Save(pugi::xml_node componentNode) override;
-    void Load(pugi::xml_node componentNode) override;
+    void Save(Config componentNode) override;
+    void Load(Config componentNode) override;
 
     void OnEditor() override;
 

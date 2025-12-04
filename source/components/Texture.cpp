@@ -35,18 +35,18 @@ void Texture::CleanUp()
     }
 }
 
-void Texture::Save(pugi::xml_node componentNode)
+void Texture::Save(Config componentNode)
 {
-    componentNode.append_attribute("textureUID").set_value(textureUID);
-    componentNode.append_attribute("useChecker").set_value(use_checker);
-    componentNode.append_attribute("transparent").set_value(transparent);
+    componentNode.SetUInt("textureUID", textureUID);
+    componentNode.SetBool("useChecker", use_checker);
+    componentNode.SetBool("transparent", transparent);
 }
 
-void Texture::Load(pugi::xml_node componentNode)
+void Texture::Load(Config componentNode)
 {
-    UID uid = componentNode.attribute("textureUID").as_uint();
-    use_checker = componentNode.attribute("useChecker").as_bool();
-    transparent = componentNode.attribute("transparent").as_bool();
+    UID uid = componentNode.GetUInt("textureUID");
+    use_checker = componentNode.GetBool("useChecker");
+    transparent = componentNode.GetBool("transparent");
 
     if (uid != 0) SetResource(uid);
 }

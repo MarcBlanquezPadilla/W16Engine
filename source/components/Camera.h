@@ -25,8 +25,8 @@ public:
     void CleanUp() override;
 
     void OnEditor() override;
-    void Save(pugi::xml_node componentNode) override;
-    void Load(pugi::xml_node componentNode) override;
+    void Save(Config componentNode) override;
+    void Load(Config componentNode) override;
 
     CameraLens* GetLens() { return lens; }
 

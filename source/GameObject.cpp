@@ -9,6 +9,7 @@
 #include "components/Camera.h"
 #include "utils/Log.h"
 #include "utils/AABB.h"
+#include "utils/Config.h"
 
 #include <random>
 
@@ -171,24 +172,24 @@ void GameObject::AddChild(GameObject* gameObject)
 	childs.push_back(gameObject);
 }
 
-void GameObject::Save(pugi::xml_node gameObjectNode)
+void GameObject::Save(Config gameObjectNode)
 {
-	gameObjectNode.append_attribute("Name") = name.c_str();
-	gameObjectNode.append_attribute("UID") = UUID;
-	gameObjectNode.append_attribute("Enabled") = enabled;
-	gameObjectNode.append_attribute("Static") = isStatic;
+	gameObjectNode.SetString("Name", name.c_str());
+	gameObjectNode.SetUInt("UID", UUID);
+	gameObjectNode.SetBool("Enabled", enabled);
+	gameObjectNode.SetBool("Static", isStatic);
 
 	if (components.size() > 0)
 	{
-		pugi::xml_node componentsNode = gameObjectNode.append_child("Components");
+		Config componentsNode = gameObjectNode.AddChild("Components");
 		for (auto const& pair : components)
 		{
-			pugi::xml_node compoenntNode = componentsNode.append_child("Component");
+			Config compoenntNode = componentsNode.AddChild("Component");
 			Component* component = pair.second;
 			if (component)
 			{
-				compoenntNode.append_attribute("type") = (int)component->GetType();
-				compoenntNode.append_attribute("enabled") = component->enabled;
+				compoenntNode.SetInt("type", (int)component->GetType());
+				compoenntNode.SetBool("enabled", component->enabled);
 				component->Save(compoenntNode);
 			}
 		}
@@ -196,47 +197,55 @@ void GameObject::Save(pugi::xml_node gameObjectNode)
 
 	if (childs.size() > 0)
 	{
-		pugi::xml_node childsNode = gameObjectNode.append_child("Childs");
+		Config childsNode = gameObjectNode.AddChild("Childs");
 		for (GameObject* child : childs)
 		{
-			pugi::xml_node childNode = childsNode.append_child("GameObject");
+			Config childNode = childsNode.AddChild("GameObject");
 			child->Save(childNode);
 		}
 	}
 }
 
-void GameObject::Load(pugi::xml_node gameObjectNode)
+void GameObject::Load(Config gameObjectNode)
 {
-	name = gameObjectNode.attribute("Name").as_string();
-	UUID = gameObjectNode.attribute("UID").as_uint();
-	enabled = gameObjectNode.attribute("Enabled").as_bool();
-	isStatic = gameObjectNode.attribute("Static").as_bool();
+	name = gameObjectNode.GetString("Name");
+	UUID = gameObjectNode.GetUInt("UID");
+	enabled = gameObjectNode.GetBool("Enabled");
+	isStatic = gameObjectNode.GetBool("Static");
 
-	pugi::xml_node componentsNode = gameObjectNode.child("Components");
+	//LOAD COMPONENTS
+	Config componentsNode = gameObjectNode.GetChild("Components");
 
-	if (!componentsNode.empty())
+	if (componentsNode.IsValid())
 	{
-		for (pugi::xml_node componentNode = componentsNode.child("Component"); componentNode; componentNode = componentNode.next_sibling("Component"))
+		Config componentNode = componentsNode.GetChild("Component");
+		while (componentNode.IsValid())
 		{
-			ComponentType type = (ComponentType)componentNode.attribute("type").as_int();
+			ComponentType type = (ComponentType)componentNode.GetInt("type");
 			Component* component = GetComponent(type);
 			if (!component)
 				component = AddComponent(type);
-			
-			if(component) component->Load(componentNode);
+
+			if (component) component->Load(componentNode);
 			else
 			{
 				LOG("Failed to load component %d to %s game object", (int)type, name);
 			}
+
+			componentNode = componentNode.GetNextSibling("Component");
 		}
 	}
 
-	pugi::xml_node childsNode = gameObjectNode.child("Childs");
-	if (!childsNode.empty())
+	//LOAD CHILDS
+	Config childsNode = gameObjectNode.GetChild("Childs");
+
+	if (childsNode.IsValid())
 	{
-		for (pugi::xml_node childNode = childsNode.child("GameObject"); childNode; childNode = childNode.next_sibling("GameObject"))
+		Config childNode = childsNode.GetChild("GameObject");
+		
+		while (childNode.IsValid())
 		{
-			GameObject* childObject = new GameObject(true, childNode.attribute("Name").as_string());
+			GameObject* childObject = new GameObject(true, childNode.GetString("Name"));
 
 			if (childObject)
 			{
@@ -247,6 +256,8 @@ void GameObject::Load(pugi::xml_node gameObjectNode)
 			{
 				LOG("Error: Could not create new GameObject while loading scene.");
 			}
+
+			childNode = childNode.GetNextSibling("GameObject");
 		}
 	}
 }

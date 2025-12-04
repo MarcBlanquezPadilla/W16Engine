@@ -42,8 +42,8 @@ public:
 	void CreateBasic(int basic);
 
 	//LOAD & SAVE
-	bool SaveScene();
-	bool LoadScene();
+	bool SaveScene(const std::string& assetPath);
+	bool LoadScene(const std::string& assetPath);
 
 	//EVENTS
 	void OnEvent(const Event& event) override;

@@ -1,10 +1,10 @@
 #pragma once
 #include "Module.h"
 #include "components/Component.h"
+#include "utils/Config.h"
 #include <map>
 #include <vector>
 #include <string>
-#include "pugixml.hpp"
 #include "glm/glm.hpp"
 
 class Transform;
@@ -33,8 +33,8 @@ public:
 
 	bool IsDescendant(GameObject* potentialParent);
 
-	void Save(pugi::xml_node gameObjectNode);
-	void Load(pugi::xml_node gameObjectNode);
+	void Save(Config gameObjectNode);
+	void Load(Config gameObjectNode);
 
 	//GETTERS & SETTERS
 	void SetStatic(bool s);
