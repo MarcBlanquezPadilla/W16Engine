@@ -81,7 +81,33 @@ bool ModuleResources::CheckChangesInAssets()
 
 	bool dirtyAssets = false;
 
-	//CHECK ASSETS
+	//CHECK IF REMOVED
+	std::vector<UID> uidsToRemove;
+
+	for (auto const& [uid, resource] : resources)
+	{
+		if (!DoesFileExist(resource->GetAssetFile()))
+		{
+			uidsToRemove.push_back(uid);
+		}
+	}
+
+	for (UID uid : uidsToRemove)
+	{
+		Resource* res = resources[uid];
+		if (res->IsLoadedToMemory()) res->UnloadFromMemory_Internal();
+
+		delete res;
+
+		resources.erase(uid);
+
+		// (Opcional: Aquí podrías borrar también el .bin de Library para no dejar basura)
+
+		LOG("Asset deleted or moved (Resource removed): UID %u", uid);
+		dirtyAssets = true;
+	}
+
+	//CHECK IF NOT IMPORTED OR EDITED
 	for (std::string assetPath : assetsPaths)
 	{
 		if (CheckFileLoaded(assetPath))
