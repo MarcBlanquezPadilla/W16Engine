@@ -78,8 +78,6 @@ ResourceTexture* Texture::GetResource() const
 
 unsigned int Texture::GetTextureID() const
 {
-    if (use_checker) return 0;
-
     if (resource && resource->IsLoadedToMemory())
     {
         return resource->gpuID;
@@ -110,14 +108,18 @@ void Texture::OnEditor()
     if (ImGui::CollapsingHeader("Texture"))
     {
         ImGui::Text("Path:");
-        ImGui::TextWrapped(resource->GetAssetFile());
-
-        ImGui::Text("Size:");
-        ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%dx%d", GetTextureWidth(), GetTextureHeight());
-        ImGui::Text("Texture ID (GPU):");
-        ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%u", GetTextureID());
+        if (resource && resource->IsLoadedToMemory())
+        {
+            ImGui::TextWrapped(resource->GetAssetFile());
+            ImGui::Text("Size:");
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%dx%d", GetTextureWidth(), GetTextureHeight());
+            ImGui::Text("Texture ID (GPU):");
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%u", GetTextureID());
+        }
+        else ImGui::TextWrapped("Default texture");
+       
         ImGui::Checkbox("Use Checker Texture", &use_checker);
         ImGui::Checkbox("Transparent", &transparent);
     }

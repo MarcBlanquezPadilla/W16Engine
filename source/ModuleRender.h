@@ -84,9 +84,13 @@ public:
 
 
 private:
+
+	//CREATE BASIC TEXTURES
+	bool CreateDefaultTexture();
+	bool CreateCheckerTexture();
+
 	//CREATE SHADERS FUNCTIONS
 	bool CreateDefaultShader();
-	bool CreateCheckerTexture();
 	bool CreateNormalShader();
 	bool CreateMeshLinesShader();
 	bool CreateOutlineShader();
@@ -142,6 +146,7 @@ private:
 	GLint meshLinesProjectionMatrixLoc;
 	GLint meshLinesColorLoc;
 
+	unsigned int defaultTextureID;
 	unsigned int checkerTextureID;
 
 	GLint hasUVsLoc;

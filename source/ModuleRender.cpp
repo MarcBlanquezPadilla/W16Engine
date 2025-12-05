@@ -92,6 +92,13 @@ bool ModuleRender::Awake()
 	}
 
 	//CREATE CHECKER TEXTURE
+	if (!CreateDefaultTexture())
+	{
+		LOG("Error creating default texture");
+		return false;
+	}
+
+	//CREATE CHECKER TEXTURE
 	if (!CreateCheckerTexture())
 	{
 		LOG("Error creating checker texture");
@@ -259,14 +266,12 @@ void ModuleRender::BuildRenderListsRecursive(GameObject* gameObject, const Camer
 				if (camera->GetFrustum()->InFrustum(globalAABB))
 				{
 					Texture* texture = (Texture*)gameObject->GetComponent(ComponentType::Texture);
-					unsigned int texToBind = checkerTextureID;
+					unsigned int texToBind = defaultTextureID;
 
 					if (texture)
 					{
-						if (texture->GetTextureID() != 0 && !texture->use_checker)
-						{
-							texToBind = texture->GetTextureID();
-						}
+						if (texture->use_checker) texToBind = checkerTextureID;
+						else if (texture->GetTextureID() != 0) texToBind = texture->GetTextureID();
 					}
 
 					RenderObject renderObject = { mesh, texToBind, globalModelMatrix };
@@ -1044,6 +1049,36 @@ bool ModuleRender::CreateCheckerTexture()
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CHECKERS_WIDTH, CHECKERS_HEIGHT,
 		0, GL_RGBA, GL_UNSIGNED_BYTE, checkerImage);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return true;
+}
+
+bool ModuleRender::CreateDefaultTexture()
+{
+	GLubyte defaultImage[CHECKERS_HEIGHT][CHECKERS_WIDTH][4];
+	for (int i = 0; i < CHECKERS_HEIGHT; i++) {
+		for (int j = 0; j < CHECKERS_WIDTH; j++) {
+			int c = ((((i & 0x8) == 0) ^ (((j & 0x8)) == 0))) * 255;
+			defaultImage[i][j][0] = (GLubyte)200;
+			defaultImage[i][j][1] = (GLubyte)200;
+			defaultImage[i][j][2] = (GLubyte)200;
+			defaultImage[i][j][3] = (GLubyte)255;
+		}
+	}
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glGenTextures(1, &defaultTextureID);
+	glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CHECKERS_WIDTH, CHECKERS_HEIGHT,
+		0, GL_RGBA, GL_UNSIGNED_BYTE, defaultImage);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	glBindTexture(GL_TEXTURE_2D, 0);

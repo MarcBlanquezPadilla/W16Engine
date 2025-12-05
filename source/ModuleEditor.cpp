@@ -169,86 +169,81 @@ bool ModuleEditor::Update(float dt)
 	
 	if (!selectedGameObjects.empty())
 	{
-
 		for (GameObject* selectedGameObject : selectedGameObjects)
 		{
-			
-			if (debugNormal || debugMesh || debugAABB)
+			Mesh* selectedMesh = nullptr;
+			selectedMesh = (Mesh*)selectedGameObject->GetComponent(ComponentType::Mesh);
+
+			if (selectedMesh)
 			{
-				Mesh* selectedMesh = nullptr;
-				selectedMesh = (Mesh*)selectedGameObject->GetComponent(ComponentType::Mesh);
+				//DEBUG MESH
+				selectedMesh->drawMesh = debugMesh;
 
-				if (selectedMesh)
+				//DEBUG NORMALS
+				selectedMesh->drawNormals = debugNormal;
+
+				//DEBUG AABB
+				if (debugAABB)
 				{
-					//DEBUG MESH
-					selectedMesh->drawMesh = debugMesh;
+					Transform* selectedTransform = selectedGameObject->transform;
 
-					//DEBUG NORMALS
-					selectedMesh->drawNormals = debugNormal;
-
-					//DEBUG AABB
-					if (debugAABB)
+					if (selectedTransform)
 					{
-						Transform* selectedTransform = selectedGameObject->transform;
+						glm::vec3 localMin = selectedMesh->aabb->min;
+						glm::vec3 localMax = selectedMesh->aabb->max;
 
-						if (selectedTransform)
+						glm::vec3 localCorners[8] = {
+							{ localMin.x, localMin.y, localMin.z },
+							{ localMax.x, localMin.y, localMin.z },
+							{ localMin.x, localMax.y, localMin.z },
+							{ localMax.x, localMax.y, localMin.z },
+							{ localMin.x, localMin.y, localMax.z },
+							{ localMax.x, localMin.y, localMax.z },
+							{ localMin.x, localMax.y, localMax.z },
+							{ localMax.x, localMax.y, localMax.z }
+						};
+
+						glm::mat4 modelMatrix = selectedTransform->GetGlobalMatrix();
+
+						glm::vec3 globalMin = glm::vec3(FLT_MAX);
+						glm::vec3 globalMax = glm::vec3(-FLT_MAX);
+
+						for (int i = 0; i < 8; i++)
 						{
-							glm::vec3 localMin = selectedMesh->aabb->min;
-							glm::vec3 localMax = selectedMesh->aabb->max;
+							glm::vec4 transformed = modelMatrix * glm::vec4(localCorners[i], 1.0f);
+							glm::vec3 worldPos = glm::vec3(transformed);
 
-							glm::vec3 localCorners[8] = {
-								{ localMin.x, localMin.y, localMin.z },
-								{ localMax.x, localMin.y, localMin.z },
-								{ localMin.x, localMax.y, localMin.z },
-								{ localMax.x, localMax.y, localMin.z },
-								{ localMin.x, localMin.y, localMax.z },
-								{ localMax.x, localMin.y, localMax.z },
-								{ localMin.x, localMax.y, localMax.z },
-								{ localMax.x, localMax.y, localMax.z }
-							};
-
-							glm::mat4 modelMatrix = selectedTransform->GetGlobalMatrix();
-
-							glm::vec3 globalMin = glm::vec3(FLT_MAX);
-							glm::vec3 globalMax = glm::vec3(-FLT_MAX);
-
-							for (int i = 0; i < 8; i++)
-							{
-								glm::vec4 transformed = modelMatrix * glm::vec4(localCorners[i], 1.0f);
-								glm::vec3 worldPos = glm::vec3(transformed);
-
-								globalMin = glm::min(globalMin, worldPos);
-								globalMax = glm::max(globalMax, worldPos);
-							}
-
-							ModuleRender* render = Engine::GetInstance().moduleRender;
-							glm::vec4 color = glm::vec4(DEBUG_COLOR);
-
-							glm::vec3 p1 = globalMin;
-							glm::vec3 p2 = glm::vec3(globalMax.x, globalMin.y, globalMin.z);
-							glm::vec3 p3 = glm::vec3(globalMin.x, globalMax.y, globalMin.z);
-							glm::vec3 p4 = glm::vec3(globalMax.x, globalMax.y, globalMin.z);
-
-							glm::vec3 p5 = glm::vec3(globalMin.x, globalMin.y, globalMax.z);
-							glm::vec3 p6 = glm::vec3(globalMax.x, globalMin.y, globalMax.z);
-							glm::vec3 p7 = glm::vec3(globalMin.x, globalMax.y, globalMax.z);
-							glm::vec3 p8 = globalMax;
-
-							render->DrawLine(p1, p2, color);
-							render->DrawLine(p2, p4, color);
-							render->DrawLine(p4, p3, color);
-							render->DrawLine(p3, p1, color);
-
-							render->DrawLine(p5, p6, color);
-							render->DrawLine(p6, p8, color);
-							render->DrawLine(p8, p7, color);
-							render->DrawLine(p7, p5, color);
-
-							render->DrawLine(p1, p5, color);
-							render->DrawLine(p2, p6, color);
-							render->DrawLine(p3, p7, color);
-							render->DrawLine(p4, p8, color);
+							globalMin = glm::min(globalMin, worldPos);
+							globalMax = glm::max(globalMax, worldPos);
 						}
+
+						ModuleRender* render = Engine::GetInstance().moduleRender;
+						glm::vec4 color = glm::vec4(DEBUG_COLOR);
+
+						glm::vec3 p1 = globalMin;
+						glm::vec3 p2 = glm::vec3(globalMax.x, globalMin.y, globalMin.z);
+						glm::vec3 p3 = glm::vec3(globalMin.x, globalMax.y, globalMin.z);
+						glm::vec3 p4 = glm::vec3(globalMax.x, globalMax.y, globalMin.z);
+
+						glm::vec3 p5 = glm::vec3(globalMin.x, globalMin.y, globalMax.z);
+						glm::vec3 p6 = glm::vec3(globalMax.x, globalMin.y, globalMax.z);
+						glm::vec3 p7 = glm::vec3(globalMin.x, globalMax.y, globalMax.z);
+						glm::vec3 p8 = globalMax;
+
+						render->DrawLine(p1, p2, color);
+						render->DrawLine(p2, p4, color);
+						render->DrawLine(p4, p3, color);
+						render->DrawLine(p3, p1, color);
+
+						render->DrawLine(p5, p6, color);
+						render->DrawLine(p6, p8, color);
+						render->DrawLine(p8, p7, color);
+						render->DrawLine(p7, p5, color);
+
+						render->DrawLine(p1, p5, color);
+						render->DrawLine(p2, p6, color);
+						render->DrawLine(p3, p7, color);
+						render->DrawLine(p4, p8, color);
 					}
 				}
 			}
