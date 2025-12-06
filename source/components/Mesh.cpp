@@ -11,6 +11,7 @@
 #include <cmath>
 #include <unordered_map>
 #include "imgui.h"
+#include "../geometry/Vertex.h"
 
 struct Vec3Comparator {
     bool operator()(const glm::vec3& a, const glm::vec3& b) const {

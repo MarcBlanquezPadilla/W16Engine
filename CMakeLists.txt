@@ -91,6 +91,7 @@ add_executable(W16Engine
 	source/utils/Config.h
 	source/geometry/Plane.h
 	source/geometry/Plane.cpp
+	source/geometry/Vertex.h
 	source/resources/Resource.h
 	source/resources/Resource.cpp
 	source/resources/ResourceTexture.h
@@ -102,6 +103,8 @@ add_executable(W16Engine
 	source/importers/ImporterTexture.cpp
 	source/importers/ImporterScene.h
 	source/importers/ImporterScene.cpp
+	source/importers/ImporterMesh.h
+	source/importers/ImporterMesh.cpp
 )
 
 target_link_libraries(W16Engine PRIVATE 

@@ -9,6 +9,7 @@ class AABB;
 class GameObject;
 
 struct aiMesh;
+struct Vertex;
 
 enum Basics
 {
@@ -16,14 +17,6 @@ enum Basics
     Triangle,
     Sphere
 };
-
-struct Vertex
-{
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec2 texCoords;
-};
-
 
 struct MeshData
 {

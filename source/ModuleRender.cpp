@@ -14,6 +14,7 @@
 #include "GameObject.h"
 #include "components/Mesh.h"
 #include "components/Texture.h"
+#include "geometry/Vertex.h"
 #include "utils/Log.h"
 
 ModuleRender::ModuleRender(bool startEnabled) : Module(startEnabled)

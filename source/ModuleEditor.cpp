@@ -13,6 +13,7 @@
 #include "components/Transform.h"
 #include "components/Camera.h"
 #include "components/Mesh.h"
+#include "geometry/Vertex.h"
 
 #include "utils/Ray.h"
 #include "utils/AABB.h"

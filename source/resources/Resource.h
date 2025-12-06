@@ -13,9 +13,10 @@ class Resource
 public:
 	enum Type {
 		texture,
+		model,
 		mesh,
-		audio,
 		scene,
+		audio,
 		bone,
 		animation,
 		unknown
