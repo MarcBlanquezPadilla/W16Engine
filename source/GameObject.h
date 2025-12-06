@@ -33,8 +33,8 @@ public:
 
 	bool IsDescendant(GameObject* potentialParent);
 
-	void Save(Config gameObjectNode);
-	void Load(Config gameObjectNode);
+	void Save(Config& gameObjectNode);
+	void Load(Config& gameObjectNode);
 
 	//GETTERS & SETTERS
 	void SetStatic(bool s);

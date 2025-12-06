@@ -56,8 +56,8 @@ public:
         return ComponentType::Mesh;
     }
 
-    void Save(Config componentNode) override;
-    void Load(Config componentNode) override;
+    void Save(Config& componentNode) override;
+    void Load(Config& componentNode) override;
 
     bool SaveToLibrary(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
     bool LoadFromLibrary(std::string path);

@@ -4,13 +4,13 @@
 std::string GetDirectoryFromPath(const std::string& filePath)
 {
     std::filesystem::path path(filePath);
-    return path.parent_path().string();
+    return path.parent_path().generic_string();
 }
 
 std::string GetFileExtension(const std::string& filePath)
 {
     std::filesystem::path path(filePath);
-    std::string ext = path.extension().string();
+    std::string ext = path.extension().generic_string();
 
     if (!ext.empty() && ext[0] == '.')
     {
@@ -26,7 +26,7 @@ std::string GetFileExtension(const std::string& filePath)
 std::string GetFileName(const std::string& filePath)
 {
     std::filesystem::path path(filePath);
-    return path.filename().string();
+    return path.filename().generic_string();
 }
 
 std::string FindFileInDirectory(const std::string& directoryPath, const std::string& fileName)
@@ -37,7 +37,7 @@ std::string FindFileInDirectory(const std::string& directoryPath, const std::str
         {
             if (entry.is_regular_file() && entry.path().filename() == fileName)
             {
-                return entry.path().string();
+                return entry.path().generic_string();
             }
         }
     }
@@ -60,14 +60,14 @@ std::vector<std::string> GetListDirectoryContents(const std::string& directoryPa
         {
             for (const auto& entry : std::filesystem::recursive_directory_iterator(directoryPath))
             {
-                allContent.push_back(entry.path().string());
+                allContent.push_back(entry.path().generic_string());
             }
         }
         else
         {
             for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
             {
-                allContent.push_back(entry.path().string());
+                allContent.push_back(entry.path().generic_string());
             }
         }
     }
@@ -96,10 +96,10 @@ std::string GetPreviousPath(const std::string& directoryPath)
 
     if (path.has_parent_path())
     {
-        return path.parent_path().string();
+        return path.parent_path().generic_string();
     }
 
-    return path.string();
+    return path.generic_string();
 }
 
 bool DoesFileHasMeta(const std::string& directoryPath)

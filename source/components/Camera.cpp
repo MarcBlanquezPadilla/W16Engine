@@ -137,7 +137,7 @@ void Camera::OnEvent(const Event& event)
     }
 }
 
-void Camera::Save(Config componentNode)
+void Camera::Save(Config& componentNode)
 {
     componentNode.SetFloat("fov", lens->GetFov());
     componentNode.SetFloat("farPlane", lens->GetFarPlane());
@@ -145,7 +145,7 @@ void Camera::Save(Config componentNode)
     componentNode.SetInt("depth", lens->depth);
 }
 
-void Camera::Load(Config componentNode)
+void Camera::Load(Config& componentNode)
 {
     lens->SetFov(componentNode.GetFloat("fov"));
     lens->SetFarPlane(componentNode.GetFloat("farPlane"));

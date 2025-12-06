@@ -38,5 +38,7 @@ bool ImporterScene::Import(const std::string assetPath, const std::string librar
         return false;
     }
 
+    SaveMeta(assetPath ,uid, type, {});
+
     return true;
 }

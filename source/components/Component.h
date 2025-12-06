@@ -30,9 +30,9 @@ public:
     
     virtual ComponentType GetType() { return ComponentType::None; };
 
-    virtual void Save(Config componentNode) {}
+    virtual void Save(Config& componentNode) {}
 
-    virtual void Load(Config componentNode) {}
+    virtual void Load(Config& componentNode) {}
 
     virtual void OnEditor() {}
 

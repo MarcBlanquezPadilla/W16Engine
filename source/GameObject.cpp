@@ -172,7 +172,7 @@ void GameObject::AddChild(GameObject* gameObject)
 	childs.push_back(gameObject);
 }
 
-void GameObject::Save(Config gameObjectNode)
+void GameObject::Save(Config& gameObjectNode)
 {
 	gameObjectNode.SetString("Name", name.c_str());
 	gameObjectNode.SetUInt("UID", UUID);
@@ -206,7 +206,7 @@ void GameObject::Save(Config gameObjectNode)
 	}
 }
 
-void GameObject::Load(Config gameObjectNode)
+void GameObject::Load(Config& gameObjectNode)
 {
 	name = gameObjectNode.GetString("Name");
 	UUID = gameObjectNode.GetUInt("UID");

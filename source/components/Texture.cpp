@@ -35,14 +35,14 @@ void Texture::CleanUp()
     }
 }
 
-void Texture::Save(Config componentNode)
+void Texture::Save(Config& componentNode)
 {
     componentNode.SetUInt("textureUID", textureUID);
     componentNode.SetBool("useChecker", use_checker);
     componentNode.SetBool("transparent", transparent);
 }
 
-void Texture::Load(Config componentNode)
+void Texture::Load(Config& componentNode)
 {
     UID uid = componentNode.GetUInt("textureUID");
     use_checker = componentNode.GetBool("useChecker");

@@ -59,6 +59,8 @@ bool ImporterTexture::Import(const std::string assetPath, const std::string libr
         ilDeleteImages(1, &ilImageID);
         return false;
     }
+	
+	SaveMeta(assetPath, uid, type, {});
 
     ilDeleteImages(1, &ilImageID);
 

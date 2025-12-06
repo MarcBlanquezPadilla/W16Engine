@@ -99,6 +99,7 @@ add_executable(W16Engine
 	source/resources/ResourceScene.h
 	source/resources/ResourceScene.cpp
 	source/importers/Importer.h
+	source/importers/Importer.cpp
 	source/importers/ImporterTexture.h
 	source/importers/ImporterTexture.cpp
 	source/importers/ImporterScene.h

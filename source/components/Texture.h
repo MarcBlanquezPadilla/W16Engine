@@ -20,8 +20,8 @@ public:
         return ComponentType::Texture;
     };
 
-    void Save(Config componentNode) override;
-    void Load(Config componentNode) override;
+    void Save(Config& componentNode) override;
+    void Load(Config& componentNode) override;
 
     void OnEditor() override;
 

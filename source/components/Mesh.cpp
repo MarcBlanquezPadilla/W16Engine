@@ -240,16 +240,15 @@ bool Mesh::LoadFromLibrary(std::string path)
 }
 
 
-void Mesh::Save(Config componentNode)
+void Mesh::Save(Config& componentNode)
 {
     componentNode.SetString("path", libraryPath);
 }
 
-void Mesh::Load(Config componentNode)
+void Mesh::Load(Config& componentNode)
 {
     LoadFromLibrary(componentNode.GetString("path"));
 }
-
 
 std::vector<Vertex> Mesh::GetVertices()
 {

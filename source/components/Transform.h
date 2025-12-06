@@ -19,8 +19,8 @@ public:
         return ComponentType::Transform;
     };
 
-    void Save(Config componentNode) override;
-    void Load(Config componentNode) override;
+    void Save(Config& componentNode) override;
+    void Load(Config& componentNode) override;
 
     void SetEulerRotation(glm::vec3 _rotation);
     void SetQuaternionRotation(glm::quat _rotation);

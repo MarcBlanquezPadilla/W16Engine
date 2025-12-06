@@ -101,8 +101,6 @@ bool ModuleResources::CheckChangesInAssets()
 		dirtyAssets = true;
 	}
 
-	
-
 	//CHECK IF NOT IMPORTED OR EDITED
 	for (std::string assetPath : assetsPaths)
 	{
@@ -123,7 +121,6 @@ bool ModuleResources::CheckFileLoaded(const std::string& assetPath)
 {
 	UID uid = 0;
 	std::string libraryPath;
-	int64_t lastModificationTime;
 	Resource::Type type = GetTypeFromExtension(assetPath);
 
 	//IF NEW FILE
@@ -134,19 +131,11 @@ bool ModuleResources::CheckFileLoaded(const std::string& assetPath)
 		return ImportFile(assetPath, libraryPath, uid, type);
 	}
 
-	GetMetaInfo(assetPath, uid, lastModificationTime);
+	GetMetaInfo(assetPath, uid);
 	libraryPath = GetLibraryPath(uid);
 
 	//IF LIBRARY MISSING
 	if (!DoesFileExist(libraryPath))
-	{
-		return ImportFile(assetPath, libraryPath, uid, type);
-	}
-
-	//IF FILE MODIFICATED
-	int64_t assetTime = GetLastModificationTime(assetPath);
-	int64_t metaTime = lastModificationTime;
-	if (assetTime > metaTime)
 	{
 		return ImportFile(assetPath, libraryPath, uid, type);
 	}
@@ -188,25 +177,7 @@ bool ModuleResources::ImportFile(const std::string& assetPath, const std::string
 
 	if (success)
 	{
-		if (!SaveMeta(assetPath, uid)) LOG("Failed saving meta");
-
-		if (resources.find(uid) != resources.end())
-		{
-			Resource* res = resources[uid];
-
-			if (res->IsLoadedToMemory())
-			{
-				res->UnloadFromMemory_Internal();
-				res->LoadToMemory_Internal();
-			}
-
-			LOG("Resource re-imported and reloaded: %s", assetPath.c_str());
-			return true;
-		}
-		else
-		{
-			return CreateResource(assetPath, libraryPath, uid, type);
-		}
+		return CreateResource(assetPath, libraryPath, uid, type);
 	}
 
 	return false;
@@ -255,36 +226,17 @@ UID ModuleResources::Find(const std::string& assetPath)
 	return 0;
 }
 
-bool ModuleResources::GetMetaInfo(const std::string& assetPath, UID& uid, int64_t& lastModificationTime)
+bool ModuleResources::GetMetaInfo(const std::string& assetPath, UID& uid)
 {
 	Config meta;
 	std::string metaPath = assetPath + ".meta";
 	if (meta.Load(metaPath.c_str()))
 	{
 		uid = (UID)meta.GetUInt("UID");
-		lastModificationTime = meta.GetInt64("ModificationTime");
 
 		return true;
 	}
 	return false;
-}
-
-bool ModuleResources::GetMetaInfo(const std::string& assetPath, UID& uid)
-{
-	int64_t ignoredTime;
-	return GetMetaInfo(assetPath, uid, ignoredTime);
-}
-
-bool ModuleResources::SaveMeta(const std::string& assetPath, UID uid)
-{
-	Config meta;
-
-	meta.SetUInt("UID", uid);
-
-	int64_t lastModificationTime = GetLastModificationTime(assetPath);
-	meta.SetInt64("ModificationTime", lastModificationTime);
-
-	return meta.Save(GetMetaPath(assetPath).c_str());
 }
 
 UID ModuleResources::GenerateNewUID()

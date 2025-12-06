@@ -25,8 +25,8 @@ public:
     void CleanUp() override;
 
     void OnEditor() override;
-    void Save(Config componentNode) override;
-    void Load(Config componentNode) override;
+    void Save(Config& componentNode) override;
+    void Load(Config& componentNode) override;
 
     CameraLens* GetLens() { return lens; }
 

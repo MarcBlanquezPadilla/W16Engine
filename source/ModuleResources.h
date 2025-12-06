@@ -39,13 +39,11 @@ private:
 	bool CheckChangesInAssets();
 	bool CheckFileLoaded(const std::string& assetPath);
 	
-	bool GetMetaInfo(const std::string& assetPath, UID& uid, int64_t& lastModificationTime);
 	bool GetMetaInfo(const std::string& assetPath, UID& uid);
 
 	Resource::Type GetTypeFromExtension(const std::string& path);
 	
 	bool CreateResource(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type);
-	bool SaveMeta(const std::string& assetPath, UID uid);
 		
 private:
 	std::map<UID, Resource*> resources;

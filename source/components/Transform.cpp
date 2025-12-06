@@ -35,14 +35,14 @@ void Transform::CleanUp()
 
 }
 
-void Transform::Save(Config componentNode)
+void Transform::Save(Config& componentNode)
 {
     componentNode.SetVector3("Position", GetPosition());
     componentNode.SetQuat("Rotation", GetQuaterionRotation());
     componentNode.SetVector3("Scale", GetScale());
 }
 
-void Transform::Load(Config componentNode)
+void Transform::Load(Config& componentNode)
 {
     SetPosition(componentNode.GetVector3("Position"));
     SetQuaternionRotation(componentNode.GetQuat("Rotation"));
