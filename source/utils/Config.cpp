@@ -1,6 +1,17 @@
 #include "Config.h"
 #include "Log.h" // Tu sistema de logs
 
+struct xml_string_writer : pugi::xml_writer
+{
+    std::string& result;
+    xml_string_writer(std::string& res) : result(res) {}
+
+    void write(const void* data, size_t size) override
+    {
+        result.append(static_cast<const char*>(data), size);
+    }
+};
+
 Config::Config()
 {
     rootDocument = new pugi::xml_document();
@@ -204,4 +215,25 @@ glm::quat Config::GetQuat(const char* name, const glm::quat& defaultValue) const
 Config Config::GetNextSibling(const char* name) const
 {
     return Config(node.next_sibling(name));
+}
+
+bool Config::SaveToString(std::string& outString)
+{
+    outString.clear();
+    xml_string_writer writer(outString);
+
+    if (rootDocument)
+    {
+        rootDocument->save(writer);
+    }
+    else if (node)
+    {
+        node.print(writer);
+    }
+    else
+    {
+        return false;
+    }
+
+    return true;
 }

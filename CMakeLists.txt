@@ -106,6 +106,8 @@ add_executable(W16Engine
 	source/importers/ImporterScene.cpp
 	source/importers/ImporterMesh.h
 	source/importers/ImporterMesh.cpp
+	source/importers/ImporterModel.h
+	source/importers/ImporterModel.cpp
 )
 
 target_link_libraries(W16Engine PRIVATE 

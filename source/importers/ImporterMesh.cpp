@@ -75,7 +75,7 @@ bool ImporterMesh::Import(const std::string libraryPath, const UID uid, const in
 		file.write(reinterpret_cast<const char*>(indices.data()), num_indices * sizeof(unsigned int));
 
 		file.close();
-		LOG("Mesh %s saved to Library: %s ", assimpMesh->mName, libraryPath.c_str(), libraryPath);
+		LOG("Mesh imported to Library: %s ", libraryPath.c_str());
 	}
 
 	return true;

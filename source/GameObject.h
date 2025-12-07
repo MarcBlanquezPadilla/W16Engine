@@ -1,7 +1,6 @@
 #pragma once
 #include "Module.h"
 #include "components/Component.h"
-#include "utils/Config.h"
 #include <map>
 #include <vector>
 #include <string>
@@ -9,6 +8,7 @@
 
 class Transform;
 class AABB;
+class Config;
 
 class GameObject
 {

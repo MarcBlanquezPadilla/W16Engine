@@ -4,7 +4,15 @@
 std::string GetDirectoryFromPath(const std::string& filePath)
 {
     std::filesystem::path path(filePath);
-    return path.parent_path().generic_string();
+
+    std::string directory = path.parent_path().generic_string();
+
+    if (!directory.empty() && directory.back() != '/')
+    {
+        directory += '/';
+    }
+
+    return directory;
 }
 
 std::string GetFileExtension(const std::string& filePath)

@@ -9,6 +9,7 @@
 #include "importers/Importer.h"
 #include "importers/ImporterTexture.h"
 #include "importers/ImporterScene.h"
+#include "importers/ImporterModel.h"
 
 #include "resources/Resource.h"
 #include "resources/ResourceTexture.h"
@@ -110,7 +111,7 @@ bool ModuleResources::CheckChangesInAssets()
 		}
 	}
 
-	if (dirtyAssets) Engine::GetInstance().moduleEvents->PublishImmediate(Event::Type::AssetsChanged);
+	if (dirtyAssets) PublishAssetChangedEvent();
 
 	checkAssetsTimer.Start();
 	
@@ -162,6 +163,10 @@ bool ModuleResources::ImportFile(const std::string& assetPath, const std::string
 
 	case Resource::scene:
 		importer = new ImporterScene();
+		break;
+
+	case Resource::model:
+		importer = new ImporterModel();
 		break;
 
 	case Resource::unknown:
@@ -239,21 +244,13 @@ bool ModuleResources::GetMetaInfo(const std::string& assetPath, UID& uid)
 	return false;
 }
 
-UID ModuleResources::GenerateNewUID()
-{
-	static std::random_device rd;
-	static std::mt19937 gen(rd());
-	static std::uniform_int_distribution<uint32_t> dis(1, UINT32_MAX);
-	return dis(gen);
-}
-
 Resource::Type ModuleResources::GetTypeFromExtension(const std::string& path)
 {
 	std::string ext = GetFileExtension(path);
 
 	if (ext == "fbx" || ext == "obj" || ext == "dae" || ext == "gltf" || ext == "glb")
 	{
-		return Resource::Type::mesh;
+		return Resource::Type::model;
 	}
 
 	if (ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "tga" || ext == "dds" || ext == "bmp" || ext == "tif")
@@ -307,4 +304,9 @@ void ModuleResources::ReleaseResource(UID uid)
 
 		res->UnloadFromMemory();
 	}
+}
+
+void ModuleResources::PublishAssetChangedEvent()
+{
+	Engine::GetInstance().moduleEvents->PublishImmediate(Event::Type::AssetsChanged);
 }

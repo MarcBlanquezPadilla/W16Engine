@@ -18,6 +18,7 @@ public:
     bool Load(const char* path);
     bool LoadFromBuffer(const char* buffer, size_t size);
     bool Save(const char* path);
+    bool SaveToString(std::string& outString);
     void CleanUp();
 
     Config AddChild(const char* name);

@@ -27,8 +27,10 @@ public:
 	
 	bool ImportFile(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type);
 	
-	UID GenerateNewUID();
-	
+	bool CheckFileLoaded(const std::string& assetPath);
+
+	void PublishAssetChangedEvent();
+
 	const Resource* RequestResource(UID uid) const;
 	Resource* RequestResource(UID uid);
 	
@@ -37,7 +39,7 @@ public:
 private:
 	
 	bool CheckChangesInAssets();
-	bool CheckFileLoaded(const std::string& assetPath);
+	
 	
 	bool GetMetaInfo(const std::string& assetPath, UID& uid);
 

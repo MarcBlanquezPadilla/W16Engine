@@ -1,7 +1,16 @@
 #pragma once
 #include <cstdint>
+#include <random>
 
 using UID = uint32_t;
+
+static UID GenerateNewUID()
+{
+	static std::random_device rd;
+	static std::mt19937 gen(rd());
+	static std::uniform_int_distribution<uint32_t> dis(1, UINT32_MAX);
+	return dis(gen);
+}
 
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
