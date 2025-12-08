@@ -11,19 +11,27 @@
 
 class GameObject;
 
+
 class ImporterModel : public Importer
 {
+	struct ImportMeshData
+	{
+		int type;
+		std::string name = "";
+		std::string path = "";
+	};
+
 public:
-	bool Import(const std::string assetPath, const std::string libraryPath, const UID uid, const int type) override;
+	bool Import_Internal() override;
 
-	bool SaveMeta(const std::string assetPath, const UID uid, const int type, const std::list<UID> referedIDs) override;
+	bool SaveMeta() override;
 
 private:
-	bool ProcessNode(aiNode* node, const aiScene* scene, const std::string& modelDirectory, GameObject* targetGameObject);
-	bool AddMeshAndTexture(aiMesh* assimpMesh, const aiScene* scene, const std::string& modelDirectory, GameObject* target);
+	bool ProcessNode(aiNode* node, const aiScene* scene, GameObject* targetGameObject);
+	bool AddMeshAndTexture(aiMesh* assimpMesh, const aiScene* scene, GameObject* target);
 	bool LoadMesh(aiMesh* assimpMesh, GameObject* mesh);
-	bool LoadTexture(aiMaterial* material, const std::string& modelDirectory, GameObject* obj);
+	bool LoadTexture(aiMaterial* material, GameObject* obj);
 
 private:
-	std::list<UID> referedUIDs;
+	std::map<UID,ImportMeshData> referedUIDs;
 };

@@ -5,24 +5,30 @@
 #include "Importer.h"
 #include <string>
 
+bool Importer::Import(const std::string assetPath, const std::string libraryPath, const UID uid, const int type)
+{
+	this->uid = uid;
+	this->type = type;
+	this->assetPath = assetPath;
+	this->libraryPath = libraryPath;
 
-bool Importer::SaveMeta(const std::string assetPath, const UID uid, const int type, const std::list<UID> referedIDs)
+	return Import_Internal();
+}
+
+
+bool Importer::SaveMeta()
 {
 	Config meta;
 
-	SaveBasicMeta(meta, uid, type, referedIDs);
+	SaveBasicMeta(meta);
 
 	return meta.Save(GetMetaPath(assetPath).c_str());
 }
 
 
-void Importer::SaveBasicMeta(Config& config, const UID uid, const int type, const std::list<UID> referedIDs)
+void Importer::SaveBasicMeta(Config& config)
 {
 	config.SetUInt("UID", uid);
-	config.SetUInt("Type", type);
-	config.SetUInt("ReferedObjects", referedIDs.size());
-	for (UID referedUID : referedIDs)
-	{
-		config.AddChild("ReferedObject").SetUInt("UID", referedUID);
-	}
+	config.SetInt("Type", type);
+	config.SetUInt("ReferedObjects", 0);
 }

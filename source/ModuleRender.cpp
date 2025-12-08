@@ -4,18 +4,27 @@
 #include <SDL3/sdl.h>
 #include <algorithm>
 
+#include "Engine.h"
 #include "ModuleEvents.h"
 #include "ModuleRender.h"
-#include "CameraLens.h"
 #include "ModuleWindow.h"
-#include "Engine.h"
-#include "utils/Frustum.h"
 #include "ModuleScene.h"
+
+#include "CameraLens.h"
+
 #include "GameObject.h"
+
 #include "components/Mesh.h"
 #include "components/Texture.h"
-#include "geometry/Vertex.h"
+
+#include "resources/ResourceMesh.h"
+#include "resources/ResourceTexture.h"
+
+#include "utils/Frustum.h"
 #include "utils/Log.h"
+
+#include "geometry/Vertex.h"
+
 
 ModuleRender::ModuleRender(bool startEnabled) : Module(startEnabled)
 {
@@ -49,7 +58,7 @@ bool ModuleRender::Awake()
 	glClearDepth(1.0f); 
 	glClearColor(0.2f, 0.2f, 0.2f, 1.f);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);  
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
 
@@ -260,9 +269,9 @@ void ModuleRender::BuildRenderListsRecursive(GameObject* gameObject, const Camer
 		{
 			Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
 
-			if (mesh && mesh->enabled && mesh->meshData.VAO != 0)
+			if (mesh && mesh->enabled && mesh->GetResource() && mesh->GetResource()->IsLoadedToMemory())
 			{
-				const AABB& globalAABB = mesh->aabb->GetGlobalAABB(globalModelMatrix);
+				const AABB& globalAABB = mesh->GetGlobalAABB();
 
 				if (camera->GetFrustum()->InFrustum(globalAABB))
 				{
@@ -272,7 +281,7 @@ void ModuleRender::BuildRenderListsRecursive(GameObject* gameObject, const Camer
 					if (texture)
 					{
 						if (texture->use_checker) texToBind = checkerTextureID;
-						else if (texture->GetTextureID() != 0) texToBind = texture->GetTextureID();
+						else if (texture->GetResource() && texture->GetResource()->IsLoadedToMemory() && texture->GetTextureID() != 0) texToBind = texture->GetTextureID();
 					}
 
 					RenderObject renderObject = { mesh, texToBind, globalModelMatrix };
@@ -325,10 +334,10 @@ void ModuleRender::DrawRenderList(const std::multimap<float, RenderObject>& map,
 
 		//DRAW MESH
 		glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
-		glUniform1i(hasUVsLoc, renderObject.mesh->hasUVs);
+		glUniform1i(hasUVsLoc, true);
 
-		glBindVertexArray(renderObject.mesh->meshData.VAO);
-		glDrawElements(GL_TRIANGLES, renderObject.mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(renderObject.mesh->GetResource()->meshData.VAO);
+		glDrawElements(GL_TRIANGLES, renderObject.mesh->GetResource()->numIndices, GL_UNSIGNED_INT, 0);
 	}
 }
 
@@ -379,14 +388,14 @@ void ModuleRender::DrawNormalsList(const CameraLens* camera)
 	//DRAW NORMALS
 	for (RenderObject renderObject : normalsList)
 	{
-		if (renderObject.mesh->drawNormals && renderObject.mesh->meshData.VAO != 0)
+		if (renderObject.mesh->drawNormals && renderObject.mesh->GetResource()->meshData.VAO != 0)
 		{
 			glUseProgram(normalShaderProgram);
 			glUniformMatrix4fv(normalModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
 			glUniform4f(normalColorLoc, debugColor.r, debugColor.g, debugColor.b, debugColor.a);
-			glBindVertexArray(renderObject.mesh->meshData.VAO);
+			glBindVertexArray(renderObject.mesh->GetResource()->meshData.VAO);
 
-			glDrawArrays(GL_POINTS, 0, renderObject.mesh->meshData.numVertices);
+			glDrawArrays(GL_POINTS, 0, renderObject.mesh->GetResource()->numVertices);
 
 			glUseProgram(shaderProgram);
 		}
@@ -409,7 +418,7 @@ void ModuleRender::DrawStencilList(const CameraLens* camera)
 		glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
 		glUniform4f(outlineColorLoc, stencilColor.r, stencilColor.g, stencilColor.b, stencilColor.a);
 		
-		glBindVertexArray(renderObject.mesh->stencilData.VAO);
+		glBindVertexArray(renderObject.mesh->GetResource()->stencilData.VAO);
 
 		//OUTLINE
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
@@ -417,7 +426,7 @@ void ModuleRender::DrawStencilList(const CameraLens* camera)
 		glDepthFunc(GL_LEQUAL);
 		glDepthMask(GL_FALSE);
 
-		glDrawElements(GL_TRIANGLES, renderObject.mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, renderObject.mesh->GetResource()->numIndices, GL_UNSIGNED_INT, 0);
 
 		//FILL ALL IF OBJECT BEHIND
 		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
@@ -425,14 +434,14 @@ void ModuleRender::DrawStencilList(const CameraLens* camera)
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 		glStencilMask(0xFF);
 		glDepthFunc(GL_LEQUAL);
-		glDrawElements(GL_TRIANGLES, renderObject.mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, renderObject.mesh->GetResource()->numIndices, GL_UNSIGNED_INT, 0);
 
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 		glDepthFunc(GL_GREATER);
 		glStencilFunc(GL_NOTEQUAL, 2, 0xFF);
 		glStencilMask(0x00);
 
-		glDrawElements(GL_TRIANGLES, renderObject.mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, renderObject.mesh->GetResource()->numIndices, GL_UNSIGNED_INT, 0);
 
 		glBindVertexArray(0);
 		glUseProgram(0);
@@ -465,8 +474,8 @@ void ModuleRender::DrawMeshLinesList(const CameraLens* camera)
 		glEnable(GL_POLYGON_OFFSET_LINE);
 		glPolygonOffset(-1.0f, -1.0f);
 
-		glBindVertexArray(renderObject.mesh->meshData.VAO);
-		glDrawElements(GL_TRIANGLES, renderObject.mesh->meshData.numIndices, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(renderObject.mesh->GetResource()->meshData.VAO);
+		glDrawElements(GL_TRIANGLES, renderObject.mesh->GetResource()->numIndices, GL_UNSIGNED_INT, 0);
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glDisable(GL_POLYGON_OFFSET_LINE);
@@ -877,21 +886,19 @@ bool ModuleRender::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>
 
 	glBindVertexArray(0);
 
-	meshData.numIndices = indices.size();
-
 	LOG("Mesh uploaded to GPU. VAO: %u, VBO: %u, EBO: %u, Indices: %d",
-		meshData.VAO, meshData.VBO, meshData.EBO, meshData.numIndices);
+		meshData.VAO, meshData.VBO, meshData.EBO, indices.size());
 
 	return true;
 
 }
 
-bool ModuleRender::UploadSmoothedMeshToGPU(unsigned int& vao, unsigned int& vbo, unsigned int& sharedEbo, const std::vector<Vertex>& vertices)
+bool ModuleRender::UploadSmoothedMeshToGPU(StencilData& stencilData, unsigned int& sharedEbo, const std::vector<Vertex>& vertices)
 {
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glGenVertexArrays(1, &stencilData.VAO);
+	glBindVertexArray(stencilData.VAO);
+	glGenBuffers(1, &stencilData.VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, stencilData.VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sharedEbo);
@@ -905,7 +912,7 @@ bool ModuleRender::UploadSmoothedMeshToGPU(unsigned int& vao, unsigned int& vbo,
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	LOG("Outline smoothed mesh upload to GPU. VAO: %u, VBO: % u", vao, vbo);
+	LOG("Outline smoothed mesh upload to GPU. VAO: %u, VBO: % u", stencilData.VAO, stencilData.VBO);
 	return true;
 }
 
@@ -939,6 +946,14 @@ void ModuleRender::DeleteMeshFromGPU(MeshData& meshData)
 	meshData = MeshData();
 }
 
+
+void ModuleRender::DeleteSmoothedMeshFromGPU(StencilData& stencilData)
+{
+	LOG("Mesh removed from GPU. VAO: %d, VBO: %d", stencilData.VAO, stencilData.VBO);
+	if (stencilData.VBO != 0) glDeleteBuffers(1, &stencilData.VBO);
+	if (stencilData.VAO != 0) glDeleteVertexArrays(1, &stencilData.VAO);
+	stencilData = StencilData();
+}
 
 
 unsigned int ModuleRender::UploadTextureToGPU(unsigned char* data, int width, int height)

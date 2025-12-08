@@ -277,7 +277,7 @@ bool GameObject::TryGetGlobalAABB(AABB& globalAABB)
 	Mesh* mesh = (Mesh*)GetComponent(ComponentType::Mesh);
 	if (mesh && transform)
 	{
-		globalAABB = mesh->aabb->GetGlobalAABB(transform->GetGlobalMatrix());
+		globalAABB = mesh->GetGlobalAABB();
 		return true;
 	}
 	else return false;

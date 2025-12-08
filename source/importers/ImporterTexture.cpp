@@ -7,7 +7,7 @@
 #include <IL/ilu.h>
 #include <fstream>
 
-bool ImporterTexture::Import(const std::string assetPath, const std::string libraryPath, const UID uid, const int type)
+bool ImporterTexture::Import_Internal()
 {
 	unsigned int ilImageID = 0;
 	ilGenImages(1, &ilImageID);
@@ -60,7 +60,7 @@ bool ImporterTexture::Import(const std::string assetPath, const std::string libr
         return false;
     }
 	
-	SaveMeta(assetPath, uid, type, {});
+	SaveMeta();
 
     ilDeleteImages(1, &ilImageID);
 

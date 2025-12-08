@@ -7,12 +7,21 @@ class Config;
 
 class Importer
 {
-public:
-	virtual bool Import(const std::string assetPath, const std::string libraryPath, const UID uid, const int type) = 0;
 
-	virtual bool SaveMeta(const std::string assetPath, const UID uid, const int type, const std::list<UID> referedIDs);
+public:
+	
+    bool Import(const std::string assetPath, const std::string libraryPath, const UID uid, const int type);
 
 protected:
-	void SaveBasicMeta(Config& config, const UID uid, const int type, const std::list<UID> referedIDs = {});
 
+    virtual bool Import_Internal() = 0;
+    virtual bool SaveMeta();
+	void SaveBasicMeta(Config& config);
+
+protected: 
+
+    UID uid;
+    int type;
+    std::string assetPath;
+    std::string libraryPath;
 };

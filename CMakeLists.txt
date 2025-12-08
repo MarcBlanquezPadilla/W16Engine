@@ -98,6 +98,10 @@ add_executable(W16Engine
 	source/resources/ResourceTexture.cpp
 	source/resources/ResourceScene.h
 	source/resources/ResourceScene.cpp
+	source/resources/ResourceModel.h
+	source/resources/ResourceModel.cpp
+	source/resources/ResourceMesh.h
+	source/resources/ResourceMesh.cpp
 	source/importers/Importer.h
 	source/importers/Importer.cpp
 	source/importers/ImporterTexture.h

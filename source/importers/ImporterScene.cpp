@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 
-bool ImporterScene::Import(const std::string assetPath, const std::string libraryPath, const UID uid, const int type)
+bool ImporterScene::Import_Internal()
 {
     std::ifstream importFile(assetPath);
     if (!importFile.is_open())
@@ -38,7 +38,7 @@ bool ImporterScene::Import(const std::string assetPath, const std::string librar
         return false;
     }
 
-    SaveMeta(assetPath ,uid, type, {});
+    SaveMeta();
 
     return true;
 }

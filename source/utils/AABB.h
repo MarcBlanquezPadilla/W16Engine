@@ -40,4 +40,15 @@ public:
 
         return globalAABB;
     }
+
+    void SetNegativeInfinity()
+    {
+        min = glm::vec3(INFINITY, INFINITY, INFINITY);
+        max = glm::vec3(-INFINITY, -INFINITY, -INFINITY);
+    }
+    void Enclose(const glm::vec3& p)
+    {
+        min = glm::min(min, p);
+        max = glm::max(max, p);
+    }
 };

@@ -178,6 +178,10 @@ void ProjectWindow::DrawFolderContent()
             {
                 ChangeCurrentNode(child);
             }
+            else
+            {
+                Engine::GetInstance().moduleLoader->LoadModel(child->path);
+            }
         }
         ImGui::PopStyleColor();
 

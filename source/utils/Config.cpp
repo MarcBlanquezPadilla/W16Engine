@@ -89,9 +89,9 @@ void Config::CleanUp()
     if (rootDocument)
     {
         delete rootDocument;
-        rootDocument = nullptr; // IMPORTANTÍSIMO: Ponerlo a null
+        rootDocument = nullptr;
     }
-    node = pugi::xml_node(); // Nodo nulo
+    node = pugi::xml_node();
 }
 
 Config Config::AddChild(const char* name)

@@ -18,6 +18,7 @@
 #include "Global.h"
 
 #include "resources/ResourceScene.h"
+#include "resources/ResourceModel.h"
 
 #include <list>
 #include <vector>
@@ -93,164 +94,41 @@ void ModuleLoader::HandleAssetDrop(const std::string& path)
 
 bool ModuleLoader::LoadModel(const std::string& filePath)
 {
-	std::string modelDirectory = GetDirectoryFromPath(filePath);
+	UID modelUID = Engine::GetInstance().moduleResources->Find(filePath);
 
-	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(filePath,
-		aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_GlobalScale);
-
-	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	if (modelUID == 0)
 	{
-		LOG("Error loading model with Assimp: %s", importer.GetErrorString());
+		LOG("Error: Scene not found at %s", filePath.c_str());
 		return false;
 	}
 
-	//SCENE NODES PROCESS
-	GameObject* rootGameObject = ProcessNode(scene->mRootNode, scene, modelDirectory);
+	ResourceModel* modelRes = (ResourceModel*)Engine::GetInstance().moduleResources->RequestResource(modelUID);
 
-	if (rootGameObject == nullptr)
+	if (modelRes && modelRes->IsLoadedToMemory())
 	{
-		LOG("Failed to process root node for model: %s", filePath.c_str());
-		return false;
-	}
+		Config gameObjectNode = modelRes->gameObjectConfig.GetChild("GameObject");
 
-	//ADD GAMEOBJECT TO SCENE
-	Engine::GetInstance().moduleScene->AddGameObject(rootGameObject);
-
-	return true;
-}
-
-GameObject* ModuleLoader::ProcessNode(aiNode* node, const aiScene* scene, const std::string& modelDirectory)
-{
-	GameObject* nodeGameObject = new GameObject(true, node->mName.C_Str());
-
-	//APPLY NODE TRANSFORMS
-	aiVector3D position;
-	aiQuaternion rotation;
-	aiVector3D scaling;
-	node->mTransformation.Decompose(scaling, rotation, position);
-
-	nodeGameObject->transform->SetPosition(glm::vec3(position.x, position.y, position.z));
-	nodeGameObject->transform->SetQuaternionRotation(glm::quat(rotation.w, rotation.x, rotation.y, rotation.z));
-	nodeGameObject->transform->SetScale(glm::vec3(scaling.x, scaling.y, scaling.z));
-
-	//PROCESS MESHES
-	if (node->mNumMeshes == 1)
-	{
-		aiMesh* assimpMesh = scene->mMeshes[node->mMeshes[0]];
-
-		if (!AddMeshAndTextureFromAssimp(nodeGameObject, assimpMesh, scene, modelDirectory))
-		{
-			LOG("Error processing mesh for node %s. Node will be empty.", node->mName.C_Str());
-		}
-	}
-	else if (node->mNumMeshes > 0)
-	{
-		for (unsigned int i = 0; i < node->mNumMeshes; i++)
-		{
-			aiMesh* assimpMesh = scene->mMeshes[node->mMeshes[i]];
-			GameObject* meshGameObject = new GameObject(true, assimpMesh->mName.C_Str());
-
-			if (AddMeshAndTextureFromAssimp(meshGameObject, assimpMesh, scene, modelDirectory))
-			{
-				nodeGameObject->AddChild(meshGameObject);
-			}
-			else
-			{
-				LOG("Error processing mesh %s, skipping.", assimpMesh->mName.C_Str());
-				delete meshGameObject;
-			}
-		}
-	}
-
-	//RECURSIVE CHILDS CREATION
-	for (unsigned int i = 0; i < node->mNumChildren; i++)
-	{
-		GameObject* childNodeGO = ProcessNode(node->mChildren[i], scene, modelDirectory);
-		if (childNodeGO)
-		{
-			nodeGameObject->AddChild(childNodeGO);
-		}
-	}
-
-	return nodeGameObject;
-}
-
-bool ModuleLoader::AddMeshAndTextureFromAssimp(GameObject* target, aiMesh* assimpMesh, const aiScene* scene, const std::string& modelDirectory)
-{
-	if (target)
-	{
-		//ADD MESH
-		Mesh* meshComp = (Mesh*)target->AddComponent(ComponentType::Mesh);
-		if (!meshComp || !LoadFromAssimpMesh(assimpMesh, meshComp))
-		{
-			LOG("Error loading mesh data for %s.", target->name.c_str());
+		if (!gameObjectNode.IsValid()) {
+			LOG("Error: Still invalid. XML structure is unexpected.");
 			return false;
 		}
 
-		//ADD TEXTURE
-		if (scene->HasMaterials())
+		GameObject* gameObject = new GameObject(true, gameObjectNode.GetString("Name"));
+		if (gameObject)
 		{
-			aiMaterial* material = scene->mMaterials[assimpMesh->mMaterialIndex];
-			if (target != nullptr)
-			{
-				LoadFromAssimpMaterial(material, modelDirectory, target);
-			}
+			gameObject->Load(gameObjectNode);
+			Engine::GetInstance().moduleScene->AddGameObject(gameObject);
 		}
+
+		LOG("Model loaded successfully: %s", filePath.c_str());
+
+		//RELEASE RESOURCE
+		Engine::GetInstance().moduleResources->ReleaseResource(modelUID);
+
+
 		return true;
 	}
 	return false;
-}
-
-bool ModuleLoader::LoadFromAssimpMesh(aiMesh* assimpMesh, Mesh* mesh)
-{
-	std::vector<Vertex> vertices;
-	std::vector<unsigned int> indices;
-
-	//FILL VERTEXS
-	for (unsigned int i = 0; i < assimpMesh->mNumVertices; i++)
-	{
-		Vertex vertex;
-
-		vertex.position.x = assimpMesh->mVertices[i].x;
-		vertex.position.y = assimpMesh->mVertices[i].y;
-		vertex.position.z = assimpMesh->mVertices[i].z;
-
-		if (assimpMesh->HasNormals()) {
-			vertex.normal.x = assimpMesh->mNormals[i].x;
-			vertex.normal.y = assimpMesh->mNormals[i].y;
-			vertex.normal.z = assimpMesh->mNormals[i].z;
-		}
-		else {
-			vertex.normal = glm::vec3(0.0f);
-		}
-
-		if (assimpMesh->HasTextureCoords(0)) {
-			vertex.texCoords.x = assimpMesh->mTextureCoords[0][i].x;
-			vertex.texCoords.y = assimpMesh->mTextureCoords[0][i].y;
-			mesh->hasUVs = true;
-		}
-		else {
-			vertex.texCoords = glm::vec2(0.0f);
-			mesh->hasUVs = false;
-		}
-
-		vertices.push_back(vertex);
-	}
-
-	//FILL INDEX
-	for (unsigned int i = 0; i < assimpMesh->mNumFaces; i++)
-	{
-		aiFace face = assimpMesh->mFaces[i];
-
-		for (unsigned int j = 0; j < face.mNumIndices; j++) {
-			indices.push_back(face.mIndices[j]);
-		}
-	}
-
-	mesh->LoadModel(vertices, indices);
-
-	return true;
 }
 
 #pragma endregion
@@ -460,7 +338,7 @@ void ModuleLoader::CreateCube()
 		20, 21, 22, 22, 23, 20
 	};
 
-	mesh->LoadModel(vertices, indices);
+	//mesh->LoadModel(vertices, indices);
 
 	if (gameObject)
 	{
@@ -517,7 +395,7 @@ void ModuleLoader::CreateSphere()
 		}
 	}
 
-	mesh->LoadModel(vertices, indices);
+	//mesh->LoadModel(vertices, indices);
 
 	if (gameObject)
 	{
@@ -566,7 +444,7 @@ void ModuleLoader::CreatePyramid()
 		13, 14, 15
 	};
 
-	mesh->LoadModel(vertices, indices);
+	//mesh->LoadModel(vertices, indices);
 
 	if (gameObject)
 	{

@@ -14,6 +14,8 @@
 #include "resources/Resource.h"
 #include "resources/ResourceTexture.h"
 #include "resources/ResourceScene.h"
+#include "resources/ResourceModel.h"
+#include "resources/ResourceMesh.h"
 
 #include <vector>
 #include <string>
@@ -144,10 +146,61 @@ bool ModuleResources::CheckFileLoaded(const std::string& assetPath)
 	//IF IMPORTED BUT NOT CREATED
 	if (resources.find(uid) == resources.end())
 	{
-		return CreateResource(assetPath, libraryPath, uid, type);
+		return CreateResourceWithSubResources(assetPath, libraryPath, uid, type);
 	}
 
 	return false;
+}
+
+bool ModuleResources::TypeCanHaveSubResources(const Resource::Type type)
+{
+	if (type == Resource::model) return true;
+	else return false;
+}
+
+bool ModuleResources::CreateResourceWithSubResources(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type)
+{
+	bool created = CreateResource(assetPath, libraryPath, uid, type);
+
+	if (created && TypeCanHaveSubResources(type))
+	{
+		CheckForSubResources(assetPath, uid);
+	}
+
+	return created;
+}
+
+void ModuleResources::CheckForSubResources(const std::string& assetPath, UID parentUID)
+{
+	Config meta;
+	if (meta.Load((assetPath + ".meta").c_str()))
+	{
+		unsigned int count = meta.GetUInt("ReferedObjects");
+
+		if (count > 0)
+		{
+			Config refNode = meta.GetChild("ReferedObject");
+
+			while (refNode.IsValid())
+			{
+				UID childUID = (UID)refNode.GetUInt("UID");
+
+				if (resources.find(childUID) == resources.end())
+				{
+					std::string childLib = GetLibraryPath(childUID);
+					int childType = refNode.GetInt("UID");
+					std::string childAssetPath = refNode.GetString("Path");
+
+					CreateResource(childAssetPath, childLib, childUID, (Resource::Type)childType);
+
+					LOG("Sub-resource registered: UID %u", childUID);
+				}
+
+				refNode = refNode.GetNextSibling("ReferedObject");
+			}
+		}
+	}
+	meta.CleanUp();
 }
 
 bool ModuleResources::ImportFile(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type)
@@ -182,7 +235,7 @@ bool ModuleResources::ImportFile(const std::string& assetPath, const std::string
 
 	if (success)
 	{
-		return CreateResource(assetPath, libraryPath, uid, type);
+		return CreateResourceWithSubResources(assetPath, libraryPath, uid, type);
 	}
 
 	return false;
@@ -198,7 +251,8 @@ bool ModuleResources::CreateResource(const std::string& assetPath, const std::st
 	Resource* ret = nullptr;
 	switch (type) {
 		case Resource::texture: ret = new ResourceTexture(uid); break;
-		//case Resource::mesh: ret = (Resource*) new ResourceMesh(uid); break;
+		case Resource::mesh: ret = new ResourceMesh(uid); break;
+		case Resource::model: ret = new ResourceModel(uid); break;
 		case Resource::scene: ret = new ResourceScene(uid); break;
 		//case Resource::bone: ret = (Resource*) new ResourceBone(uid); break;
 		//case Resource::animation: ret = (Resource*) new ResourceAnimation(uid); break;

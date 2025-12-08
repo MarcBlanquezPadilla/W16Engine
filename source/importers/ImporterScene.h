@@ -7,5 +7,5 @@
 class ImporterScene : public Importer
 {
 public:
-	virtual bool Import(const std::string assetPath, const std::string libraryPath, const UID uid, const int type) override;
+	virtual bool Import_Internal() override;
 };

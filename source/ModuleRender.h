@@ -9,6 +9,7 @@
 #include <string>
 
 struct MeshData;
+struct StencilData;
 struct Vertex;
 class GameObject;
 class CameraLens;
@@ -16,7 +17,6 @@ class Mesh;
 
 #define CHECKERS_WIDTH 64
 #define CHECKERS_HEIGHT 64
-
 
 struct RenderObject
 {
@@ -55,7 +55,8 @@ public:
 	bool UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
 	void DeleteMeshFromGPU(MeshData& meshData);
 
-	bool UploadSmoothedMeshToGPU(unsigned int& vao, unsigned int& vbo, unsigned int& sharedEbo,const std::vector<Vertex>& vertices);
+	bool UploadSmoothedMeshToGPU(StencilData& stencilData, unsigned int& sharedEbo,const std::vector<Vertex>& vertices);
+	void DeleteSmoothedMeshFromGPU(StencilData& stencilData);
 	
 	bool UploadLinesToGPU(unsigned int& vao, unsigned int& vbo, const std::vector<glm::vec3>& lines);
 

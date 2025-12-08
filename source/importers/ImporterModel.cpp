@@ -23,7 +23,7 @@
 #include <fstream>
 #include <sstream>
 
-bool ImporterModel::Import(const std::string assetPath, const std::string libraryPath, const UID uid, const int type)
+bool ImporterModel::Import_Internal()
 {
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(assetPath, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_GlobalScale);
@@ -37,7 +37,7 @@ bool ImporterModel::Import(const std::string assetPath, const std::string librar
 	referedUIDs.clear();
 	GameObject* modelGameObject = new GameObject(true, GetFileName(assetPath));
 
-	if (!modelGameObject || !ProcessNode(scene->mRootNode, scene, assetPath, modelGameObject))
+	if (!modelGameObject || !ProcessNode(scene->mRootNode, scene, modelGameObject))
 	{
 		LOG("Failed to process root node for model: %s", assetPath.c_str());
 		return false;
@@ -45,7 +45,8 @@ bool ImporterModel::Import(const std::string assetPath, const std::string librar
 
 	//SAVE LIBRARY
 	Config gameObjectConfig;
-	modelGameObject->Save(gameObjectConfig);
+	Config gameObjectNode = gameObjectConfig.AddChild("GameObject");
+	modelGameObject->Save(gameObjectNode);
 
 	std::string xmlBuffer;
 	gameObjectConfig.SaveToString(xmlBuffer);
@@ -65,9 +66,7 @@ bool ImporterModel::Import(const std::string assetPath, const std::string librar
 
 
 	//SAVE META
-	referedUIDs.sort();
-	referedUIDs.unique();
-	SaveMeta(assetPath, uid, type, referedUIDs);
+	SaveMeta();
 
 	modelGameObject->CleanUp();
 	delete modelGameObject;
@@ -75,7 +74,7 @@ bool ImporterModel::Import(const std::string assetPath, const std::string librar
 	return true;
 }
 
-bool ImporterModel::ProcessNode(aiNode* node, const aiScene* scene, const std::string& modelDirectory, GameObject* targetGameObject)
+bool ImporterModel::ProcessNode(aiNode* node, const aiScene* scene, GameObject* targetGameObject)
 {
 	//APPLY NODE TRANSFORMS
 	aiVector3D position;
@@ -92,7 +91,7 @@ bool ImporterModel::ProcessNode(aiNode* node, const aiScene* scene, const std::s
 	{
 		aiMesh* assimpMesh = scene->mMeshes[node->mMeshes[0]];
 
-		if (!AddMeshAndTexture(assimpMesh, scene, modelDirectory, targetGameObject))
+		if (!AddMeshAndTexture(assimpMesh, scene, targetGameObject))
 		{
 			LOG("Error processing mesh for node %s. Node will be empty.", node->mName.C_Str());
 		}
@@ -104,7 +103,7 @@ bool ImporterModel::ProcessNode(aiNode* node, const aiScene* scene, const std::s
 			aiMesh* assimpMesh = scene->mMeshes[node->mMeshes[i]];
 			GameObject* meshGameObject = new GameObject(true, assimpMesh->mName.C_Str());
 
-			if (meshGameObject && AddMeshAndTexture(assimpMesh, scene, modelDirectory, meshGameObject))
+			if (meshGameObject && AddMeshAndTexture(assimpMesh, scene, meshGameObject))
 			{
 				targetGameObject->AddChild(meshGameObject);
 			}
@@ -121,7 +120,7 @@ bool ImporterModel::ProcessNode(aiNode* node, const aiScene* scene, const std::s
 	{
 		GameObject* childNodeGO = new GameObject(true, node->mChildren[i]->mName.C_Str());
 			
-		if (ProcessNode(node->mChildren[i], scene, modelDirectory, childNodeGO))
+		if (ProcessNode(node->mChildren[i], scene, childNodeGO))
 		{
 			targetGameObject->AddChild(childNodeGO);
 		}
@@ -130,7 +129,7 @@ bool ImporterModel::ProcessNode(aiNode* node, const aiScene* scene, const std::s
 	return true;
 }
 
-bool ImporterModel::AddMeshAndTexture(aiMesh* assimpMesh, const aiScene* scene, const std::string& modelDirectory, GameObject* target)
+bool ImporterModel::AddMeshAndTexture(aiMesh* assimpMesh, const aiScene* scene, GameObject* target)
 {
 	if (target)
 	{
@@ -141,7 +140,7 @@ bool ImporterModel::AddMeshAndTexture(aiMesh* assimpMesh, const aiScene* scene, 
 		if (scene->HasMaterials())
 		{
 			aiMaterial* material = scene->mMaterials[assimpMesh->mMaterialIndex];
-			LoadTexture(material, GetDirectoryFromPath(modelDirectory), target);
+			LoadTexture(material, target);
 		}
 		return true;
 	}
@@ -164,7 +163,11 @@ bool ImporterModel::LoadMesh(aiMesh* assimpMesh, GameObject* target)
 	if (success)
 	{
 		//meshComp->SetResource(meshUID);
-		referedUIDs.push_back(meshUID);
+		ImportMeshData importMeshData;
+		importMeshData.name = target->name;
+		importMeshData.path = assetPath;
+		importMeshData.type = Resource::Type::mesh;
+		referedUIDs.emplace(meshUID,importMeshData);
 		return true;
 	}
 	else
@@ -174,7 +177,7 @@ bool ImporterModel::LoadMesh(aiMesh* assimpMesh, GameObject* target)
 	}
 }
 
-bool ImporterModel::LoadTexture(aiMaterial* material, const std::string& modelDirectory, GameObject* obj)
+bool ImporterModel::LoadTexture(aiMaterial* material, GameObject* obj)
 {
 	if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
 	{
@@ -185,6 +188,7 @@ bool ImporterModel::LoadTexture(aiMaterial* material, const std::string& modelDi
 
 		//SEARCH FILE
 		bool foundFile = false;
+		std::string modelDirectory = GetDirectoryFromPath(assetPath);
 
 		std::string texPath = modelDirectory + aiPath.C_Str();
 		if (DoesFileExist(texPath))
@@ -220,7 +224,11 @@ bool ImporterModel::LoadTexture(aiMaterial* material, const std::string& modelDi
 				if (textureUID != 0)
 				{
 					texture->SetResource(textureUID);
-					referedUIDs.push_back(textureUID);
+					ImportMeshData importMeshData;
+					importMeshData.name = fileName;
+					importMeshData.type = Resource::Type::texture;
+					importMeshData.path = texPath;
+					referedUIDs.emplace(textureUID, importMeshData);
 				}
 				else
 				{
@@ -246,11 +254,21 @@ bool ImporterModel::LoadTexture(aiMaterial* material, const std::string& modelDi
 	}
 }
 
-bool ImporterModel::SaveMeta(const std::string assetPath, const UID uid, const int type, const std::list<UID> referedIDs)
+bool ImporterModel::SaveMeta()
 {
 	Config meta;
 
-	SaveBasicMeta(meta, uid, type, referedIDs);
+	SaveBasicMeta(meta);
+
+	meta.SetUInt("ReferedObjects", referedUIDs.size());
+	for (auto pair : referedUIDs)
+	{
+		Config refered = meta.AddChild("ReferedObject");
+		refered.SetUInt("UID", pair.first);
+		refered.SetString("Name", pair.second.name.c_str());
+		refered.SetString("Path", pair.second.path.c_str());
+		refered.SetInt("Type", pair.second.type);
+	}
 
 	return meta.Save(GetMetaPath(assetPath).c_str());
 }

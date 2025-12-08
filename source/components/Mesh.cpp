@@ -1,283 +1,124 @@
 #include "Mesh.h"
-#include "../utils/Log.h"
-#include "../utils/AABB.h"
-#include "Component.h"
 #include "../GameObject.h"
-#include <vector>
-#include <assimp/scene.h>
 #include "../Engine.h"
-#include "../ModuleRender.h"
-#include <fstream>
-#include <cmath>
-#include <unordered_map>
+#include "../ModuleResources.h"
+#include "../ModuleRender.h" // Para llamar a dibujar
+#include "../resources/ResourceMesh.h"
+#include "../components/Transform.h"
+#include "../utils/Config.h"
 #include "imgui.h"
-#include "../geometry/Vertex.h"
-
-struct Vec3Comparator {
-    bool operator()(const glm::vec3& a, const glm::vec3& b) const {
-        if (a.x != b.x) return a.x < b.x;
-        if (a.y != b.y) return a.y < b.y;
-        return a.z < b.z;
-    }
-};
 
 Mesh::Mesh(GameObject* owner) : Component(owner)
 {
-    aabb = nullptr;
 }
 
 Mesh::~Mesh()
 {
-	
+    CleanUp();
+}
+
+void Mesh::Update(float dt)
+{
+
 }
 
 void Mesh::CleanUp()
 {
-	Engine::GetInstance().moduleRender->DeleteMeshFromGPU(this->meshData);
+    if (meshUID != 0)
+    {
+        Engine::GetInstance().moduleResources->ReleaseResource(meshUID);
+        meshUID = 0;
+        resource = nullptr;
+    }
 }
-    
-bool Mesh::LoadModel(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
-{
-    if (vertices.empty() || indices.empty()) {
-        LOG("Error: Assimp mesh read but empty vectors.");
-        return false;
-    }
-
-    meshData.numVertices = vertices.size();
-    meshData.numIndices = indices.size();
-    this->vertices = vertices;
-    this->indices = indices;
-
-    aabb = new AABB();
-
-    aabb->min = {INFINITY, INFINITY, INFINITY};
-    aabb->max = {-INFINITY, -INFINITY, -INFINITY};
-
-    for (const Vertex& vertex : vertices)
-    {
-        aabb->min.x = fmin(aabb->min.x, vertex.position.x);
-        aabb->min.y = fmin(aabb->min.y, vertex.position.y);
-        aabb->min.z = fmin(aabb->min.z, vertex.position.z);
-        aabb->max.x = fmax(aabb->max.x, vertex.position.x);
-        aabb->max.y = fmax(aabb->max.y, vertex.position.y);
-        aabb->max.z = fmax(aabb->max.z, vertex.position.z);
-    }
-
-    if (!LoadToGpu(vertices, indices))
-    {
-        LOG("Error: Failed to upload mesh to GPU.");
-        return false;
-    }
-
-    if (!LoadNormalsToGpu(vertices, indices))
-    {
-        LOG("Error: Failed to upload normals to GPU.");
-    }
-
-    if (!LoadSmothedNormalsToGpu(vertices, indices))
-    {
-        LOG("Error: Failed to upload normals to GPU.");
-    }
-
-    if (!SaveToLibrary(vertices, indices))
-    {
-        LOG("Error: Failed saving to library.");
-    }
-
-    return true;
-}
-
-bool Mesh::LoadToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
-{
-    if (vertices.empty() || indices.empty())
-    {
-        LOG("Error: Vertices or indices were empty");
-        return false;
-    }
-
-    bool success = Engine::GetInstance().moduleRender->UploadMeshToGPU(meshData, vertices, indices);
-
-    if (!success)
-    {
-        LOG("Error: Could not upload basic mesh to GPU.");
-        return false;
-    }
-
-    hasUVs = true;
-    return true;
-}
-
-bool Mesh::LoadNormalsToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
-{
-    std::vector<glm::vec3> normal_lines;
-    normal_lines.reserve(vertices.size() * 2);
-    const float NORMAL_LINE_LENGTH = 0.5f;
-
-    for (const Vertex& v : vertices)
-    {
-        normal_lines.push_back(v.position);
-        glm::vec3 lineEnd = v.position + (glm::normalize(v.normal) * NORMAL_LINE_LENGTH);
-        normal_lines.push_back(lineEnd);
-    }
-
-    if (!normal_lines.empty())
-    {
-        Engine::GetInstance().moduleRender->UploadLinesToGPU(
-            this->normalData.VAO,
-            this->normalData.VBO,
-            normal_lines
-        );
-        this->normalData.numVertices = normal_lines.size();
-    }
-    return true;
-}
-
-bool Mesh::LoadSmothedNormalsToGpu(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
-{
-    std::vector<Vertex> smothedVertices;
-
-    std::map<glm::vec3, glm::vec3, Vec3Comparator> accumulatedNormals;
-    for (const Vertex& v : vertices)
-    {
-        accumulatedNormals[v.position] += v.normal;
-    }
-    for (auto& pair : accumulatedNormals)
-    {
-        pair.second = glm::normalize(pair.second);
-    }
-
-    smothedVertices.reserve(vertices.size());
-    for (const Vertex& v : vertices)
-    {
-        smothedVertices.push_back({
-            v.position,
-            accumulatedNormals[v.position],
-            v.texCoords
-            });
-    }
-
-    if (!smothedVertices.empty())
-    {
-        Engine::GetInstance().moduleRender->UploadSmoothedMeshToGPU(
-            stencilData.VAO,
-            stencilData.VBO,
-            meshData.EBO,
-            smothedVertices
-        );
-        stencilData.numVertices = indices.size();
-    }
-    return true;
-}
-
-bool Mesh::SaveToLibrary(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
-{
-    libraryPath = "Library/Meshes/" + owner->name + ".W16Mesh";
-    std::ofstream file(libraryPath, std::ios::out | std::ios::binary);
-
-    if (!file.is_open())
-    {
-        LOG("Error: Could not open the .mesh file for writing: %s", libraryPath.c_str());
-        return false;
-    }
-
-    uint32_t num_vertices = vertices.size();
-    uint32_t num_indices = indices.size();
-
-    file.write(reinterpret_cast<const char*>(&num_vertices), sizeof(uint32_t));
-
-    file.write(reinterpret_cast<const char*>(&num_indices), sizeof(uint32_t));
-
-    file.write(reinterpret_cast<const char*>(vertices.data()), num_vertices * sizeof(Vertex));
-
-    file.write(reinterpret_cast<const char*>(indices.data()), num_indices * sizeof(unsigned int));
-
-    file.close();
-
-    LOG("Mesh saved in Library: %s", libraryPath.c_str());
-    return true;
-}
-
-bool Mesh::LoadFromLibrary(std::string path)
-{
-    std::ifstream file(path, std::ios::in | std::ios::binary);
-
-    if (!file.is_open())
-    {
-        LOG("Error: Could not open the .mesh file for reading: %s", path.c_str());
-        return false;
-    }
-
-    uint32_t num_vertices = 0;
-    uint32_t num_indices = 0;
-
-    file.read(reinterpret_cast<char*>(&num_vertices), sizeof(uint32_t));
-    file.read(reinterpret_cast<char*>(&num_indices), sizeof(uint32_t));
-
-    if (num_vertices == 0 || num_indices == 0)
-    {
-        LOG("Error: Mesh file has 0 vertices or indices: %s", path.c_str());
-        file.close();
-        return false;
-    }
-
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-
-    vertices.resize(num_vertices);
-    indices.resize(num_indices);
-
-    file.read(reinterpret_cast<char*>(vertices.data()), num_vertices * sizeof(Vertex));
-    file.read(reinterpret_cast<char*>(indices.data()), num_indices * sizeof(unsigned int));
-    file.read(reinterpret_cast<char*>(vertices.data()), num_vertices * sizeof(Vertex));
-    file.read(reinterpret_cast<char*>(indices.data()), num_indices * sizeof(unsigned int));
-    file.close();
-
-    LOG("Mesh loaded from Library: %s", path.c_str());
-
-    LoadModel(vertices, indices);
-
-    return true;
-}
-
 
 void Mesh::Save(Config& componentNode)
 {
-    componentNode.SetString("path", libraryPath);
+    componentNode.SetUInt("MeshUID", meshUID);
+    componentNode.SetBool("DrawNormals", drawNormals);
+    componentNode.SetBool("DrawMesh", drawMesh);
+    componentNode.SetBool("DrawStencil", drawStencil);
 }
 
 void Mesh::Load(Config& componentNode)
 {
-    LoadFromLibrary(componentNode.GetString("path"));
+    UID uid = componentNode.GetUInt("MeshUID");
+    drawNormals = componentNode.GetBool("DrawNormals");
+    drawMesh = componentNode.GetBool("DrawMesh");
+    drawStencil = componentNode.GetBool("DrawStencil");
+
+    if (uid != 0) SetResource(uid);
 }
 
-std::vector<Vertex> Mesh::GetVertices()
+void Mesh::SetResource(UID uid)
 {
-    return vertices;
+    if (meshUID != 0)
+    {
+        Engine::GetInstance().moduleResources->ReleaseResource(meshUID);
+    }
+
+    meshUID = uid;
+    resource = nullptr;
+
+    if (meshUID != 0)
+    {
+        resource = (ResourceMesh*)Engine::GetInstance().moduleResources->RequestResource(meshUID);
+    }
 }
 
-std::vector<unsigned int> Mesh::GetIndices()
+ResourceMesh* Mesh::GetResource() const
 {
-    return indices;
+    if (resource == nullptr && meshUID != 0)
+    {
+        resource = (ResourceMesh*)Engine::GetInstance().moduleResources->RequestResource(meshUID);
+    }
+    return resource;
 }
+
+AABB Mesh::GetGlobalAABB()
+{
+    ResourceMesh* r = GetResource();
+    if (r && r->IsLoadedToMemory())
+    {
+        glm::mat4 globalMatrix;
+
+        if (owner->TryGetGlobalMatrix(globalMatrix))
+        {
+            return r->localAABB.GetGlobalAABB(globalMatrix);
+        }
+    }
+
+    AABB empty;
+    empty.SetNegativeInfinity();
+    return empty;
+}
+
 
 void Mesh::OnEditor()
 {
+
     if (ImGui::CollapsingHeader("Mesh"))
     {
-        ImGui::Text("Vertices:");
-        ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.0f, 1.0f), "%d", meshData.numVertices);
+        if (resource && resource->IsLoadedToMemory())
+        {
+            ImGui::Text("Path:");
+            ImGui::TextWrapped(resource->GetAssetFile());
+            ImGui::Text("Vertices:");
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.0f, 1.0f), "%d", resource->numVertices);
 
-        ImGui::Text("Indices:");
-        ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.0f, 1.0f), "%d", meshData.numIndices);
+            ImGui::Text("Indices:");
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.0f, 1.0f), "%d", resource->numIndices);
 
-        ImGui::Text("VAO (ID):");
-        ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%u", meshData.VAO);
+            ImGui::Text("VAO (ID):");
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%u", resource->meshData.VAO);
 
-        ImGui::Text("Has UVs:");
-        ImGui::SameLine();
-        ImGui::TextUnformatted(hasUVs ? "Yes" : "No");
+            ImGui::Text("Has UVs:");
+            ImGui::SameLine();
+            ImGui::TextUnformatted(resource->hasUVs ? "Yes" : "No");
+        }
+        else ImGui::Text("There's no mesh attatched");
     }
 }
