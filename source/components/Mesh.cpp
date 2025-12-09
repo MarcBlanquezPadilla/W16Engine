@@ -2,7 +2,6 @@
 #include "../GameObject.h"
 #include "../Engine.h"
 #include "../ModuleResources.h"
-#include "../ModuleRender.h" // Para llamar a dibujar
 #include "../resources/ResourceMesh.h"
 #include "../components/Transform.h"
 #include "../utils/Config.h"

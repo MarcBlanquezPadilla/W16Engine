@@ -35,6 +35,30 @@ bool ImporterModel::Import_Internal()
 	}
 	
 	referedUIDs.clear();
+	UIDsByName.clear();
+	if (DoesFileHasMeta(assetPath))
+	{
+		Config modelConfig;
+		if (modelConfig.Load(GetMetaPath(assetPath).c_str()))
+		{					
+			if (modelConfig.IsValid() && modelConfig.GetUInt("ReferedObjects") > 0)
+			{
+				Config childNode = modelConfig.GetChild("ReferedObject");
+				while (childNode.IsValid())
+				{
+					std::string name = childNode.GetString("Name");
+					UID uid = childNode.GetUInt("UID");
+
+					if (name != "" && uid != 0)
+					{
+						UIDsByName.emplace(name, uid);
+					}
+					childNode = childNode.GetNextSibling("ReferedObject");
+				}
+			}
+		}
+	}
+
 	GameObject* modelGameObject = new GameObject(true, GetFileName(assetPath));
 
 	if (!modelGameObject || !ProcessNode(scene->mRootNode, scene, modelGameObject))
@@ -152,7 +176,13 @@ bool ImporterModel::LoadMesh(aiMesh* assimpMesh, GameObject* target)
 	Mesh* meshComp = (Mesh*)target->AddComponent(ComponentType::Mesh);
 	if (!meshComp) return false;
 
-	UID meshUID = GenerateNewUID();
+	//GET UID
+	UID meshUID = 0;
+	if (UIDsByName.find(target->name) != UIDsByName.end())
+	{
+		meshUID = UIDsByName[target->name];
+	}
+	else meshUID = GenerateNewUID();
 
 	ImporterMesh* importer = new ImporterMesh();
 
@@ -162,7 +192,7 @@ bool ImporterModel::LoadMesh(aiMesh* assimpMesh, GameObject* target)
 
 	if (success)
 	{
-		//meshComp->SetResource(meshUID);
+		meshComp->SetResource(meshUID);
 		ImportMeshData importMeshData;
 		importMeshData.name = target->name;
 		importMeshData.path = assetPath;

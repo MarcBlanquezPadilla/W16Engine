@@ -34,4 +34,5 @@ private:
 
 private:
 	std::map<UID,ImportMeshData> referedUIDs;
+	std::map<std::string, UID> UIDsByName;
 };

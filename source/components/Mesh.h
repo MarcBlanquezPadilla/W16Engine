@@ -30,7 +30,7 @@ public:
 public:
 
     bool drawNormals = false;
-    bool drawMesh = true;
+    bool drawMesh = false;
     bool drawStencil = false;
 
 private:

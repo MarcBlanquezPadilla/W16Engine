@@ -188,7 +188,7 @@ void ModuleResources::CheckForSubResources(const std::string& assetPath, UID par
 				if (resources.find(childUID) == resources.end())
 				{
 					std::string childLib = GetLibraryPath(childUID);
-					int childType = refNode.GetInt("UID");
+					int childType = refNode.GetInt("Type");
 					std::string childAssetPath = refNode.GetString("Path");
 
 					CreateResource(childAssetPath, childLib, childUID, (Resource::Type)childType);
