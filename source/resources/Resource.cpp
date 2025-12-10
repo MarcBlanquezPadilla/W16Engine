@@ -11,14 +11,6 @@ Resource::~Resource()
 
 }
 
-void Resource::SaveBasicData(Config& config)
-{
-	config.SetUInt("UID", uid);
-	config.SetInt("type", type);
-	config.SetString("assetPath", assetPath);
-	config.SetString("libraryPath", libraryPath);
-}
-
 bool Resource::LoadToMemory()
 {
     if (!IsLoadedToMemory())

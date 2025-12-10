@@ -10,6 +10,7 @@
 #include "importers/ImporterTexture.h"
 #include "importers/ImporterScene.h"
 #include "importers/ImporterModel.h"
+#include "importers/ImporterMesh.h"
 
 #include "resources/Resource.h"
 #include "resources/ResourceTexture.h"
@@ -72,6 +73,9 @@ bool ModuleResources::CheckChangesInAssets()
 	std::vector<std::string> allPaths = GetListDirectoryContents("Assets", true);
 	std::vector<std::string> assetsPaths;
 	assetsPaths.clear();
+
+	//CHECK INTERNAL ASSETS
+	CreateInternalResources();
 
 	//SEPARATE ASSETS FROM OTHER FILES
 	for (std::string path : allPaths)
@@ -272,6 +276,170 @@ bool ModuleResources::CreateResource(const std::string& assetPath, const std::st
 	return true;
 }
 
+
+bool ModuleResources::CreateInternalResources()
+{
+	std::string cubePath = GetLibraryPath(CUBE);
+	std::string pyramidPath = GetLibraryPath(PYRAMID);
+	std::string spherePath = GetLibraryPath(SPHERE);
+
+	//CUBE
+	if (!DoesFileExist(cubePath))
+	{
+		std::vector<Vertex> vertices;
+		std::vector<unsigned int> indices;
+
+		vertices = {
+
+			{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
+			{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)},
+			{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f)},
+			{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)},
+
+			{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 0.0f)},
+			{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 0.0f)},
+			{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 1.0f)},
+			{glm::vec3(0.5f,  0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 1.0f)},
+
+			{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)},
+			{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f)},
+			{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f)},
+			{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 1.0f)},
+
+			{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)},
+			{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f)},
+			{glm::vec3(0.5f,  0.5f, -0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f)},
+			{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 1.0f)},
+
+			{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f)},
+			{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f)},
+			{glm::vec3(0.5f,  0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(1.0f, 1.0f)},
+			{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 1.0f)},
+			{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(0.0f, 0.0f)},
+			{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(1.0f, 0.0f)},
+			{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(1.0f, 1.0f)},
+			{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(0.0f, 1.0f)}
+		};
+
+		indices = {
+			0, 1, 2,  2, 3, 0,
+			4, 5, 6,  6, 7, 4,
+			8, 9, 10, 10, 11, 8,
+			12, 13, 14, 14, 15, 12,
+			16, 17, 18, 18, 19, 16,
+			20, 21, 22, 22, 23, 20
+		};
+
+		ImporterMesh* importer = new ImporterMesh();
+
+		importer->Import(cubePath, CUBE, Resource::Type::mesh, vertices, indices);
+
+		delete importer;
+	}
+	CreateResource("Internal resource", cubePath, CUBE, Resource::Type::mesh);
+
+	// PYRAMID
+	if (!DoesFileExist(pyramidPath))
+	{
+		std::vector<Vertex> vertices;
+		std::vector<unsigned int> indices;
+		glm::vec3 apex = glm::vec3(0.0f, 0.5f, 0.0f);
+
+		vertices = {
+		{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(0.0f, 0.0f)},
+		{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(1.0f, 0.0f)},
+		{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(1.0f, 1.0f)},
+		{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(0.0f, 1.0f)},
+
+		{glm::vec3(-0.5f, -0.5f,  0.5f), glm::normalize(glm::vec3(0.0f, 0.5f, 0.5f)), glm::vec2(0.0f, 0.0f)},
+		{glm::vec3(0.5f, -0.5f,  0.5f), glm::normalize(glm::vec3(0.0f, 0.5f, 0.5f)), glm::vec2(1.0f, 0.0f)},
+		{apex, glm::normalize(glm::vec3(0.0f, 0.5f, 0.5f)), glm::vec2(0.5f, 1.0f)},
+
+		{glm::vec3(0.5f, -0.5f,  0.5f), glm::normalize(glm::vec3(0.5f, 0.5f, 0.0f)), glm::vec2(0.0f, 0.0f)},
+		{glm::vec3(0.5f, -0.5f, -0.5f), glm::normalize(glm::vec3(0.5f, 0.5f, 0.0f)), glm::vec2(1.0f, 0.0f)},
+		{apex, glm::normalize(glm::vec3(0.5f, 0.5f, 0.0f)), glm::vec2(0.5f, 1.0f)},
+
+		{glm::vec3(0.5f, -0.5f, -0.5f), glm::normalize(glm::vec3(0.0f, 0.5f, -0.5f)), glm::vec2(0.0f, 0.0f)},
+		{glm::vec3(-0.5f, -0.5f, -0.5f), glm::normalize(glm::vec3(0.0f, 0.5f, -0.5f)), glm::vec2(1.0f, 0.0f)},
+		{apex, glm::normalize(glm::vec3(0.0f, 0.5f, -0.5f)), glm::vec2(0.5f, 1.0f)},
+
+		{glm::vec3(-0.5f, -0.5f, -0.5f), glm::normalize(glm::vec3(-0.5f, 0.5f, 0.0f)), glm::vec2(0.0f, 0.0f)},
+		{glm::vec3(-0.5f, -0.5f,  0.5f), glm::normalize(glm::vec3(-0.5f, 0.5f, 0.0f)), glm::vec2(1.0f, 0.0f)},
+		{apex, glm::normalize(glm::vec3(-0.5f, 0.5f, 0.0f)), glm::vec2(0.5f, 1.0f)},
+		};
+
+		indices = {
+			0, 1, 3,  1, 2, 3,
+			4, 5, 6,
+			7, 8, 9,
+			10, 11, 12,
+			13, 14, 15
+		};
+
+		ImporterMesh* importer = new ImporterMesh();
+		importer->Import(pyramidPath, PYRAMID, Resource::Type::mesh, vertices, indices);
+		delete importer;
+	}
+	CreateResource("Internal resource", pyramidPath, PYRAMID, Resource::Type::mesh);
+
+	//SPHERE
+	if (!DoesFileExist(spherePath))
+	{
+		std::vector<Vertex> vertices;
+		std::vector<unsigned int> indices;
+
+		const int sectors = 36;
+		const int stacks = 18;
+		const float radius = 0.5f;
+
+		for (int i = 0; i <= stacks; ++i) {
+			float V = (float)i / (float)stacks;
+			float phi = V * glm::pi<float>();
+
+			for (int j = 0; j <= sectors; ++j) {
+				float U = (float)j / (float)sectors;
+				float theta = U * (glm::pi<float>() * 2.0f);
+
+				float x = cos(theta) * sin(phi);
+				float y = cos(phi);
+				float z = sin(theta) * sin(phi);
+
+				glm::vec3 normal = glm::normalize(glm::vec3(x, y, z));
+
+				vertices.push_back({
+					{x * radius, y * radius, z * radius},
+					normal,
+					{U, V}
+					});
+			}
+		}
+
+		for (int i = 0; i < stacks; ++i) {
+			for (int j = 0; j < sectors; ++j) {
+				int first = (i * (sectors + 1)) + j;
+				int second = first + sectors + 1;
+
+
+				indices.push_back(first);
+				indices.push_back(first + 1);
+				indices.push_back(second);
+
+				indices.push_back(first + 1);
+				indices.push_back(second + 1);
+				indices.push_back(second);
+			}
+		}
+
+		ImporterMesh* importer = new ImporterMesh();
+
+		importer->Import(spherePath, SPHERE, Resource::Type::mesh, vertices, indices);
+
+		delete importer;
+	}
+	CreateResource("Internal resource", spherePath, SPHERE, Resource::Type::mesh);
+
+	return true;
+}
 
 UID ModuleResources::Find(const std::string& assetPath)
 {

@@ -57,6 +57,13 @@ bool ImporterMesh::Import(const std::string libraryPath, const UID uid, const in
 		}
 	}
 
+	Import(libraryPath, uid, type, vertices, indices);
+
+	return true;
+}
+
+bool ImporterMesh::Import(const std::string libraryPath, const UID uid, const int type, std::vector<Vertex> vertices, std::vector<unsigned int> indices)
+{
 	std::ofstream file(libraryPath, std::ios::out | std::ios::binary);
 	if (file.is_open())
 	{

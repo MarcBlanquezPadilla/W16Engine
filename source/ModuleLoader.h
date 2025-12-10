@@ -36,7 +36,8 @@ public:
 	bool LoadTexture(const std::string& path, unsigned int& textureID, int& width, int& height, bool flip = false);
 	
 	//BASICS
-	void CreateBasic(int basic);
+	void LoadBasic(int basic);
+	void LoadEmpty();
 
 	//LOAD & SAVE
 	bool SaveScene(const std::string& assetPath);
@@ -44,11 +45,4 @@ public:
 
 	//EVENTS
 	void OnEvent(const Event& event) override;
-
-private:
-	void CreateEmpty();
-	void CreateCube();
-	void CreateSphere();
-	void CreatePyramid();
-
 };

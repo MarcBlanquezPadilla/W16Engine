@@ -28,7 +28,6 @@ static UID GenerateNewUID()
 #define LIBRARY_5 "ImGui (Editor UI)"
 #define LIBRARY_6 "GLM (Math)"
 
-#define EMPTY 0
 #define CUBE 1
 #define PYRAMID 2
 #define SPHERE 3

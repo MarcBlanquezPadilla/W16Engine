@@ -35,8 +35,8 @@ Engine::Engine() {
     AddModule(moduleInput);
     AddModule(moduleRender);
     AddModule(moduleResources);
-    AddModule(moduleScene);
     AddModule(moduleLoader);
+    AddModule(moduleScene);
     AddModule(moduleEditor);
 }
 

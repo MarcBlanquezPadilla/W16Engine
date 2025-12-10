@@ -259,26 +259,22 @@ bool ModuleLoader::LoadTexture(const std::string& path, unsigned int& textureID,
 
 #pragma region Basics
 
-void ModuleLoader::CreateBasic(int basic)
+void ModuleLoader::LoadBasic(int basic)
 {
-	switch (basic)
+	if (Engine::GetInstance().moduleResources->RequestResource(basic))
 	{
-	case EMPTY:
-		CreateEmpty();
-		break;
-	case CUBE:
-		CreateCube();
-		break;
-	case SPHERE:
-		CreateSphere();
-		break;
-	case PYRAMID:
-		CreatePyramid();
-		break;
+		GameObject* gameObject = new GameObject(true, "Basic");
+		Mesh* mesh = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
+		mesh->SetResource(basic);
+
+		if (gameObject)
+		{
+			Engine::GetInstance().moduleScene->AddGameObject(gameObject);
+		}
 	}
 }
 
-void ModuleLoader::CreateEmpty()
+void ModuleLoader::LoadEmpty()
 {
 	GameObject* gameObject = new GameObject(true, "Empty");
 
@@ -288,169 +284,6 @@ void ModuleLoader::CreateEmpty()
 	}
 }
 
-void ModuleLoader::CreateCube()
-{
-	GameObject* gameObject = new GameObject(true, "Cube");
-	Mesh* mesh = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
-
-	std::vector<Vertex> vertices;
-	std::vector<unsigned int> indices;
-
-	//CUBE CONSTRUCTION
-	vertices = {
-
-		{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
-		{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)},
-		{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f)},
-		{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)},
-
-		{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 0.0f)},
-		{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 0.0f)},
-		{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 1.0f)},
-		{glm::vec3(0.5f,  0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 1.0f)},
-
-		{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)},
-		{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f)},
-		{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f)},
-		{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 1.0f)},
-
-		{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)},
-		{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f)},
-		{glm::vec3(0.5f,  0.5f, -0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f)},
-		{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 1.0f)},
-
-		{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f)},
-		{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f)},
-		{glm::vec3(0.5f,  0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(1.0f, 1.0f)},
-		{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 1.0f)},
-		{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(0.0f, 0.0f)},
-		{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(1.0f, 0.0f)},
-		{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(1.0f, 1.0f)},
-		{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(0.0f, 1.0f)}
-	};
-
-	indices = {
-		0, 1, 2,  2, 3, 0,
-		4, 5, 6,  6, 7, 4,
-		8, 9, 10, 10, 11, 8,
-		12, 13, 14, 14, 15, 12,
-		16, 17, 18, 18, 19, 16,
-		20, 21, 22, 22, 23, 20
-	};
-
-	//mesh->LoadModel(vertices, indices);
-
-	if (gameObject)
-	{
-		Engine::GetInstance().moduleScene->AddGameObject(gameObject);
-	}
-}
-
-void ModuleLoader::CreateSphere()
-{
-	GameObject* gameObject = new GameObject(true, "Sphere");
-	Mesh* mesh = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
-	std::vector<Vertex> vertices;
-	std::vector<unsigned int> indices;
-
-	const int sectors = 36;
-	const int stacks = 18;
-	const float radius = 0.5f;
-
-	for (int i = 0; i <= stacks; ++i) {
-		float V = (float)i / (float)stacks;
-		float phi = V * glm::pi<float>();
-
-		for (int j = 0; j <= sectors; ++j) {
-			float U = (float)j / (float)sectors;
-			float theta = U * (glm::pi<float>() * 2.0f);
-
-			float x = cos(theta) * sin(phi);
-			float y = cos(phi);
-			float z = sin(theta) * sin(phi);
-
-			glm::vec3 normal = glm::normalize(glm::vec3(x, y, z));
-
-			vertices.push_back({
-				{x * radius, y * radius, z * radius},
-				normal,
-				{U, V}
-				});
-		}
-	}
-
-	for (int i = 0; i < stacks; ++i) {
-		for (int j = 0; j < sectors; ++j) {
-			int first = (i * (sectors + 1)) + j;
-			int second = first + sectors + 1;
-
-
-			indices.push_back(first);
-			indices.push_back(first + 1);
-			indices.push_back(second);
-
-			indices.push_back(first + 1);
-			indices.push_back(second + 1);
-			indices.push_back(second);
-		}
-	}
-
-	//mesh->LoadModel(vertices, indices);
-
-	if (gameObject)
-	{
-		Engine::GetInstance().moduleScene->AddGameObject(gameObject);
-	}
-}
-
-void ModuleLoader::CreatePyramid()
-{
-	GameObject* gameObject = new GameObject(true, "Pyramid");
-	Mesh* mesh = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
-
-	std::vector<Vertex> vertices;
-	std::vector<unsigned int> indices;
-	glm::vec3 apex = glm::vec3(0.0f, 0.5f, 0.0f);
-
-	//PYRAMID CONSTRUCTION
-	vertices = {
-		{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(0.0f, 0.0f)},
-		{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(1.0f, 0.0f)},
-		{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(1.0f, 1.0f)},
-		{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(0.0f, 1.0f)},
-
-		{glm::vec3(-0.5f, -0.5f,  0.5f), glm::normalize(glm::vec3(0.0f, 0.5f, 0.5f)), glm::vec2(0.0f, 0.0f)},
-		{glm::vec3(0.5f, -0.5f,  0.5f), glm::normalize(glm::vec3(0.0f, 0.5f, 0.5f)), glm::vec2(1.0f, 0.0f)},
-		{apex, glm::normalize(glm::vec3(0.0f, 0.5f, 0.5f)), glm::vec2(0.5f, 1.0f)},
-
-		{glm::vec3(0.5f, -0.5f,  0.5f), glm::normalize(glm::vec3(0.5f, 0.5f, 0.0f)), glm::vec2(0.0f, 0.0f)},
-		{glm::vec3(0.5f, -0.5f, -0.5f), glm::normalize(glm::vec3(0.5f, 0.5f, 0.0f)), glm::vec2(1.0f, 0.0f)},
-		{apex, glm::normalize(glm::vec3(0.5f, 0.5f, 0.0f)), glm::vec2(0.5f, 1.0f)},
-
-		{glm::vec3(0.5f, -0.5f, -0.5f), glm::normalize(glm::vec3(0.0f, 0.5f, -0.5f)), glm::vec2(0.0f, 0.0f)},
-		{glm::vec3(-0.5f, -0.5f, -0.5f), glm::normalize(glm::vec3(0.0f, 0.5f, -0.5f)), glm::vec2(1.0f, 0.0f)},
-		{apex, glm::normalize(glm::vec3(0.0f, 0.5f, -0.5f)), glm::vec2(0.5f, 1.0f)},
-
-		{glm::vec3(-0.5f, -0.5f, -0.5f), glm::normalize(glm::vec3(-0.5f, 0.5f, 0.0f)), glm::vec2(0.0f, 0.0f)},
-		{glm::vec3(-0.5f, -0.5f,  0.5f), glm::normalize(glm::vec3(-0.5f, 0.5f, 0.0f)), glm::vec2(1.0f, 0.0f)},
-		{apex, glm::normalize(glm::vec3(-0.5f, 0.5f, 0.0f)), glm::vec2(0.5f, 1.0f)},
-	};
-
-	indices = {
-		0, 1, 3,  1, 2, 3,
-		4, 5, 6,
-		7, 8, 9,
-		10, 11, 12,
-		13, 14, 15
-	};
-
-	//mesh->LoadModel(vertices, indices);
-
-	if (gameObject)
-	{
-		Engine::GetInstance().moduleScene->AddGameObject(gameObject);
-	}
-}
 
 #pragma endregion
 

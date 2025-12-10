@@ -44,10 +44,10 @@ void HierarchyWindow::Draw()
     {
         if (ImGui::BeginMenu("Create"))
         {
-            if (ImGui::MenuItem("Empty")) { loader->CreateBasic(EMPTY); }
-            if (ImGui::MenuItem("Cube")) { loader->CreateBasic(CUBE); }
-            if (ImGui::MenuItem("Sphere")) { loader->CreateBasic(SPHERE); }
-            if (ImGui::MenuItem("Pyramid")) { loader->CreateBasic(PYRAMID); }
+            if (ImGui::MenuItem("Empty")) { loader->LoadEmpty(); }
+            if (ImGui::MenuItem("Cube")) { loader->LoadBasic(CUBE); }
+            if (ImGui::MenuItem("Sphere")) { loader->LoadBasic(SPHERE); }
+            if (ImGui::MenuItem("Pyramid")) { loader->LoadBasic(PYRAMID); }
             ImGui::EndMenu();
         }
         ImGui::EndPopup();

@@ -35,11 +35,6 @@ public:
 	bool UnloadFromMemory();
 
 
-	void SaveBasicData(Config& config);
-	virtual void Save(Config& config) const {};
-	virtual void Load(const Config& config) {};
-
-
 protected:
 
 	virtual bool LoadToMemory_Internal() = 0;
