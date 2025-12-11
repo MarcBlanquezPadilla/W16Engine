@@ -29,3 +29,5 @@ std::string GetLibraryPath(const UID uid);
 bool CreateDirectory(const std::string& directoryPath);
 
 int64_t GetLastModificationTime(const std::string& path);
+
+uint32_t GetFileHash(const std::string& path);

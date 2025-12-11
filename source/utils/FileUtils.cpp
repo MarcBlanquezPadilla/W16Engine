@@ -1,6 +1,8 @@
 #include "FileUtils.h"
 #include "Log.h"
 
+#include <fstream>
+
 std::string GetDirectoryFromPath(const std::string& filePath)
 {
     std::filesystem::path path(filePath);
@@ -146,4 +148,22 @@ int64_t GetLastModificationTime(const std::string& path)
 
     auto duration = fileTime.time_since_epoch();
     return std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+}
+
+uint32_t GetFileHash(const std::string& path)
+{
+    std::ifstream file(path, std::ios::binary);
+    if (!file.is_open()) return 0;
+
+    std::vector<char> buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+    uint32_t crc = 0xFFFFFFFF;
+    for (char c : buffer) {
+        crc = crc ^ (unsigned char)c;
+        for (int i = 0; i < 8; i++) {
+            if (crc & 1) crc = (crc >> 1) ^ 0xEDB88320;
+            else         crc = crc >> 1;
+        }
+    }
+    return ~crc;
 }
