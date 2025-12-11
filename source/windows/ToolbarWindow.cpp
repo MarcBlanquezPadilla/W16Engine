@@ -12,7 +12,7 @@
 
 ToolbarWindow::ToolbarWindow(bool active) : UIWindow("Toolbar", active)
 {
-
+	pauseOnPlay = false;
 }
 
 ToolbarWindow::~ToolbarWindow()
@@ -99,7 +99,6 @@ void ToolbarWindow::Draw()
 		if (ImGui::Button("Frame", ImVec2(buttonWidth, 0)))
 		{
 			Engine::GetInstance().moduleTime->Step();
-			LOG("Boton Step Pulsado");
 		}
 
 		if (!isPaused) ImGui::EndDisabled();
