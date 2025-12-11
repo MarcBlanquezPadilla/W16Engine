@@ -79,7 +79,7 @@ bool ModuleEditor::PreUpdate()
 	return true;
 }
 
-bool ModuleEditor::Update(float dt)
+bool ModuleEditor::Update()
 {
 	if (!selectedGameObjects.empty() && Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_DELETE) == KEY_DOWN)
 	{
@@ -267,7 +267,7 @@ bool ModuleEditor::Update(float dt)
 	}
 
 	//INTERFACE
-	userInterface->Update(dt);
+	userInterface->Update();
 	return true;
 }
 

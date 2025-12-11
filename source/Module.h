@@ -26,7 +26,7 @@ public:
 		return true;
 	}
 
-	virtual bool Update(float dt)
+	virtual bool Update()
 	{
 		return true;
 	}

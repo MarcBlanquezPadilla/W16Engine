@@ -1,6 +1,7 @@
 #pragma once
 #include "Module.h"
 #include "EventListener.h"
+#include "utils/Config.h"
 #include <vector>
 
 class GameObject;
@@ -10,6 +11,7 @@ struct Ray;
 
 class ModuleScene : public Module, public EventListener
 {
+
 public:
 
 	ModuleScene(bool startEnabled) ;
@@ -20,7 +22,7 @@ public:
 	bool Start();
 
 	bool PreUpdate();
-	bool Update(float dt);
+	bool Update();
 	bool PostUpdate();
 
 	bool NewScene();
@@ -53,6 +55,9 @@ public:
 	//EVENTS
 	void OnEvent(const Event& event) override;
 
+public: 
+	Config sceneBackup;
+
 private:
 	std::vector<GameObject*> gameObjects;
 	std::vector<GameObject*> dynamicGameObjects;
@@ -61,4 +66,6 @@ private:
 
 	Tree* staticTree;
 	bool staticTreeDirty;
+
+	
 };

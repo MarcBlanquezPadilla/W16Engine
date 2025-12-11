@@ -15,8 +15,10 @@
 #include "windows/ProjectWindow.h"
 #include "windows/SceneWindow.h"
 #include "windows/GameWindow.h"
+#include "windows/ToolbarWindow.h"
 
 #include "utils/Log.h"
+#include "utils/Time.h"
 
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
@@ -78,6 +80,7 @@ bool Interface::Awake()
 
 	windows[Menu::Help].push_back(new AboutWindow(false));
 
+
 	for (auto const& pair : windows)
 	{
 		const std::vector<UIWindow*>& windows = pair.second;
@@ -90,6 +93,9 @@ bool Interface::Awake()
 			}
 		}
 	}
+
+	toolBar = new ToolbarWindow(true);
+	toolBar->Awake();
 
 	setDefaultUI = true;
 
@@ -105,16 +111,8 @@ bool Interface::PreUpdate()
 	return true;
 }
 
-bool Interface::Update(float dt)
+bool Interface::Update()
 {
-	ImGuiID dockspace_id = ImGui::DockSpaceOverViewport(0U, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
-
-	if (setDefaultUI)
-	{
-		SetupDockspace(dockspace_id);
-		setDefaultUI = false;
-	}
-
 	if (ImGui::BeginMainMenuBar())
 	{
 		if (ImGui::BeginMenu("File"))
@@ -133,6 +131,7 @@ bool Interface::Update(float dt)
 			}
 			if (ImGui::MenuItem("Load Scene"))
 			{
+				Engine::GetInstance().moduleScene->NewScene();
 				Engine::GetInstance().moduleLoader->LoadScene("Assets/Scenes/scene.wscene");
 			}
 			ImGui::EndMenu();
@@ -196,16 +195,22 @@ bool Interface::Update(float dt)
 		ImGui::EndMainMenuBar();
 	}
 
+	toolBar->Draw();
+
+	ImGuiID dockspace_id = ImGui::DockSpaceOverViewport(0U, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
+
+	if (setDefaultUI)
+	{
+		SetupDockspace(dockspace_id);
+		setDefaultUI = false;
+	}
+
 	for (auto const& pair : windows)
 	{
 		const std::vector<UIWindow*>& windows = pair.second;
-
 		for (auto& window : windows)
 		{
-			if (window->is_active)
-			{
-				window->Draw();
-			}
+			if (window->is_active) window->Draw();
 		}
 	}
 

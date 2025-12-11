@@ -19,7 +19,7 @@ public:
     void OnEnable() override;
     void OnDisable() override;
 
-    void Update(float dt) override;
+    void Update() override;
     void UpdateTransform();
     
     void CleanUp() override;

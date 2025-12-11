@@ -38,7 +38,7 @@ void Camera::OnDisable()
     Engine::GetInstance().moduleRender->RemoveCamera(lens);
 }
 
-void Camera::Update(float dt)
+void Camera::Update()
 {
     UpdateTransform();
     lens->SetActiveCamera(enabled);

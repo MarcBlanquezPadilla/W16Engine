@@ -2,6 +2,12 @@
 #include "utils/Timer.h"
 #include "utils/Time.h"
 
+float Time::time = 0.0f;
+float Time::realTime = 0.0f;
+float Time::deltaTime = 0.0f;
+float Time::realDeltaTime = 0.0f;
+float Time::timeScale = 0.0f;
+int Time::frameCount = 0;
 
 ModuleTime::ModuleTime(bool startEnabled) : Module(startEnabled)
 {
@@ -19,6 +25,10 @@ bool ModuleTime::Awake()
 
 	realTimeTimer.Start();
 	lastTime = 0;
+	
+	isRunning = false;
+	isPaused = false;
+	oneFrameStep = false;
 
 	return ret;
 }
@@ -33,23 +43,65 @@ bool ModuleTime::PreUpdate()
 	lastTime = Time::realTime;
 
 	//GAME TIMERS
-	Time::deltaTime = Time::realDeltaTime * Time::timeScale;
-	Time::time += Time::deltaTime;
-	
-	Time::frameCount++;
+	if (isRunning)
+	{
+		if (oneFrameStep)
+		{
+			Time::deltaTime = Time::realDeltaTime;
+			oneFrameStep = false;
+		}
+		else
+		{
+			Time::deltaTime = Time::realDeltaTime * Time::timeScale;
+		}
+		Time::time += Time::deltaTime;
+	}
+	else
+	{
+		Time::deltaTime = 0.0f;
+	}
 
+	//FRAME COUNT
+	Time::frameCount++;
 
 	return ret;
 }
 
-
-bool ModuleTime::CleanUp()
+void ModuleTime::Play()
 {
-	bool ret = true;
-
+    isRunning = true;
+	isPaused = false;
+    Time::timeScale = 1.0f;
 	
+	Time::time = 0.0f;
+	Time::deltaTime = 0.0f;
+}
 
-	return ret;
+void ModuleTime::Stop()
+{
+	isRunning = false;
+	isPaused = false;
+    Time::timeScale = 0.0f;
+
+    Time::time = 0.0f;
+    Time::deltaTime = 0.0f;
+}
+
+void ModuleTime::Pause()
+{
+	if (!isRunning) return;
+
+	isPaused = !isPaused;
+
+	Time::timeScale = (isPaused) ? 0.0f : 1.0f;
+}
+
+void ModuleTime::Step()
+{
+	if (isRunning && isPaused)
+	{
+		oneFrameStep = true;
+	}
 }
 
 #pragma region Draw

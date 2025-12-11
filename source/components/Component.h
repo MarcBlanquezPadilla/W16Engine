@@ -24,7 +24,7 @@ public:
     
     virtual void OnDisable() {}
 
-    virtual void Update(float deltaTime) {}
+    virtual void Update() {}
 
     virtual void CleanUp() {}
     

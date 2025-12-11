@@ -37,7 +37,7 @@ GameObject::~GameObject()
 }
 
 
-bool GameObject::Update(float dt)
+bool GameObject::Update()
 {
 	bool ret = true;
 
@@ -46,13 +46,13 @@ bool GameObject::Update(float dt)
 		Component* component = pair.second;
 		if (component->enabled)
 		{
-			component->Update(dt);
+			component->Update();
 		}
 	}
 
 	for (auto child : childs)
 	{
-		child->Update(dt);
+		child->Update();
 	}
 
 	return ret;

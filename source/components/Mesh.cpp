@@ -16,7 +16,7 @@ Mesh::~Mesh()
     CleanUp();
 }
 
-void Mesh::Update(float dt)
+void Mesh::Update()
 {
 
 }

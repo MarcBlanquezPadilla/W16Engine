@@ -33,7 +33,7 @@ public:
 	bool Awake();
 
 	bool PreUpdate();
-	bool Update(float dt);
+	bool Update();
 	bool PostUpdate();
 
 	bool CleanUp();
@@ -52,9 +52,10 @@ private:
 private:
 	
 	Theme currentTheme;
-
-	ImGuiIO* io = nullptr;
+	
 	std::map<Menu, std::vector<UIWindow*>> windows;
+	UIWindow* toolBar;
 
     bool setDefaultUI = false;
+	ImGuiIO* io = nullptr;
 };

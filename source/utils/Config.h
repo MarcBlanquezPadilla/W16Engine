@@ -20,6 +20,7 @@ public:
     bool Save(const char* path);
     bool SaveToString(std::string& outString);
     void CleanUp();
+    void Reset();
 
     Config AddChild(const char* name);
     Config GetChild(const char* name) const;

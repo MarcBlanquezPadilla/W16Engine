@@ -15,6 +15,7 @@ enum EngineState
 };
 
 class Module;
+class ModuleTime;
 class ModuleWindow;
 class ModuleInput;
 class ModuleRender;
@@ -57,6 +58,7 @@ private:
 
 public: 
 	
+	ModuleTime* moduleTime;
 	ModuleWindow* moduleWindow;
 	ModuleInput* moduleInput;
 	ModuleRender* moduleRender;
@@ -69,10 +71,6 @@ public:
 
 private:
 
-	Timer startTime;
-	PerfTimer frameTime;
-
-	float dt;
 	bool quit;
 
 	std::vector<Module*> moduleList;

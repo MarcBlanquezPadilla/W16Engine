@@ -22,7 +22,7 @@ public:
 
 	bool OnDisable();
 
-	bool Update(float dt);
+	bool Update();
 
 	bool CleanUp();
 

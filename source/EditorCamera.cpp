@@ -17,6 +17,7 @@
 #include "utils/Frustum.h"
 #include "utils/Ray.h"
 #include "ModuleEvents.h"
+#include "utils/Time.h"
 
 EditorCamera::EditorCamera()
 {
@@ -192,7 +193,7 @@ bool EditorCamera::PreUpdate()
 		if (wPressed && !sPressed) zMovement = 1;
 		if (sPressed && !wPressed) zMovement = -1;
 
-		float dt = Engine::GetInstance().GetDtS();
+		float dt = Time::realDeltaTime;
 		float finalSpeed = speed * dt * (shift ? speedMultiplier : 1.0f);
 
 		if (wPressed)

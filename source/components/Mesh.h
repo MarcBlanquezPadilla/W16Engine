@@ -13,7 +13,7 @@ public:
     Mesh(GameObject* owner);
     ~Mesh() override;
 
-    void Update(float dt) override;
+    void Update() override;
     void CleanUp() override;
 
     ComponentType GetType() override { return ComponentType::Mesh; }

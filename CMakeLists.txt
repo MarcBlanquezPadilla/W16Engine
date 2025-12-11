@@ -76,6 +76,8 @@ add_executable(W16Engine
 	source/windows/SceneWindow.h
 	source/windows/GameWindow.cpp
 	source/windows/GameWindow.h
+	source/windows/ToolbarWindow.cpp
+	source/windows/ToolbarWindow.h
 	source/utils/Log.cpp 
 	source/utils/Log.h
 	source/utils/Timer.cpp

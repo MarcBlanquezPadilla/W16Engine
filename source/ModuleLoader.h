@@ -7,6 +7,7 @@
 class Mesh;
 class Texture;
 class GameObject;
+class Config;
 struct aiMesh;
 struct aiMaterial;
 struct aiScene;
@@ -42,6 +43,8 @@ public:
 	//LOAD & SAVE
 	bool SaveScene(const std::string& assetPath);
 	bool LoadScene(const std::string& assetPath);
+	bool SaveSceneToMemory(Config& sceneConfig);
+	bool LoadSceneFromMemory(Config& sceneConfig);
 
 	//EVENTS
 	void OnEvent(const Event& event) override;

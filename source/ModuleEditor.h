@@ -25,7 +25,7 @@ public:
 	bool Awake();
 
 	bool PreUpdate();
-	bool Update(float dt);
+	bool Update();
 	bool PostUpdate();
 
 	bool CleanUp();

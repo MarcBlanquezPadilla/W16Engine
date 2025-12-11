@@ -48,14 +48,14 @@ bool ModuleScene::PreUpdate()
 	return ret;
 }
 
-bool ModuleScene::Update(float dt)
+bool ModuleScene::Update()
 {
 	bool ret = true;
 
 	//GAME OBJECTS
 	for (GameObject* gameObject : gameObjects)
 	{
-		gameObject->Update(dt);
+		gameObject->Update();
 	}
 
 	return ret;

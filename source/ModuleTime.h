@@ -13,9 +13,20 @@ public:
 	bool Awake() override;
 
 	bool PreUpdate() override;
-	bool CleanUp() override;
+
+	void Play();
+	void Stop();
+	void Pause();
+	void Step();
+
+	const bool GetIsRunning() { return isRunning; };
+	const bool GetIsPaused() { return isPaused; };
 
 private:
 	PerfTimer realTimeTimer;
 	double lastTime;
+
+	bool isRunning;
+	bool isPaused;
+	bool oneFrameStep;
 };

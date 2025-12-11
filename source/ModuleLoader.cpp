@@ -294,9 +294,26 @@ bool ModuleLoader::SaveScene(const std::string& savePath)
 	//SAVE SCENE
 	LOG("Saving scene in: %s", savePath.c_str());
 
-	Config sceneFile;
+	Config sceneConfig;
 
-	Config sceneNode = sceneFile.AddChild("Scene");
+	if (!SaveSceneToMemory(sceneConfig))
+	{
+		LOG("Failed parsing scene to XML");
+	}
+
+	if (!sceneConfig.Save(savePath.c_str()))
+	{
+		LOG("Error saving the scene file.");
+		return false;
+	}
+
+	LOG("Scene saved successfully.");
+	return true;
+}
+
+bool ModuleLoader::SaveSceneToMemory(Config& sceneConfig)
+{
+	Config sceneNode = sceneConfig.AddChild("Scene");
 	Config gameObjectsList = sceneNode.AddChild("GameObjects");
 
 	//SAVE EACH GAMEOBJECT RECURSIVE
@@ -314,16 +331,9 @@ bool ModuleLoader::SaveScene(const std::string& savePath)
 			}
 		}
 	}
-
-	if (!sceneFile.Save(savePath.c_str()))
-	{
-		LOG("Error saving the scene file.");
-		return false;
-	}
-
-	LOG("Scene saved successfully.");
 	return true;
 }
+
 
 bool ModuleLoader::LoadScene(const std::string& assetPath)
 {
@@ -336,42 +346,12 @@ bool ModuleLoader::LoadScene(const std::string& assetPath)
 		return false;
 	}
 
+	//LOAD RESOURCE
 	ResourceScene* sceneRes = (ResourceScene*)Engine::GetInstance().moduleResources->RequestResource(sceneUID);
 
 	if (sceneRes && sceneRes->IsLoadedToMemory())
 	{
-
-		//SCENE CLEANUP
-		Engine::GetInstance().moduleScene->NewScene();
-
-		Config sceneNode = sceneRes->sceneConfig.GetChild("Scene");
-
-		if (!sceneNode.IsValid()) {
-			LOG("Error: Still invalid. XML structure is unexpected.");
-			return false;
-		}
-
-		Config gameObjectsNode = sceneNode.GetChild("GameObjects");
-		if (!gameObjectsNode.IsValid())
-		{
-			LOG("Error loading scene: gameObjects node invalid.");
-			return false;
-		}
-
-		Config gameObjectNode = gameObjectsNode.GetChild("GameObject");
-
-		while (gameObjectNode.IsValid())
-		{
-			GameObject* gameObject = new GameObject(true, gameObjectNode.GetString("Name"));
-			if (gameObject)
-			{
-				gameObject->Load(gameObjectNode);
-				Engine::GetInstance().moduleScene->AddGameObject(gameObject);
-			}
-			gameObjectNode = gameObjectNode.GetNextSibling("GameObject");
-		}
-		
-		LOG("Scene loaded successfully: %s", assetPath.c_str());
+		LoadSceneFromMemory(sceneRes->sceneConfig);
 
 		//RELEASE RESOURCE
 		Engine::GetInstance().moduleResources->ReleaseResource(sceneUID);
@@ -380,6 +360,37 @@ bool ModuleLoader::LoadScene(const std::string& assetPath)
 	}
 
 	return false;
+}
+
+bool ModuleLoader::LoadSceneFromMemory(Config& sceneConfig)
+{
+	Config sceneNode = sceneConfig.GetChild("Scene");
+
+	if (!sceneNode.IsValid()) {
+		LOG("Error: Still invalid. XML structure is unexpected.");
+		return false;
+	}
+
+	Config gameObjectsNode = sceneNode.GetChild("GameObjects");
+	if (!gameObjectsNode.IsValid())
+	{
+		LOG("Error loading scene: gameObjects node invalid.");
+		return false;
+	}
+
+	Config gameObjectNode = gameObjectsNode.GetChild("GameObject");
+
+	while (gameObjectNode.IsValid())
+	{
+		GameObject* gameObject = new GameObject(true, gameObjectNode.GetString("Name"));
+		if (gameObject)
+		{
+			gameObject->Load(gameObjectNode);
+			Engine::GetInstance().moduleScene->AddGameObject(gameObject);
+		}
+		gameObjectNode = gameObjectNode.GetNextSibling("GameObject");
+	}
+	return true;
 }
 
 #pragma endregion

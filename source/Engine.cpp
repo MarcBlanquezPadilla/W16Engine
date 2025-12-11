@@ -8,6 +8,7 @@
 #include "ModuleLoader.h"
 #include "ModuleEvents.h"
 #include "ModuleResources.h"
+#include "ModuleTime.h"
 
 
 Engine& Engine::GetInstance() {
@@ -17,10 +18,7 @@ Engine& Engine::GetInstance() {
 
 Engine::Engine() {
 
-    Timer timer = Timer();
-    startTime = Timer();
-    frameTime = PerfTimer();
-
+    moduleTime = new ModuleTime(true);
     moduleEvents = new ModuleEvents(true);
     moduleWindow = new ModuleWindow(true);
     moduleInput = new ModuleInput(true);
@@ -30,6 +28,7 @@ Engine::Engine() {
     moduleLoader = new ModuleLoader(true);
     moduleEditor = new ModuleEditor(true);
     
+    AddModule(moduleTime);
     AddModule(moduleEvents);
     AddModule(moduleWindow);
     AddModule(moduleInput);
@@ -53,8 +52,6 @@ bool Engine::Awake() {
         }
     }
 
-    startTime.Start();
-    frameTime.Start();
     quit = false;
     
     return ret;
@@ -98,7 +95,7 @@ bool Engine::Update() {
 
     for (Module* module : moduleList) {
 
-        ret = module->Update(dt);
+        ret = module->Update();
         if (!ret) {
 
             continue;
@@ -110,10 +107,6 @@ bool Engine::Update() {
         quit = true;
 
     if (quit) ret = false;
-
-    //UPDATE FRAMERATE
-    dt = frameTime.ReadMs();
-    frameTime.Start();
 
     return ret;
 }
@@ -162,17 +155,6 @@ void Engine::AddModule(Module* module) {
     
     moduleList.push_back(module);
 }
-
-float Engine::GetDtMs()
-{
-    return dt;
-}
-
-float Engine::GetDtS()
-{
-    return dt/1000;
-}
-
 
 void Engine::QuitApplication()
 {

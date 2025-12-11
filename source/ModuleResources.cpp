@@ -51,7 +51,7 @@ bool ModuleResources::Start()
 
 	return ret;
 }
-bool ModuleResources::Update(float dt)
+bool ModuleResources::Update()
 {
 	bool ret = true;
 

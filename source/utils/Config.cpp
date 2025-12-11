@@ -94,6 +94,23 @@ void Config::CleanUp()
     node = pugi::xml_node();
 }
 
+void Config::Reset()
+{
+    if (rootDocument)
+    {
+        rootDocument->reset();
+        node = rootDocument->append_child("Data");
+    }
+    else if (node)
+    {
+        while (node.first_attribute())
+            node.remove_attribute(node.first_attribute());
+
+        while (node.first_child())
+            node.remove_child(node.first_child());
+    }
+}
+
 Config Config::AddChild(const char* name)
 {
     return Config(node.append_child(name));
