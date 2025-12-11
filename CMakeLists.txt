@@ -34,6 +34,8 @@ add_executable(W16Engine
 	source/ModuleEvents.h
 	source/ModuleResources.cpp
 	source/ModuleResources.h
+	source/ModuleTime.cpp
+	source/ModuleTime.h
 	source/Vector2D.cpp
 	source/Vector2D.h
 	source/ModuleRender.cpp
@@ -89,6 +91,7 @@ add_executable(W16Engine
 	source/utils/FileUtils.h
 	source/utils/Config.cpp
 	source/utils/Config.h
+	source/utils/Time.h
 	source/geometry/Plane.h
 	source/geometry/Plane.cpp
 	source/geometry/Vertex.h

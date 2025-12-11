@@ -23,6 +23,7 @@ public:
 
 	void Start();
 	double ReadMs() const;
+	double ReadSec() const;
 	Uint64 ReadTicks() const;
 
 private:
