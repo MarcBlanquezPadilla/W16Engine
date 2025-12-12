@@ -30,4 +30,5 @@ void Importer::SaveBasicMeta(Config& config)
 {
 	config.SetUInt("UID", uid);
 	config.SetInt("Type", type);
+	config.SetUInt("FileHash", GetFileHash(assetPath));
 }

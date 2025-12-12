@@ -23,6 +23,7 @@ public:
 	bool CleanUp() override;
 
 	//CHECKERS
+	bool CheckChangesInAssets();
 	bool CheckFileLoaded(const std::string& assetPath);
 
 	//RESURCES
@@ -30,6 +31,7 @@ public:
 	const Resource* RequestResource(UID uid) const;
 	Resource* RequestResource(UID uid);
 	void ReleaseResource(UID uid);
+
 
 	//EVENTS
 	void PublishAssetChangedEvent();
@@ -40,11 +42,12 @@ private:
 	bool ImportFile(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type);
 
 	//CHECKERS
-	bool CheckChangesInAssets();
+	
 	void CheckForSubResources(const std::string& assetPath, UID parentUID);
 	
 	//GETTERS
-	bool GetMetaInfo(const std::string& assetPath, UID& uid);
+	bool GetMetaInfo(const std::string& assetPath, UID& uid, uint32_t& fileHash);
+	bool GetMetaUID(const std::string& assetPath, UID& uid);
 	Resource::Type GetTypeFromExtension(const std::string& path);
 	
 	//CREATE RESOURCES
@@ -56,6 +59,8 @@ private:
 private:
 	std::map<UID, Resource*> resources;
 
-	float timeToCheckAssets;
-	Timer checkAssetsTimer;
+	float timeToCheckInternalAssets;
+	Timer checkInternalAssetsTimer;
+
+	bool updateAssets;
 };

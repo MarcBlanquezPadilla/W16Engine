@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<Data>
+	<Scene>
+		<GameObjects>
+			<GameObject Name="BakerHouse.fbx" UID="2674895376" Enabled="true" Static="true">
+				<Components>
+					<Component type="1" enabled="true">
+						<Position x="0" y="0" z="0" />
+						<Rotation w="1" x="0" y="0" z="0" />
+						<Scale x="1" y="1" z="1" />
+					</Component>
+				</Components>
+				<Childs>
+					<GameObject Name="Chimney" UID="349201595" Enabled="true" Static="true">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="0" y="0" z="0" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="100" y="100" z="100" />
+							</Component>
+							<Component type="2" enabled="true" MeshUID="78667744" DrawNormals="false" DrawMesh="false" DrawStencil="false" />
+							<Component type="3" enabled="true" textureUID="1108278117" useChecker="false" transparent="false" />
+						</Components>
+					</GameObject>
+					<GameObject Name="Baker_house" UID="3876611497" Enabled="true" Static="true">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="0" y="0" z="0" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="100" y="100" z="100" />
+							</Component>
+							<Component type="2" enabled="true" MeshUID="1230699865" DrawNormals="false" DrawMesh="false" DrawStencil="false" />
+							<Component type="3" enabled="true" textureUID="1108278117" useChecker="false" transparent="false" />
+						</Components>
+					</GameObject>
+				</Childs>
+			</GameObject>
+		</GameObjects>
+	</Scene>
+</Data>

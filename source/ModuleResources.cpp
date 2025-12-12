@@ -38,8 +38,11 @@ bool ModuleResources::Awake()
 {
 	bool ret = true;
 
-	timeToCheckAssets = 1.0f;
+	timeToCheckInternalAssets = 1.0f;
+	CreateInternalResources();
+	
 	CheckChangesInAssets();
+	updateAssets = false;
 
 	return true;
 }
@@ -55,8 +58,18 @@ bool ModuleResources::Update()
 {
 	bool ret = true;
 
-	if (checkAssetsTimer.ReadSec() > timeToCheckAssets)
+	if (checkInternalAssetsTimer.ReadSec() > timeToCheckInternalAssets)
+	{
+		//CHECK INTERNAL ASSETS
+		CreateInternalResources();
+	}
+
+	if (updateAssets)
+	{
+		//CHECK ASSETS FOLDER
 		CheckChangesInAssets();
+		updateAssets = false;
+	}	
 
 	return ret;
 }
@@ -73,9 +86,6 @@ bool ModuleResources::CheckChangesInAssets()
 	std::vector<std::string> allPaths = GetListDirectoryContents("Assets", true);
 	std::vector<std::string> assetsPaths;
 	assetsPaths.clear();
-
-	//CHECK INTERNAL ASSETS
-	CreateInternalResources();
 
 	//SEPARATE ASSETS FROM OTHER FILES
 	for (std::string path : allPaths)
@@ -118,8 +128,6 @@ bool ModuleResources::CheckChangesInAssets()
 	}
 
 	if (dirtyAssets) PublishAssetChangedEvent();
-
-	checkAssetsTimer.Start();
 	
 	return true;
 }
@@ -127,6 +135,7 @@ bool ModuleResources::CheckChangesInAssets()
 bool ModuleResources::CheckFileLoaded(const std::string& assetPath)
 {
 	UID uid = 0;
+	uint32_t fileHash = 0;
 	std::string libraryPath;
 	Resource::Type type = GetTypeFromExtension(assetPath);
 
@@ -138,8 +147,14 @@ bool ModuleResources::CheckFileLoaded(const std::string& assetPath)
 		return ImportFile(assetPath, libraryPath, uid, type);
 	}
 
-	GetMetaInfo(assetPath, uid);
+	GetMetaInfo(assetPath, uid, fileHash);
 	libraryPath = GetLibraryPath(uid);
+
+	//IF FILE MODIFIED
+	if (fileHash != GetFileHash(assetPath))
+	{
+		return ImportFile(assetPath, libraryPath, uid, type);
+	}
 
 	//IF LIBRARY MISSING
 	if (!DoesFileExist(libraryPath))
@@ -249,6 +264,8 @@ bool ModuleResources::CreateResource(const std::string& assetPath, const std::st
 {	
 	if (resources.find(uid) != resources.end())
 	{
+		resources[uid]->UnloadFromMemory_Internal();
+		resources[uid]->LoadToMemory_Internal();
 		return false;
 	}
 
@@ -334,9 +351,10 @@ bool ModuleResources::CreateInternalResources()
 
 		importer->Import(cubePath, CUBE, Resource::Type::mesh, vertices, indices);
 
-		delete importer;
+		delete importer;	
 	}
 	CreateResource("Internal resource", cubePath, CUBE, Resource::Type::mesh);
+	
 
 	// PYRAMID
 	if (!DoesFileExist(pyramidPath))
@@ -381,6 +399,7 @@ bool ModuleResources::CreateInternalResources()
 		delete importer;
 	}
 	CreateResource("Internal resource", pyramidPath, PYRAMID, Resource::Type::mesh);
+	
 
 	//SPHERE
 	if (!DoesFileExist(spherePath))
@@ -437,6 +456,9 @@ bool ModuleResources::CreateInternalResources()
 		delete importer;
 	}
 	CreateResource("Internal resource", spherePath, SPHERE, Resource::Type::mesh);
+	
+
+	checkInternalAssetsTimer.Start();
 
 	return true;
 }
@@ -445,7 +467,7 @@ UID ModuleResources::Find(const std::string& assetPath)
 {
 	UID uid = 0;
 
-	if (GetMetaInfo(assetPath, uid))
+	if (GetMetaUID(assetPath, uid))
 	{
 		return uid; 
 	}
@@ -453,13 +475,27 @@ UID ModuleResources::Find(const std::string& assetPath)
 	return 0;
 }
 
-bool ModuleResources::GetMetaInfo(const std::string& assetPath, UID& uid)
+bool ModuleResources::GetMetaUID(const std::string& assetPath, UID& uid)
 {
 	Config meta;
 	std::string metaPath = assetPath + ".meta";
 	if (meta.Load(metaPath.c_str()))
 	{
 		uid = (UID)meta.GetUInt("UID");
+
+		return true;
+	}
+	return false;
+}
+
+bool ModuleResources::GetMetaInfo(const std::string& assetPath, UID& uid, uint32_t& fileHash)
+{
+	Config meta;
+	std::string metaPath = assetPath + ".meta";
+	if (meta.Load(metaPath.c_str()))
+	{
+		uid = (UID)meta.GetUInt("UID");
+		fileHash = meta.GetUInt("FileHash");
 
 		return true;
 	}

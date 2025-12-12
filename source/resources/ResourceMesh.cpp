@@ -99,7 +99,7 @@ bool ResourceMesh::GenerateBuffers()
 
 	bool success = Engine::GetInstance().moduleRender->UploadMeshToGPU(meshData, vertices, indices);
 
-	if (success) hasUVs = true; // Asumimos que si carga, tiene UVs
+	if (success) hasUVs = true;
 	return success;
 }
 

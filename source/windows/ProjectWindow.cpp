@@ -1,6 +1,7 @@
 #include "ProjectWindow.h"
 #include "../ModuleLoader.h"
 #include "../ModuleEvents.h"
+#include "../ModuleResources.h"
 #include "../Engine.h"
 #include "../utils/Log.h"
 #include "../utils/FileUtils.h"
@@ -77,7 +78,20 @@ void ProjectWindow::Draw()
     }
     ImGui::SameLine();
     ImGui::Text("| Current: %s", currentNode->path.c_str());
-    ImGui::Separator();
+    ImGui::SameLine();
+    
+    const float refresh_button_width = ImGui::CalcTextSize("Refresh").x;
+    float region_max_x = ImGui::GetWindowContentRegionMax().x;
+    float frame_padding_x = 10;
+
+    float target_x = region_max_x - refresh_button_width - frame_padding_x;
+
+    ImGui::SetCursorPosX(target_x);
+
+    if (ImGui::Button("Refresh", { 0, 0 }))
+    {
+        Engine::GetInstance().moduleResources->CheckChangesInAssets();
+    }
 
     DrawFolderContent();
     ImGui::EndChild();
