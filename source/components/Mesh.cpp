@@ -5,6 +5,7 @@
 #include "../resources/ResourceMesh.h"
 #include "../components/Transform.h"
 #include "../utils/Config.h"
+#include "../utils/LOG.h"
 #include "imgui.h"
 
 Mesh::Mesh(GameObject* owner) : Component(owner)
@@ -23,17 +24,18 @@ void Mesh::Update()
 
 void Mesh::CleanUp()
 {
-    if (meshUID != 0)
+    if (resourceUID != 0)
     {
-        Engine::GetInstance().moduleResources->ReleaseResource(meshUID);
-        meshUID = 0;
+        Engine::GetInstance().moduleResources->ReleaseResource(resourceUID);
+        resource->RemoveReference(this);
+        resourceUID = 0;
         resource = nullptr;
     }
 }
 
 void Mesh::Save(Config& componentNode)
 {
-    componentNode.SetUInt("MeshUID", meshUID);
+    componentNode.SetUInt("MeshUID", resourceUID);
     componentNode.SetBool("DrawNormals", drawNormals);
     componentNode.SetBool("DrawMesh", drawMesh);
     componentNode.SetBool("DrawStencil", drawStencil);
@@ -51,25 +53,33 @@ void Mesh::Load(Config& componentNode)
 
 void Mesh::SetResource(UID uid)
 {
-    if (meshUID != 0)
+    if (resource != nullptr)
     {
-        Engine::GetInstance().moduleResources->ReleaseResource(meshUID);
+        Engine::GetInstance().moduleResources->ReleaseResource(resourceUID);
+        resource->RemoveReference(this);
     }
 
-    meshUID = uid;
-    resource = nullptr;
+    this->resourceUID = uid;
 
-    if (meshUID != 0)
+    Resource* res = Engine::GetInstance().moduleResources->RequestResource(uid);
+
+    if (res != nullptr && res->GetType() == Resource::Type::mesh)
     {
-        resource = (ResourceMesh*)Engine::GetInstance().moduleResources->RequestResource(meshUID);
+        resource = (ResourceMesh*)res;
+
+        resource->AddReference(this);
+    }
+    else
+    {
+        resource = nullptr;
     }
 }
 
 ResourceMesh* Mesh::GetResource() const
 {
-    if (resource == nullptr && meshUID != 0)
+    if (resource == nullptr && resourceUID != 0)
     {
-        resource = (ResourceMesh*)Engine::GetInstance().moduleResources->RequestResource(meshUID);
+        resource = (ResourceMesh*)Engine::GetInstance().moduleResources->RequestResource(resourceUID);
     }
     return resource;
 }
@@ -119,5 +129,15 @@ void Mesh::OnEditor()
             ImGui::TextUnformatted(resource->hasUVs ? "Yes" : "No");
         }
         else ImGui::Text("There's no mesh attatched");
+    }
+}
+
+void Mesh::OnResourceLost(UID lostUID)
+{
+    if (resourceUID == lostUID)
+    {
+        LOG("Texture Resource deleted! Removing reference in Component.");
+        resource = nullptr;
+        resourceUID = 0;
     }
 }

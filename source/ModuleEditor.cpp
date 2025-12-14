@@ -81,12 +81,13 @@ bool ModuleEditor::PreUpdate()
 
 bool ModuleEditor::Update()
 {
-	if (!selectedGameObjects.empty() && Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_DELETE) == KEY_DOWN)
+	if ((userInterface->IsHierarchyFocused() || userInterface->IsSceneFocused()) && !selectedGameObjects.empty() && Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_DELETE) == KEY_DOWN)
 	{
 		for (GameObject* selectedGameObject : selectedGameObjects)
 		{
 			selectedGameObject->Destroy();
 		}
+		selectedGameObjects.clear();
 	}
 
 	if (debugRay)

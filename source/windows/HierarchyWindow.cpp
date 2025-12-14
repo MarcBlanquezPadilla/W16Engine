@@ -21,6 +21,8 @@ HierarchyWindow::~HierarchyWindow()
 
 void HierarchyWindow::Draw()
 {
+    isFocused = false;
+
     if (!is_active) return;
 
     if (!ImGui::Begin(name, &is_active))
@@ -30,12 +32,14 @@ void HierarchyWindow::Draw()
         return;
     }
 
+    isFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+
     ModuleScene* scene = Engine::GetInstance().moduleScene;
     ModuleLoader* loader = Engine::GetInstance().moduleLoader;
 
     objectToDrop = nullptr;
 
-    for (GameObject* go : scene->GetGameObjects())
+    for (GameObject* go : scene->GetRootGameObjects())
     {
         DrawGameObjectNode(go);
     }
@@ -78,7 +82,7 @@ void HierarchyWindow::Draw()
         {
             for (GameObject* movingObj : selectedObjects)
             {
-                if (movingObj != objectToDrop && !objectToDrop->IsDescendant(movingObj))
+                if (movingObj != objectToDrop && !movingObj->IsDescendant(objectToDrop) && movingObj->parent != objectToDrop)
                 {
                     movingObj->SetParent(objectToDrop);
                 }

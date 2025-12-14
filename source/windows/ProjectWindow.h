@@ -5,29 +5,28 @@
 #include <string>
 #include <vector>
 
+struct DirectoryNode
+{
+    std::string name;
+    std::string path;
+    std::string extension;
+    bool isDirectory;
+
+    std::vector<DirectoryNode*> children;
+    DirectoryNode* parent = nullptr;
+
+    DirectoryNode(std::string _name, std::string _path, bool _isDir)
+        : name(_name), path(_path), isDirectory(_isDir) {
+    }
+
+    ~DirectoryNode() {
+        for (auto child : children) delete child;
+        children.clear();
+    }
+};
+
 class ProjectWindow : public UIWindow, public EventListener
 {
-
-    struct DirectoryNode
-    {
-        std::string name;
-        std::string path;
-        std::string extension;
-        bool isDirectory;
-
-        std::vector<DirectoryNode*> children;
-        DirectoryNode* parent = nullptr;
-
-        DirectoryNode(std::string _name, std::string _path, bool _isDir)
-            : name(_name), path(_path), isDirectory(_isDir) {
-        }
-
-        ~DirectoryNode() {
-            for (auto child : children) delete child;
-            children.clear();
-        }
-    };
-
 public:
     ProjectWindow(bool active);
     virtual ~ProjectWindow();
@@ -45,6 +44,8 @@ private:
     void BuildTreeRecursive(const std::string& path, DirectoryNode* parent);
 
     void ChangeCurrentNode(DirectoryNode* direcoryNode);
+    DirectoryNode* FindNodeByPath(DirectoryNode* root, const std::string& path);
+    void SelectNode(DirectoryNode* direcoryNode);
 
     unsigned int GetIconTextureWithExtension(const std::string& extension);
    
@@ -56,7 +57,9 @@ private:
 
     DirectoryNode* rootNode = nullptr;
     DirectoryNode* currentNode = nullptr;
-    DirectoryNode* selectedNode = nullptr;
+    std::vector<DirectoryNode*> selectedNodes = {};
+
+    std::string pathToDrop;
 
     unsigned int folderIconTextureID = 0;
     unsigned int fileIconTextureID = 0;
@@ -66,4 +69,5 @@ private:
     unsigned int sceneIconTextureID = 0;
 
     bool expandTreeToSelection = false;
+    bool dragging = false;
 };

@@ -1,6 +1,7 @@
 #include "ProjectWindow.h"
 #include "../ModuleLoader.h"
 #include "../ModuleEvents.h"
+#include "../ModuleInput.h"
 #include "../ModuleResources.h"
 #include "../Engine.h"
 #include "../utils/Log.h"
@@ -62,6 +63,8 @@ void ProjectWindow::Draw()
         return;
     }
 
+    pathToDrop = "";
+
     ImGui::Columns(2, "ProjectColumns", true);
 
     //FOLDERS
@@ -97,6 +100,95 @@ void ProjectWindow::Draw()
     ImGui::EndChild();
 
     ImGui::Columns(1);
+
+    bool changed = false;
+
+    if (dragging && ImGui::IsMouseReleased(0))
+    {
+        
+        if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && pathToDrop != "" && IsFileDirectory(pathToDrop))
+        {
+            for (DirectoryNode* node : selectedNodes)
+            {
+                std::string originalPath = node->path;
+                std::string metaPath = GetMetaPath(node->path);
+
+                if (MoveAssetToFolder(originalPath, pathToDrop))
+                {
+                    std::string newFilename = GetFileName(originalPath);
+                    std::string newAssetPath = pathToDrop + "/" + newFilename;
+
+                    if (DoesFileExist(metaPath))
+                    {
+                        
+                        if (MoveAssetToFolder(metaPath, pathToDrop))
+                        {
+                            changed = true;
+                            Engine::GetInstance().moduleResources->MoveResource(originalPath, newAssetPath);
+                            LOG("%s moved to %s", newFilename.c_str(), pathToDrop.c_str());
+                        }
+                        else
+                        {
+                            std::string restoreFolder = GetPreviousPath(originalPath);
+
+                            LOG("ERROR: Meta failed to move. Undoing asset move to save references.");
+
+                            MoveAssetToFolder(newAssetPath, restoreFolder);
+                        }
+                    }
+                    else
+                    {
+                        changed = true;
+                    }
+                }
+            }
+        }
+        else if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows))
+        {
+            /*for (GameObject* movingObj : selectedObjects)
+            {
+                movingObj->SetParent(nullptr);
+            }*/
+        }
+
+        
+
+        dragging = false;
+        pathToDrop = "";
+    }
+
+    if (dragging && !selectedNodes.empty())
+    {
+        ImGui::SetTooltip("Moving %d objects", selectedNodes.size());
+    }
+    else if (dragging && selectedNodes.empty())
+    {
+        dragging = false;
+        pathToDrop = "";
+    }
+
+    if (!dragging && ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && selectedNodes.size() > 0 && Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_DELETE) == KEY_DOWN)
+    {
+        bool deleted = false;
+        for (DirectoryNode* path : selectedNodes)
+        {
+            UID uid = Engine::GetInstance().moduleResources->Find(path->path);
+            if (DeleteAsset(path->path))
+            {
+                deleted = true;
+                Engine::GetInstance().moduleResources->RemoveResource(uid);
+            }
+        }
+
+        if (deleted)
+        {
+            selectedNodes.clear();
+            changed = true;
+        }
+    }
+
+    if (changed) Engine::GetInstance().moduleResources->PublishAssetChangedEvent();
+
     ImGui::End();
 }
 
@@ -137,11 +229,26 @@ void ProjectWindow::DrawTreeNodeRecursive(DirectoryNode* node)
                 ImGui::SetNextItemOpen(true, ImGuiCond_Always);
                 break;
             }
-            p = p->parent; // Subimos un nivel
+            p = p->parent;
         }
     }
 
     bool isOpen = ImGui::TreeNodeEx(node->name.c_str(), flags);
+
+    if (dragging && node->isDirectory && ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly))
+    {
+        pathToDrop = node->path;
+
+        // Dibujamos el rectángulo
+        ImGui::GetWindowDrawList()->AddRect(
+            ImGui::GetItemRectMin(),
+            ImGui::GetItemRectMax(),
+            IM_COL32(0, 255, 255, 255),
+            0.0f,
+            0,
+            1.0f
+        );
+    }
 
     if (ImGui::IsItemClicked())
     {
@@ -179,25 +286,60 @@ void ProjectWindow::DrawFolderContent()
         ImGui::BeginGroup();
         ImTextureID iconTexture = GetIconTextureWithExtension(child->extension);
 
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+        bool isSelected = std::find(selectedNodes.begin(), selectedNodes.end(), child) != selectedNodes.end();
 
-        if (ImGui::ImageButton("##icon", iconTexture, ImVec2(thumbnailSize, thumbnailSize)))
+        if (isSelected) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
+        ImGui::ImageButton("##icon", iconTexture, ImVec2(thumbnailSize, thumbnailSize));
+        if (isSelected) ImGui::PopStyleColor();
+
+        if (!dragging && ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
         {
-            selectedNode = child;
+            bool ctrlPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
+            bool shiftPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
+            bool eraseSelecteds = !(ctrlPressed || shiftPressed);
+            if (eraseSelecteds) selectedNodes.clear();
+           SelectNode(child);
         }
 
-        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+        if (!dragging && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
         {
             if (IsFileDirectory(child->path))
             {
+                selectedNodes.clear();
                 ChangeCurrentNode(child);
             }
             else
             {
-                Engine::GetInstance().moduleLoader->LoadModel(child->path);
+                //SET IMPORT SETTINGS
             }
         }
-        ImGui::PopStyleColor();
+
+        if (!dragging && ImGui::IsItemHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+        {
+            if (!isSelected)
+            {
+                bool ctrlPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
+                bool shiftPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
+                bool eraseSelecteds = !(ctrlPressed || shiftPressed);
+                if (eraseSelecteds) selectedNodes.clear();
+                SelectNode(child);
+            }
+            
+            dragging = true;
+        }
+
+        if (dragging && child->isDirectory && ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly))
+        {
+            pathToDrop = child->path;
+            ImGui::GetWindowDrawList()->AddRect(
+                ImGui::GetItemRectMin(),
+                ImGui::GetItemRectMax(),
+                IM_COL32(0, 255, 255, 255),
+                0.0f,
+                0,
+                1.0f
+            );
+        }
 
         float textWidth = ImGui::CalcTextSize(GetFileName(child->name).c_str()).x;
 
@@ -275,6 +417,12 @@ unsigned int ProjectWindow::GetIconTextureWithExtension(const std::string& exten
 
 void ProjectWindow::RefreshTree()
 {
+    std::string previousPath = "Assets";
+    if (currentNode != nullptr)
+    {
+        previousPath = currentNode->path;
+    }
+
     if (rootNode)
     {
         delete rootNode;
@@ -282,9 +430,20 @@ void ProjectWindow::RefreshTree()
     }
 
     rootNode = new DirectoryNode(rootPath, rootPath, true);
-    currentNode = rootNode;
-
     BuildTreeRecursive(rootPath, rootNode);
+
+    DirectoryNode* nodeToRestore = FindNodeByPath(rootNode, previousPath);
+
+    if (nodeToRestore != nullptr)
+    {
+        currentNode = nodeToRestore;
+    }
+    else
+    {
+        currentNode = rootNode;
+    }
+
+    expandTreeToSelection = true;
 }
 
 void ProjectWindow::BuildTreeRecursive(const std::string& path, DirectoryNode* parentNode)
@@ -307,6 +466,29 @@ void ProjectWindow::BuildTreeRecursive(const std::string& path, DirectoryNode* p
         {
             BuildTreeRecursive(entryPath, newNode);
         }
+    }
+}
+
+DirectoryNode* ProjectWindow::FindNodeByPath(DirectoryNode* node, const std::string& path)
+{
+    if (node->path == path) return node;
+
+    for (DirectoryNode* child : node->children)
+    {
+        if (child->isDirectory)
+        {
+            DirectoryNode* result = FindNodeByPath(child, path);
+            if (result != nullptr) return result;
+        }
+    }
+    return nullptr;
+}
+
+void ProjectWindow::SelectNode(DirectoryNode* direcoryNode)
+{
+    if (std::find(selectedNodes.begin(), selectedNodes.end(), direcoryNode) == selectedNodes.end())
+    {
+        selectedNodes.push_back(direcoryNode);
     }
 }
 

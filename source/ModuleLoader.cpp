@@ -317,7 +317,7 @@ bool ModuleLoader::SaveSceneToMemory(Config& sceneConfig)
 	Config gameObjectsList = sceneNode.AddChild("GameObjects");
 
 	//SAVE EACH GAMEOBJECT RECURSIVE
-	const std::vector<GameObject*>& gameObjects = Engine::GetInstance().moduleScene->GetGameObjects();
+	const std::vector<GameObject*>& gameObjects = Engine::GetInstance().moduleScene->GetRootGameObjects();
 
 	if (gameObjects.size() > 0)
 	{

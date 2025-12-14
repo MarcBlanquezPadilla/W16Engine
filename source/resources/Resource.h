@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../Global.h"
+#include "ResourceUser.h"
 #include <string>
+#include <vector>
 
 class Config;
 class ModuleResources;
@@ -34,6 +36,12 @@ public:
 	bool LoadToMemory();
 	bool UnloadFromMemory();
 
+	bool IsInteralResource()  const { return internalResource; };
+
+	//USERS
+	void AddReference(ResourceUser* user);
+	void RemoveReference(ResourceUser* user);
+	void NotifyUsers(UID newUID = 0);
 
 protected:
 
@@ -45,4 +53,8 @@ protected:
 	std::string libraryPath;
 	Type type = unknown;
 	unsigned int referenceCount = 0;
+
+	bool internalResource = false;
+
+	std::vector<ResourceUser*> users;
 };

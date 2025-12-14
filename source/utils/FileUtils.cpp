@@ -62,28 +62,45 @@ std::string FindFileInDirectory(const std::string& directoryPath, const std::str
 std::vector<std::string> GetListDirectoryContents(const std::string& directoryPath, bool recursive)
 {
     std::vector<std::string> allContent;
-    allContent.clear();
 
-    try
+    auto options = std::filesystem::directory_options::skip_permission_denied;
+
+    std::error_code ec;
+
+    if (recursive)
     {
-        if (recursive)
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(directoryPath, options, ec))
         {
-            for (const auto& entry : std::filesystem::recursive_directory_iterator(directoryPath))
-            {
-                allContent.push_back(entry.path().generic_string());
+            if (ec) {
+                LOG("Warning: Error accessing a file during recursive scan inside %s", directoryPath.c_str());
+                ec.clear();
+                continue;
             }
-        }
-        else
-        {
-            for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
-            {
-                allContent.push_back(entry.path().generic_string());
+
+            try {
+                if (entry.exists(ec) && !ec) {
+                    allContent.push_back(entry.path().generic_string());
+                }
+            }
+            catch (...) {
+                continue;
             }
         }
     }
-    catch (const std::filesystem::filesystem_error& e)
+    else
     {
-        LOG("Error listing directory: %s", e.what());
+        for (const auto& entry : std::filesystem::directory_iterator(directoryPath, options, ec))
+        {
+            if (ec) {
+                ec.clear();
+                continue;
+            }
+            allContent.push_back(entry.path().generic_string());
+        }
+    }
+
+    if (ec) {
+        LOG("Error: Could not open directory %s", directoryPath.c_str());
     }
 
     return allContent;
@@ -166,4 +183,91 @@ uint32_t GetFileHash(const std::string& path)
         }
     }
     return ~crc;
+}
+
+bool MoveAssetToFolder(const std::string& oldPath, const std::string& destinationFolder)
+{
+    std::error_code ec;
+
+    std::filesystem::path source(oldPath);
+    std::filesystem::path destDir(destinationFolder);
+    std::filesystem::path finalDestination = destDir / source.filename();
+
+    if (!std::filesystem::exists(source)) {
+        LOG("Error: Source file does not exist: %s", oldPath.c_str());
+        return false;
+    }
+
+    if (std::filesystem::exists(finalDestination)) {
+        LOG("Error: Destination file already exists. Move cancelled: %s", finalDestination.string().c_str());
+        return false;
+    }
+
+    std::filesystem::rename(source, finalDestination, ec);
+
+    if (ec) {
+        LOG("Error moving asset: %s", ec.message().c_str());
+        return false;
+    }
+
+    return true;
+}
+
+bool DeletePath(const std::string& path)
+{
+    std::error_code ec;
+
+    if (!std::filesystem::exists(path))
+    {
+        LOG("Error: File to delete not found: %s", path.c_str());
+        return false;
+    }
+
+    bool success = std::filesystem::remove_all(path, ec);
+
+    if (ec)
+    {
+        LOG("Error deleting asset: %s. Message: %s", path.c_str(), ec.message().c_str());
+        return false;
+    }
+
+    LOG("Deleted asset successfully: %s", path.c_str());
+    return true;
+}
+
+bool DeleteAsset(const std::string& path)
+{
+    std::error_code ec;
+
+    if (!std::filesystem::exists(path))
+    {
+        LOG("Error: File to delete not found: %s", path.c_str());
+        return false;
+    }
+
+    bool assetDeleted = std::filesystem::remove_all(path, ec);
+
+    if (ec)
+    {
+        LOG("Error deleting asset: %s. Message: %s", path.c_str(), ec.message().c_str());
+        return false;
+    }
+
+    if (assetDeleted)
+    {
+        std::string metaPath = GetMetaPath(path);
+
+        if (std::filesystem::exists(metaPath))
+        {
+            std::filesystem::remove(metaPath, ec);
+
+            if (ec)
+            {
+                LOG("Warning: Asset deleted, but failed to delete meta file: %s", metaPath.c_str());
+            }
+        }
+    }
+
+    LOG("Deleted asset successfully: %s", path.c_str());
+    return true;
 }

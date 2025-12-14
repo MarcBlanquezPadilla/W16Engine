@@ -52,6 +52,9 @@ struct Event
         //ASSETS
         AssetsChanged,
 
+        //RESOURCES
+        ResourceDestroyed,
+
         //OTHERS
         Custom,
         Invalid

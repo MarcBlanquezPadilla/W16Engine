@@ -31,3 +31,9 @@ bool CreateDirectory(const std::string& directoryPath);
 int64_t GetLastModificationTime(const std::string& path);
 
 uint32_t GetFileHash(const std::string& path);
+
+bool MoveAssetToFolder(const std::string& oldPath, const std::string& destinationFolder);
+
+bool DeletePath(const std::string& path);
+
+bool DeleteAsset(const std::string& path);

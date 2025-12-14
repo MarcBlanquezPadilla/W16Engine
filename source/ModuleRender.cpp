@@ -210,7 +210,7 @@ bool ModuleRender::RenderScene(const CameraLens* camera)
 	opaqueList.clear();
 	transparentList.clear();
 
-	for (GameObject* gameObject : Engine::GetInstance().moduleScene->GetGameObjects())
+	for (GameObject* gameObject : Engine::GetInstance().moduleScene->GetRootGameObjects())
 	{
 		BuildRenderListsRecursive(gameObject, camera);
 	}

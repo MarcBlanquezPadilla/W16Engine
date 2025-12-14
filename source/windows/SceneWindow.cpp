@@ -29,6 +29,8 @@ SceneWindow::~SceneWindow()
 
 void SceneWindow::Draw()
 {
+	isFocused = false;
+
 	if (!is_active) return;
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -39,6 +41,8 @@ void SceneWindow::Draw()
 		ImGui::PopStyleVar();
 		return;
 	}
+
+	isFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
 
 	ImGui::PopStyleVar();
 

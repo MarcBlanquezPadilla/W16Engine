@@ -69,13 +69,18 @@ bool Interface::Awake()
 		ret = false;
 	}
 
+	hierarchy = new HierarchyWindow(true);
+	scene = new SceneWindow(true);
+	project = new ProjectWindow(true);
+	inspector = new InspectorWindow(true);
+
 	//CREATE WINDOWS
 	windows[Menu::View].push_back(new ConfigWindow(false));
 	windows[Menu::View].push_back(new ConsoleWindow(true));
-	windows[Menu::View].push_back(new HierarchyWindow(true));
-	windows[Menu::View].push_back(new InspectorWindow(true));
-	windows[Menu::View].push_back(new ProjectWindow(true));
-	windows[Menu::View].push_back(new SceneWindow(true));
+	windows[Menu::View].push_back(hierarchy);
+	windows[Menu::View].push_back(inspector);
+	windows[Menu::View].push_back(project);
+	windows[Menu::View].push_back(scene);
 	windows[Menu::View].push_back(new GameWindow(true));
 
 	windows[Menu::Help].push_back(new AboutWindow(false));
@@ -578,3 +583,5 @@ void Interface::SetDraculaTheme()
 	style.TabRounding = 4;
 }
 
+bool Interface::IsHierarchyFocused() { return hierarchy->isFocused; }
+bool Interface::IsSceneFocused() { return scene->isFocused; }

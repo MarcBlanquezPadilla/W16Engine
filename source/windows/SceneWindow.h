@@ -10,6 +10,6 @@ public:
 
     void Draw() override;
 
-private:
-
+public:
+    bool isFocused;
 };

@@ -6,6 +6,11 @@
 
 union SDL_Event;
 class UIWindow;
+class HierarchyWindow;
+class SceneWindow;
+class InspectorWindow;
+class ProjectWindow;
+class ToolbarWindow;
 
 enum Menu
 {
@@ -43,18 +48,27 @@ public:
 	void SetupImGuiStyle();
 	void ApplyTheme(Theme theme);
 
+	//GETTERS
+	bool IsHierarchyFocused();
+	bool IsSceneFocused();
+
 private:
 	void SetDarkTheme();
 	void SetLightTheme();
 	void SetCyberpunkTheme();
 	void SetDraculaTheme();
 
+
 private:
 	
 	Theme currentTheme;
-	
+	HierarchyWindow* hierarchy = nullptr;
+	SceneWindow* scene = nullptr;
+	InspectorWindow* inspector = nullptr;
+	ProjectWindow* project = nullptr;
+	ToolbarWindow* toolBar = nullptr;
+
 	std::map<Menu, std::vector<UIWindow*>> windows;
-	UIWindow* toolBar;
 
     bool setDefaultUI = false;
 	ImGuiIO* io = nullptr;

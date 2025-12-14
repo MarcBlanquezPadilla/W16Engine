@@ -50,11 +50,6 @@ bool GameObject::Update()
 		}
 	}
 
-	for (auto child : childs)
-	{
-		child->Update();
-	}
-
 	return ret;
 }
 
@@ -400,9 +395,12 @@ bool GameObject::IsDescendant(GameObject* potentialDescendant)
 
 void GameObject::SetParent(GameObject* newParent)
 {
-	if (parent == newParent) return;
-	if (newParent == this) return;
-	if (newParent != nullptr && IsDescendant(newParent)) return;
+	if (parent == newParent) 
+		return;
+	if (newParent == this) 
+		return;
+	if (newParent != nullptr && IsDescendant(newParent)) 
+		return;
 
 	glm::mat4 currentGlobalMatrix = transform->GetGlobalMatrix();
 	bool wasActive = GetEnabled();
@@ -413,7 +411,7 @@ void GameObject::SetParent(GameObject* newParent)
 	}
 	else
 	{
-		Engine::GetInstance().moduleScene->RemoveGameObject(this);
+		Engine::GetInstance().moduleScene->RemoveFromRoots(this);
 	}
 
 	parent = newParent;
@@ -424,7 +422,7 @@ void GameObject::SetParent(GameObject* newParent)
 	}
 	else
 	{
-		Engine::GetInstance().moduleScene->AddGameObject(this);
+		Engine::GetInstance().moduleScene->AddToRoots(this);
 	}
 
 	if (parent != nullptr)
@@ -432,7 +430,6 @@ void GameObject::SetParent(GameObject* newParent)
 		glm::mat4 parentGlobal = parent->transform->GetGlobalMatrix();
 		glm::mat4 parentInverse = glm::inverse(parentGlobal);
 		glm::mat4 newLocal = parentInverse * currentGlobalMatrix;
-
 		transform->SetLocalMatrix(newLocal);
 	}
 	else

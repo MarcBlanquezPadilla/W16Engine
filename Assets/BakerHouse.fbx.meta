@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<Data UID="193849107" Type="1" FileHash="3601660774" ReferedObjects="3">
-	<ReferedObject UID="78667744" Name="Chimney" Path="Assets/BakerHouse.fbx" Type="2" />
-	<ReferedObject UID="1108278117" Name="Baker_house.png" Path="Assets/Baker_house.png" Type="0" />
-	<ReferedObject UID="1230699865" Name="Baker_house" Path="Assets/BakerHouse.fbx" Type="2" />
+<Data UID="1423898643" Type="1" FileHash="4098799318" ReferedObjects="3">
+	<ReferedObject UID="2142568269" Name="Baker_house.png" Path="Assets/Baker_house.png" Type="0" />
+	<ReferedObject UID="2852527909" Name="Baker_house" Path="Assets/BakerHouse.fbx" Type="2" />
+	<ReferedObject UID="3858985428" Name="Chimney" Path="Assets/BakerHouse.fbx" Type="2" />
 </Data>

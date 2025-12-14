@@ -1,12 +1,14 @@
 #pragma once
 #include "Component.h"
 #include "../Global.h"
+#include "../EventListener.h"
+#include "../resources/ResourceUser.h"
 #include <string>
 
 struct aiMaterial;
 class ResourceTexture;
 
-class Texture : public Component
+class Texture : public Component, public ResourceUser
 {
 public:
 
@@ -33,9 +35,11 @@ public:
     unsigned int GetTextureWidth() const;
     unsigned int GetTextureHeight() const;
 
+    void OnResourceLost(UID resourceUID) override;
+
 public:
 
-    UID textureUID = 0;
+    UID resourceUID = 0;
 
     bool use_checker = false;
     bool transparent = false;

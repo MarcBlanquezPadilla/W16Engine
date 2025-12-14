@@ -2,12 +2,13 @@
 #include "Component.h"
 #include "../Global.h"
 #include "../utils/AABB.h"
+#include "../resources/ResourceUser.h"
 
 class ResourceMesh;
 class GameObject;
 class Config;
 
-class Mesh : public Component
+class Mesh : public Component, public ResourceUser
 {
 public:
     Mesh(GameObject* owner);
@@ -24,8 +25,10 @@ public:
 
     void SetResource(UID uid);
     ResourceMesh* GetResource() const;
-    UID GetMeshUID() const { return meshUID; }
+    UID GetMeshUID() const { return resourceUID; }
     AABB GetGlobalAABB();
+
+    void OnResourceLost(UID resourceUID) override;
 
 public:
 
@@ -34,6 +37,6 @@ public:
     bool drawStencil = false;
 
 private:
-    UID meshUID = 0;
+    UID resourceUID = 0;
     mutable ResourceMesh* resource = nullptr;
 };

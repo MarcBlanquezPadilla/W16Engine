@@ -30,10 +30,11 @@ public:
 	bool CleanUp();
 
 	//GAMEOBJECT
-	void CollectGameObjectsRecursive(GameObject* go, std::vector<GameObject*>& list);
 	void AddGameObject(GameObject* gameObject);
 	void DestroyGameObject(GameObject* gameObject);
 	void RemoveGameObject(GameObject* gameObject);
+	void AddToRoots(GameObject* go);
+	void RemoveFromRoots(GameObject* go);
 
 	//TREE
 	void RebuildTree();
@@ -45,8 +46,8 @@ public:
 	void QueryRayToDynamic(Ray ray, std::vector<GameObject*>& results);
 
 	//GETTERS
-	std::vector<GameObject*> GetGameObjects() { return gameObjects; }
-	std::vector<GameObject*> GetAllGameObjects();
+	std::vector<GameObject*> GetRootGameObjects() const { return rootGameObjects; };
+	std::vector<GameObject*> GetAllGameObjects() const { return allGameObjects; };
 	std::vector<GameObject*> GetStaticGameObjects() const { return staticGameObjects; };
 	std::vector<GameObject*> GetDynamicGameObjects() const { return dynamicGameObjects; };
 	AABB GetWorldLimits();
@@ -59,7 +60,8 @@ public:
 	Config sceneBackup;
 
 private:
-	std::vector<GameObject*> gameObjects;
+	std::vector<GameObject*> allGameObjects;
+	std::vector<GameObject*> rootGameObjects;
 	std::vector<GameObject*> dynamicGameObjects;
 	std::vector<GameObject*> staticGameObjects;
 	std::vector<GameObject*> objectsPendingToDelete;

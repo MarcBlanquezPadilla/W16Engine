@@ -23,6 +23,7 @@ compile_commands.json
 [Bb]in/
 [Dd]ebug/
 [Rr]elease/
+[Ll]ibrary/
 
 # Archivos ejecutables y binarios
 *.exe

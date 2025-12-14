@@ -38,7 +38,6 @@ bool ModuleResources::Awake()
 {
 	bool ret = true;
 
-	timeToCheckInternalAssets = 1.0f;
 	CreateInternalResources();
 	
 	CheckChangesInAssets();
@@ -57,12 +56,6 @@ bool ModuleResources::Start()
 bool ModuleResources::Update()
 {
 	bool ret = true;
-
-	if (checkInternalAssetsTimer.ReadSec() > timeToCheckInternalAssets)
-	{
-		//CHECK INTERNAL ASSETS
-		CreateInternalResources();
-	}
 
 	if (updateAssets)
 	{
@@ -83,6 +76,8 @@ bool ModuleResources::CleanUp()
 
 bool ModuleResources::CheckChangesInAssets()
 {
+	LOG("SEARCHING FOR CHANGES IN ASSETS...");
+
 	std::vector<std::string> allPaths = GetListDirectoryContents("Assets", true);
 	std::vector<std::string> assetsPaths;
 	assetsPaths.clear();
@@ -91,7 +86,7 @@ bool ModuleResources::CheckChangesInAssets()
 	for (std::string path : allPaths)
 	{
 		if (IsFileDirectory(path)) continue;
-		if (GetFileExtension(path) == "meta") continue;
+		if (GetTypeFromExtension(path) == Resource::Type::unknown) continue;
 
 		assetsPaths.push_back(path);
 	}
@@ -103,7 +98,7 @@ bool ModuleResources::CheckChangesInAssets()
 
 	for (auto const& [uid, resource] : resources)
 	{
-		if (!DoesFileExist(resource->GetAssetFile()))
+		if (!resource->IsInteralResource() && !DoesFileExist(resource->GetAssetFile()))
 		{
 			uidsToRemove.push_back(uid);
 		}
@@ -113,7 +108,8 @@ bool ModuleResources::CheckChangesInAssets()
 	{
 		for (UID uid : uidsToRemove)
 		{
-			LOG("Asset deleted or moved (Resource removed): UID %u", uid);
+			RemoveResource(uid);
+			LOG("Asset deleted: UID %u", uid);
 		}
 		dirtyAssets = true;
 	}
@@ -127,7 +123,15 @@ bool ModuleResources::CheckChangesInAssets()
 		}
 	}
 
-	if (dirtyAssets) PublishAssetChangedEvent();
+	if (dirtyAssets)
+	{
+		LOG("FOUND CHANGES AND APPLIED TO FOLDER.");
+		PublishAssetChangedEvent();
+	}
+	else
+	{
+		LOG("NO CHANGES FOUND.");
+	}
 	
 	return true;
 }
@@ -211,8 +215,6 @@ void ModuleResources::CheckForSubResources(const std::string& assetPath, UID par
 					std::string childAssetPath = refNode.GetString("Path");
 
 					CreateResource(childAssetPath, childLib, childUID, (Resource::Type)childType);
-
-					LOG("Sub-resource registered: UID %u", childUID);
 				}
 
 				refNode = refNode.GetNextSibling("ReferedObject");
@@ -266,7 +268,8 @@ bool ModuleResources::CreateResource(const std::string& assetPath, const std::st
 	{
 		resources[uid]->UnloadFromMemory_Internal();
 		resources[uid]->LoadToMemory_Internal();
-		return false;
+		LOG("Reloaded resource %s", assetPath.c_str());
+		return true;
 	}
 
 	Resource* ret = nullptr;
@@ -283,6 +286,7 @@ bool ModuleResources::CreateResource(const std::string& assetPath, const std::st
 		resources[uid] = ret;
 		ret->assetPath = assetPath;
 		ret->libraryPath = libraryPath;
+		LOG("Created resource for %s", assetPath.c_str());
 	}
 	else
 	{
@@ -456,9 +460,14 @@ bool ModuleResources::CreateInternalResources()
 		delete importer;
 	}
 	CreateResource("Internal resource", spherePath, SPHERE, Resource::Type::mesh);
-	
 
-	checkInternalAssetsTimer.Start();
+	Resource* cube = RequestResource(CUBE);
+	Resource* sphere = RequestResource(SPHERE);
+	Resource* pyramid = RequestResource(PYRAMID);
+
+	if (cube) cube->internalResource = true;
+	if (sphere) sphere->internalResource = true;
+	if (pyramid) pyramid->internalResource = true;
 
 	return true;
 }
@@ -561,6 +570,59 @@ void ModuleResources::ReleaseResource(UID uid)
 		Resource* res = it->second;
 
 		res->UnloadFromMemory();
+	}
+}
+
+void ModuleResources::MoveResource(const std::string& oldPath, const std::string& newPath)
+{
+	UID uid = 0;
+
+	for (auto& [id, resource] : resources)
+	{
+		if (resource->assetPath == oldPath)
+		{
+			uid = id;
+			break;
+		}
+	}
+
+	if (uid == 0)
+	{
+		uid = Find(newPath);
+	}
+
+	if (uid != 0)
+	{
+		Resource* res = RequestResource(uid);
+		if (res)
+		{
+			res->assetPath = newPath;
+			LOG("Resource updated in memory: %s -> %s (UID: %u)", oldPath.c_str(), newPath.c_str(), uid);
+		}
+
+		ReleaseResource(uid);
+	}
+	else
+	{
+		LOG("Error: Could not find UID for moved resource. Old: %s", oldPath.c_str());
+	}
+}
+
+void ModuleResources::RemoveResource(UID uid)
+{
+	auto it = resources.find(uid);
+
+	if (it != resources.end())
+	{
+		Resource* resource = it->second;
+
+		resource->UnloadFromMemory_Internal();
+
+		delete resource;
+
+		resources.erase(it);
+
+		LOG("Resource removed/destroyed: UID %u", uid);
 	}
 }
 

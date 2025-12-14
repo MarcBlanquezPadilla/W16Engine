@@ -1,6 +1,7 @@
 #include "../Engine.h"
 #include "../ModuleRender.h"
 #include "../ModuleResources.h"
+#include "../ModuleEvents.h"
 
 #include "Component.h"
 #include "Texture.h"
@@ -22,22 +23,24 @@ Texture::Texture(GameObject* owner) : Component(owner)
 
 Texture::~Texture()
 {
-    
+   
 }
 
 void Texture::CleanUp()
 {
-    if (textureUID != 0)
+
+    if (resource != nullptr)
     {
-        Engine::GetInstance().moduleResources->ReleaseResource(textureUID);
-        textureUID = 0;
+        resource->RemoveReference(this);
+        Engine::GetInstance().moduleResources->ReleaseResource(resourceUID);
+        resourceUID = 0;
         resource = nullptr;
     }
 }
 
 void Texture::Save(Config& componentNode)
 {
-    componentNode.SetUInt("textureUID", textureUID);
+    componentNode.SetUInt("textureUID", resourceUID);
     componentNode.SetBool("useChecker", use_checker);
     componentNode.SetBool("transparent", transparent);
 }
@@ -53,25 +56,33 @@ void Texture::Load(Config& componentNode)
 
 void Texture::SetResource(UID uid)
 {
-    if (textureUID != 0)
+    if (resource != nullptr)
     {
-        Engine::GetInstance().moduleResources->ReleaseResource(textureUID);
+        Engine::GetInstance().moduleResources->ReleaseResource(resourceUID);
+        resource->RemoveReference(this);
     }
 
-    textureUID = uid;
-    resource = nullptr;
+    this->resourceUID = uid;
 
-    if (textureUID != 0)
+    Resource* res = Engine::GetInstance().moduleResources->RequestResource(uid);
+
+    if (res != nullptr && res->GetType() == Resource::Type::texture)
     {
-        GetResource();
+        resource = (ResourceTexture*)res;
+
+        resource->AddReference(this);
+    }
+    else
+    {
+        resource = nullptr;
     }
 }
 
 ResourceTexture* Texture::GetResource() const
 {
-    if (resource == nullptr && textureUID != 0)
+    if (resource == nullptr && resourceUID != 0)
     {
-        resource = (ResourceTexture*)Engine::GetInstance().moduleResources->RequestResource(textureUID);
+        resource = (ResourceTexture*)Engine::GetInstance().moduleResources->RequestResource(resourceUID);
     }
     return resource;
 }
@@ -122,5 +133,15 @@ void Texture::OnEditor()
        
         ImGui::Checkbox("Use Checker Texture", &use_checker);
         ImGui::Checkbox("Transparent", &transparent);
+    }
+}
+
+
+void Texture::OnResourceLost(UID lostUID)
+{
+    if (resourceUID == lostUID)
+    {
+        LOG("Texture Resource deleted! Removing reference in Component.");
+        this->resource = nullptr;
     }
 }

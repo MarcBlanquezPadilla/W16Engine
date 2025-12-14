@@ -6,8 +6,6 @@
 
 #include "resources/Resource.h"
 
-#include "utils/Timer.h"
-
 #include <map>
 
 class ModuleResources : public Module
@@ -31,7 +29,8 @@ public:
 	const Resource* RequestResource(UID uid) const;
 	Resource* RequestResource(UID uid);
 	void ReleaseResource(UID uid);
-
+	void RemoveResource(UID uid);
+	void MoveResource(const std::string& oldPath, const std::string& newPath);
 
 	//EVENTS
 	void PublishAssetChangedEvent();
@@ -58,9 +57,6 @@ private:
 		
 private:
 	std::map<UID, Resource*> resources;
-
-	float timeToCheckInternalAssets;
-	Timer checkInternalAssetsTimer;
 
 	bool updateAssets;
 };

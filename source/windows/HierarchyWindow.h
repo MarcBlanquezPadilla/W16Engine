@@ -12,6 +12,9 @@ public:
     void Draw() override;
     void DrawGameObjectNode(GameObject* go);
 
+public:
+    bool isFocused;
+
 private:
     GameObject* objectToDrop = nullptr;
     GameObject* objectToSelect = nullptr;
