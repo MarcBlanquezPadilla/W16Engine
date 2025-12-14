@@ -2,7 +2,7 @@
 #include <fstream>
 #include "ResourceModel.h"
 
-ResourceModel::ResourceModel(UID uid) : Resource(uid, Resource::Type::scene)
+ResourceModel::ResourceModel(UID uid) : Resource(uid, Resource::Type::model)
 {
 
 }

@@ -28,7 +28,6 @@ Texture::~Texture()
 
 void Texture::CleanUp()
 {
-
     if (resource != nullptr)
     {
         resource->RemoveReference(this);

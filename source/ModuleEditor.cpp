@@ -396,10 +396,6 @@ void ModuleEditor::HandleInput(SDL_Event* event)
 	userInterface->HandleInput(event);
 }
 
-EditorCamera* ModuleEditor::GetEditorCamera()
-{
-	return editorCamera;
-}
 CameraLens* ModuleEditor::GetEditorCameraLens()
 {
 	return editorCamera->GetCameraLens();

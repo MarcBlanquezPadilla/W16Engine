@@ -3,6 +3,7 @@
 #include "Module.h"
 #include "EventListener.h"
 #include <string>
+#include <vector>
 
 class Mesh;
 class Texture;
@@ -28,11 +29,14 @@ public:
 
 	void HandleAssetDrop(const std::string& path);
 
+	//LOAD TO SCENE
+	void LoadAsset(const std::string& assetPath);
+
 	//MODELS
 	bool LoadModel(const std::string& filePath);
 
 	//TEXTURES
-	bool LoadTextureToGameObject(const std::string& filePath, GameObject* gameObject);
+	bool LoadTextureToGameObjects(const std::string& filePath, std::vector<GameObject*> gameObject);
 	bool LoadFromAssimpMaterial(aiMaterial* material, const std::string& modelDirectory, GameObject* obj);
 	bool LoadTexture(const std::string& path, unsigned int& textureID, int& width, int& height, bool flip = false);
 	
@@ -43,6 +47,7 @@ public:
 	//LOAD & SAVE
 	bool SaveScene(const std::string& assetPath);
 	bool LoadScene(const std::string& assetPath);
+	bool CleanAndLoadScene(const std::string& assetPath);
 	bool SaveSceneToMemory(Config& sceneConfig);
 	bool LoadSceneFromMemory(Config& sceneConfig);
 

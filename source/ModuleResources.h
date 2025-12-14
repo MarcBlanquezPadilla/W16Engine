@@ -6,6 +6,8 @@
 
 #include "resources/Resource.h"
 
+#include "utils/Timer.h"
+
 #include <map>
 
 class ModuleResources : public Module
@@ -21,7 +23,8 @@ public:
 	bool CleanUp() override;
 
 	//CHECKERS
-	bool CheckChangesInAssets();
+	bool CheckChangesInAssetsFolder();
+	bool CheckForFilesModifications();
 	bool CheckFileLoaded(const std::string& assetPath);
 
 	//RESURCES
@@ -31,6 +34,7 @@ public:
 	void ReleaseResource(UID uid);
 	void RemoveResource(UID uid);
 	void MoveResource(const std::string& oldPath, const std::string& newPath);
+	Resource::Type GetTypeFromExtension(const std::string& path);
 
 	//EVENTS
 	void PublishAssetChangedEvent();
@@ -47,7 +51,7 @@ private:
 	//GETTERS
 	bool GetMetaInfo(const std::string& assetPath, UID& uid, uint32_t& fileHash);
 	bool GetMetaUID(const std::string& assetPath, UID& uid);
-	Resource::Type GetTypeFromExtension(const std::string& path);
+
 	
 	//CREATE RESOURCES
 	bool CreateResourceWithSubResources(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type);
@@ -58,5 +62,8 @@ private:
 private:
 	std::map<UID, Resource*> resources;
 
-	bool updateAssets;
+	float checkChangesInterval;
+	Timer checkChangesTimer;
+
+	bool checkAssetsModifications;
 };

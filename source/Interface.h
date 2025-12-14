@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <string>
 #include <map>
 
 #include "imgui.h"
@@ -72,4 +73,7 @@ private:
 
     bool setDefaultUI = false;
 	ImGuiIO* io = nullptr;
+
+	bool showSaveSceneModal = false;
+	char saveSceneNameBuffer[64] = "NewScene";
 };

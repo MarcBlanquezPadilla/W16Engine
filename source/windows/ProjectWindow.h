@@ -47,6 +47,8 @@ private:
     DirectoryNode* FindNodeByPath(DirectoryNode* root, const std::string& path);
     void SelectNode(DirectoryNode* direcoryNode);
 
+    void AddAssetToScene(DirectoryNode* direcoryNode);
+
     unsigned int GetIconTextureWithExtension(const std::string& extension);
    
     void OnEvent(const Event& event);
@@ -58,6 +60,7 @@ private:
     DirectoryNode* rootNode = nullptr;
     DirectoryNode* currentNode = nullptr;
     std::vector<DirectoryNode*> selectedNodes = {};
+    std::vector<DirectoryNode*> nodesToDelete = {};
 
     std::string pathToDrop;
 
@@ -70,4 +73,5 @@ private:
 
     bool expandTreeToSelection = false;
     bool dragging = false;
+    bool isFocused = false;
 };

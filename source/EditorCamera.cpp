@@ -11,6 +11,7 @@
 #include "ModuleRender.h"
 #include "ModuleScene.h"
 #include "ModuleWindow.h"
+#include "Interface.h"
 #include "GameObject.h"
 #include "components/Component.h"
 #include "components/Transform.h"
@@ -21,7 +22,6 @@
 
 EditorCamera::EditorCamera()
 {
-	
 }
 
 EditorCamera::~EditorCamera()
@@ -66,7 +66,7 @@ bool EditorCamera::Awake()
 
 	shouldBeRelative = false;
 	mouseCaptured = false;
-	lockCamera = false;
+	lockCamera = true;
 
 	//EVENTS
 	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::WindowResize, this);
@@ -79,12 +79,12 @@ bool EditorCamera::PreUpdate()
 {
 	bool ret = true;
 
+	lockCamera = ImGuizmo::IsUsing && !Engine::GetInstance().moduleEditor->GetInterface()->IsSceneFocused();
+
 	if (lockCamera)
 	{
 		return ret;
 	}
-
-	
 
 	std::vector<GameObject*> gameObjects = Engine::GetInstance().moduleEditor->GetSelectedGameObjects();
 
@@ -94,17 +94,22 @@ bool EditorCamera::PreUpdate()
 
 	if (shouldBeRelative && !mouseCaptured)
 	{
-
 		float tempX, tempY;
 		SDL_GetRelativeMouseState(&tempX, &tempY);
 		SDL_SetWindowRelativeMouseMode(Engine::GetInstance().moduleWindow->window, true);
 		mouseCaptured = true;
+		SDL_GetMouseState(&startMovementPos.x, &startMovementPos.y);
 	}
 	else if (mouseCaptured && !shouldBeRelative)
 	{
 		SDL_SetWindowRelativeMouseMode(Engine::GetInstance().moduleWindow->window, false);
 		mouseCaptured = false;
 	}
+	else if (mouseCaptured && shouldBeRelative)
+	{
+		SDL_WarpMouseInWindow(Engine::GetInstance().moduleWindow->window, startMovementPos.x, startMovementPos.y);
+	}
+
 
 	orbit = Engine::GetInstance().moduleInput->GetMouseButtonDown(1) == KEY_REPEAT && Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LALT) == KEY_REPEAT && !gameObjects.empty();
 	move = Engine::GetInstance().moduleInput->GetMouseButtonDown(3) == KEY_REPEAT;

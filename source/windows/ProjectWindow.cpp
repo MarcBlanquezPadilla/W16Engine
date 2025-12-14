@@ -3,6 +3,7 @@
 #include "../ModuleEvents.h"
 #include "../ModuleInput.h"
 #include "../ModuleResources.h"
+#include "../ModuleEditor.h"
 #include "../Engine.h"
 #include "../utils/Log.h"
 #include "../utils/FileUtils.h"
@@ -55,6 +56,10 @@ void ProjectWindow::CleanUp()
 
 void ProjectWindow::Draw()
 {
+    isFocused = false;
+
+    nodesToDelete.clear();
+
     if (!is_active) return;
 
     if (!ImGui::Begin(name, &is_active))
@@ -62,6 +67,13 @@ void ProjectWindow::Draw()
         ImGui::End();
         return;
     }
+
+    if (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows) && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+    {
+        ImGui::SetWindowFocus();
+    }
+
+    isFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
 
     pathToDrop = "";
 
@@ -81,20 +93,6 @@ void ProjectWindow::Draw()
     }
     ImGui::SameLine();
     ImGui::Text("| Current: %s", currentNode->path.c_str());
-    ImGui::SameLine();
-    
-    const float refresh_button_width = ImGui::CalcTextSize("Refresh").x;
-    float region_max_x = ImGui::GetWindowContentRegionMax().x;
-    float frame_padding_x = 10;
-
-    float target_x = region_max_x - refresh_button_width - frame_padding_x;
-
-    ImGui::SetCursorPosX(target_x);
-
-    if (ImGui::Button("Refresh", { 0, 0 }))
-    {
-        Engine::GetInstance().moduleResources->CheckChangesInAssets();
-    }
 
     DrawFolderContent();
     ImGui::EndChild();
@@ -103,6 +101,7 @@ void ProjectWindow::Draw()
 
     bool changed = false;
 
+    //MOVING
     if (dragging && ImGui::IsMouseReleased(0))
     {
         
@@ -143,15 +142,6 @@ void ProjectWindow::Draw()
                 }
             }
         }
-        else if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows))
-        {
-            /*for (GameObject* movingObj : selectedObjects)
-            {
-                movingObj->SetParent(nullptr);
-            }*/
-        }
-
-        
 
         dragging = false;
         pathToDrop = "";
@@ -167,27 +157,35 @@ void ProjectWindow::Draw()
         pathToDrop = "";
     }
 
+    //DELETE
     if (!dragging && ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && selectedNodes.size() > 0 && Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_DELETE) == KEY_DOWN)
     {
-        bool deleted = false;
-        for (DirectoryNode* path : selectedNodes)
+        nodesToDelete = selectedNodes;
+    }
+
+    if (!nodesToDelete.empty())
+    {
+        for (DirectoryNode* node : nodesToDelete)
         {
-            UID uid = Engine::GetInstance().moduleResources->Find(path->path);
-            if (DeleteAsset(path->path))
+            std::string pathToDelete = node->path;
+
+            UID uid = Engine::GetInstance().moduleResources->Find(pathToDelete);
+
+            if (DeleteAsset(pathToDelete))
             {
-                deleted = true;
                 Engine::GetInstance().moduleResources->RemoveResource(uid);
+                changed = true;
             }
         }
 
-        if (deleted)
-        {
-            selectedNodes.clear();
-            changed = true;
-        }
+        selectedNodes.clear();
+        nodesToDelete.clear();
     }
 
-    if (changed) Engine::GetInstance().moduleResources->PublishAssetChangedEvent();
+    if (changed)
+    {
+        Engine::GetInstance().moduleResources->PublishAssetChangedEvent();
+    }
 
     ImGui::End();
 }
@@ -239,7 +237,6 @@ void ProjectWindow::DrawTreeNodeRecursive(DirectoryNode* node)
     {
         pathToDrop = node->path;
 
-        // Dibujamos el rectángulo
         ImGui::GetWindowDrawList()->AddRect(
             ImGui::GetItemRectMin(),
             ImGui::GetItemRectMax(),
@@ -268,6 +265,11 @@ void ProjectWindow::DrawTreeNodeRecursive(DirectoryNode* node)
 
 void ProjectWindow::DrawFolderContent() 
 {
+    if (currentNode == nullptr)
+    {
+        currentNode = rootNode;
+    }
+
     float padding = 16.0f;
     float thumbnailSize = 64.0f;
     float cellSize = thumbnailSize + padding;
@@ -292,6 +294,26 @@ void ProjectWindow::DrawFolderContent()
         ImGui::ImageButton("##icon", iconTexture, ImVec2(thumbnailSize, thumbnailSize));
         if (isSelected) ImGui::PopStyleColor();
 
+
+        if (ImGui::BeginPopupContextItem("ItemContext"))
+        {
+            bool isSelected = std::find(selectedNodes.begin(), selectedNodes.end(), child) != selectedNodes.end();
+            if (!isSelected)
+            {
+                if (!Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL))
+                    selectedNodes.clear();
+                SelectNode(child);
+            }
+
+            if (ImGui::MenuItem("Delete")) 
+            {
+                nodesToDelete = selectedNodes;
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        }
+
         if (!dragging && ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
         {
             bool ctrlPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
@@ -310,7 +332,12 @@ void ProjectWindow::DrawFolderContent()
             }
             else
             {
-                //SET IMPORT SETTINGS
+                Resource::Type type = Engine::GetInstance().moduleResources->GetTypeFromExtension(child->path);
+                switch (type) {
+                    case Resource::texture: Engine::GetInstance().moduleLoader->LoadTextureToGameObjects(child->path, Engine::GetInstance().moduleEditor->GetSelectedGameObjects()); break;
+                    case Resource::model: Engine::GetInstance().moduleLoader->LoadModel(child->path); break;
+                    case Resource::scene: Engine::GetInstance().moduleLoader->CleanAndLoadScene(child->path); break;
+                }
             }
         }
 
@@ -352,6 +379,7 @@ void ProjectWindow::DrawFolderContent()
         ImGui::Text(child->name.c_str());
         ImGui::PopTextWrapPos();
 
+
         ImGui::EndGroup();
 
         ImGui::PopID();
@@ -360,6 +388,35 @@ void ProjectWindow::DrawFolderContent()
     }
 
     ImGui::Columns(1);
+
+    if (ImGui::BeginPopupContextWindow("BackgroundContext", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+    {
+        
+
+        if (ImGui::MenuItem("Refresh"))
+        {
+            Engine::GetInstance().moduleResources->CheckForFilesModifications();
+        }
+        
+        ImGui::Separator();
+
+        if (ImGui::BeginMenu("Create"))
+        {
+            if (ImGui::MenuItem("Folder")) {
+
+                CreateDirectory(currentNode->path + "/NewFolder");
+                Engine::GetInstance().moduleResources->PublishAssetChangedEvent();
+                ImGui::CloseCurrentPopup();
+            }
+
+            if (ImGui::MenuItem("Material")) { }
+            if (ImGui::MenuItem("Script")) { }
+
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndPopup();
+    }
 }
 
 void ProjectWindow::ChangeCurrentNode(DirectoryNode* directoryNode)
@@ -455,7 +512,7 @@ void ProjectWindow::BuildTreeRecursive(const std::string& path, DirectoryNode* p
         std::string extension = GetFileExtension(entry);
         bool isDir = IsFileDirectory(entry);
 
-        if (GetFileExtension(entry) == "meta") continue;
+        if (!IsFileDirectory(entry) && Engine::GetInstance().moduleResources->GetTypeFromExtension(entry) == Resource::Type::unknown) continue;
 
         DirectoryNode* newNode = new DirectoryNode(entryName, entryPath, isDir);
         newNode->parent = parentNode;

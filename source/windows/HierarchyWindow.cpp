@@ -11,7 +11,7 @@
 
 HierarchyWindow::HierarchyWindow(bool active) : UIWindow("Hierarchy", active)
 {
-
+    isFocused = false;
 }
 
 HierarchyWindow::~HierarchyWindow()
@@ -32,6 +32,11 @@ void HierarchyWindow::Draw()
         return;
     }
 
+    if (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows) && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+    {
+        ImGui::SetWindowFocus();
+    }
+
     isFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
 
     ModuleScene* scene = Engine::GetInstance().moduleScene;
@@ -44,7 +49,7 @@ void HierarchyWindow::Draw()
         DrawGameObjectNode(go);
     }
 
-    if (ImGui::BeginPopupContextWindow("HierarchyContextMenu"))
+    if (isFocused && ImGui::BeginPopupContextWindow("HierarchyContextMenu"))
     {
         if (ImGui::BeginMenu("Create"))
         {

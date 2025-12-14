@@ -38,7 +38,8 @@ public:
 	
 	std::vector<GameObject*> GetSelectedGameObjects() { return selectedGameObjects; };
 
-	EditorCamera* GetEditorCamera();
+	EditorCamera* GetEditorCamera() { return editorCamera; };
+	Interface* GetInterface() { return userInterface; };
 	CameraLens* GetEditorCameraLens();
 
 	//EVENTS
@@ -63,6 +64,7 @@ public:
 	int gridColumns;
 
 private:
+	
 	Interface* userInterface;
 	EditorCamera* editorCamera;
 

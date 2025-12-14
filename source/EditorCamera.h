@@ -29,6 +29,8 @@ public:
 	
 	bool GetCameraLocked() { return lockCamera; }
 
+	bool IsMouseCaptured() const { return mouseCaptured; }
+
 	//EVENTS
 	void OnEvent(const Event& event) override;
 
@@ -41,6 +43,8 @@ public:
 
 private:
 	
+	CameraLens* cameraLens;
+
 	glm::vec3 position;
 	glm::vec3 forward;
 	glm::vec3 up;
@@ -70,5 +74,6 @@ private:
 	bool mouseCaptured;
 	bool lockCamera;
 
-	CameraLens* cameraLens;
+	
+	glm::vec2 startMovementPos;
 };

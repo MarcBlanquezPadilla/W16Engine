@@ -19,7 +19,7 @@
 
 SceneWindow::SceneWindow(bool active) : UIWindow("Scene", active)
 {
-
+	isFocused = false;
 }
 
 SceneWindow::~SceneWindow()
@@ -40,6 +40,11 @@ void SceneWindow::Draw()
 		ImGui::End();
 		ImGui::PopStyleVar();
 		return;
+	}
+
+	if (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows) && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+	{
+		ImGui::SetWindowFocus();
 	}
 
 	isFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
@@ -157,7 +162,7 @@ void SceneWindow::Draw()
 			wasUsing = true;
 		}
 
-		bool canUseGuizmo = ImGui::IsWindowHovered();
+		bool canUseGuizmo = ImGui::IsWindowFocused();
 		ImGuizmo::Enable(canUseGuizmo);
 
 		if (canUseGuizmo && ImGuizmo::IsUsing())
@@ -251,8 +256,6 @@ void SceneWindow::Draw()
 			}
 		}
 	}
-
-	Engine::GetInstance().moduleEditor->GetEditorCamera()->LockCamera(ImGuizmo::IsUsing() || !ImGui::IsWindowHovered());
 
 	ImGui::End();
 }

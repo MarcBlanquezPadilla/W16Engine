@@ -56,5 +56,6 @@ protected:
 
 	bool internalResource = false;
 
+	std::vector<UID> childs;
 	std::vector<ResourceUser*> users;
 };

@@ -85,7 +85,7 @@ bool ImporterModel::Import_Internal()
 		file.write((const char*)&size, sizeof(uint32_t));
 		file.write(xmlBuffer.c_str(), size);
 		file.close();
-		LOG("Model imported to Library: %s", libraryPath.c_str());
+		LOG("Model %s imported to Library: %s", GetFileName(assetPath).c_str(), libraryPath.c_str());
 	}
 
 

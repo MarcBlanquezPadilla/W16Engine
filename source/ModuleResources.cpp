@@ -37,11 +37,13 @@ ModuleResources::~ModuleResources()
 bool ModuleResources::Awake()
 {
 	bool ret = true;
+	checkChangesInterval = 1.0f;
 
 	CreateInternalResources();
-	
-	CheckChangesInAssets();
-	updateAssets = false;
+	CheckChangesInAssetsFolder();
+
+	checkAssetsModifications = false;
+	checkChangesTimer.Start();
 
 	return true;
 }
@@ -57,11 +59,16 @@ bool ModuleResources::Update()
 {
 	bool ret = true;
 
-	if (updateAssets)
+	if (checkChangesTimer.ReadSec() > checkChangesInterval)
+	{
+		CheckChangesInAssetsFolder();
+	}
+
+	if (checkAssetsModifications)
 	{
 		//CHECK ASSETS FOLDER
-		CheckChangesInAssets();
-		updateAssets = false;
+		CheckForFilesModifications();
+		checkAssetsModifications = false;
 	}	
 
 	return ret;
@@ -74,10 +81,8 @@ bool ModuleResources::CleanUp()
 	return true;
 }
 
-bool ModuleResources::CheckChangesInAssets()
+bool ModuleResources::CheckChangesInAssetsFolder()
 {
-	LOG("SEARCHING FOR CHANGES IN ASSETS...");
-
 	std::vector<std::string> allPaths = GetListDirectoryContents("Assets", true);
 	std::vector<std::string> assetsPaths;
 	assetsPaths.clear();
@@ -125,15 +130,12 @@ bool ModuleResources::CheckChangesInAssets()
 
 	if (dirtyAssets)
 	{
-		LOG("FOUND CHANGES AND APPLIED TO FOLDER.");
 		PublishAssetChangedEvent();
 	}
-	else
-	{
-		LOG("NO CHANGES FOUND.");
-	}
-	
-	return true;
+
+	checkChangesTimer.Start();
+
+	return dirtyAssets;
 }
 
 bool ModuleResources::CheckFileLoaded(const std::string& assetPath)
@@ -154,12 +156,6 @@ bool ModuleResources::CheckFileLoaded(const std::string& assetPath)
 	GetMetaInfo(assetPath, uid, fileHash);
 	libraryPath = GetLibraryPath(uid);
 
-	//IF FILE MODIFIED
-	if (fileHash != GetFileHash(assetPath))
-	{
-		return ImportFile(assetPath, libraryPath, uid, type);
-	}
-
 	//IF LIBRARY MISSING
 	if (!DoesFileExist(libraryPath))
 	{
@@ -172,6 +168,55 @@ bool ModuleResources::CheckFileLoaded(const std::string& assetPath)
 		return CreateResourceWithSubResources(assetPath, libraryPath, uid, type);
 	}
 
+	return false;
+}
+
+bool ModuleResources::CheckForFilesModifications()
+{
+	LOG("SEARCHING FOR EXTERNAL MODIFICATIONS IN ASSETS...");
+
+	std::vector<std::string> allPaths = GetListDirectoryContents("Assets", true);
+	std::vector<std::string> assetsPaths;
+	assetsPaths.clear();
+
+	//SEPARATE ASSETS FROM OTHER FILES
+	for (std::string path : allPaths)
+	{
+		if (IsFileDirectory(path)) continue;
+		if (GetTypeFromExtension(path) == Resource::Type::unknown) continue;
+
+		assetsPaths.push_back(path);
+	}
+	
+	bool somethingModified = false;
+	for (std::string path : assetsPaths	)
+	{
+		UID uid = 0;
+		uint32_t fileHash = 0;
+		std::string libraryPath;
+		Resource::Type type = GetTypeFromExtension(path);
+
+		if (DoesFileHasMeta(path))
+		{
+			GetMetaInfo(path, uid, fileHash);
+			libraryPath = GetLibraryPath(uid);
+
+			//IF FILE MODIFIED
+			if (fileHash != GetFileHash(path))
+			{
+				somethingModified = true;
+				return ImportFile(path, libraryPath, uid, type);
+			}
+		}
+	}
+
+	if (somethingModified) 
+	{
+		LOG("SOME FILES HAD CHANGES AND REIMPORTED.");
+		return true;
+	}
+
+	LOG("NO CHANGES FOUND.");
 	return false;
 }
 
@@ -195,6 +240,11 @@ bool ModuleResources::CreateResourceWithSubResources(const std::string& assetPat
 
 void ModuleResources::CheckForSubResources(const std::string& assetPath, UID parentUID)
 {
+	auto it = resources.find(parentUID);
+	if (it == resources.end()) return;
+
+	Resource* parentResource = it->second;
+
 	Config meta;
 	if (meta.Load((assetPath + ".meta").c_str()))
 	{
@@ -208,12 +258,24 @@ void ModuleResources::CheckForSubResources(const std::string& assetPath, UID par
 			{
 				UID childUID = (UID)refNode.GetUInt("UID");
 
+				bool alreadyChild = false;
+				for (UID existingChild : parentResource->childs) {
+					if (existingChild == childUID) { alreadyChild = true; break; }
+				}
+				if (!alreadyChild) {
+					parentResource->childs.push_back(childUID);
+				}
+
+				std::string childLib = GetLibraryPath(childUID);
+				int childType = refNode.GetInt("Type");
+				std::string childAssetPath = refNode.GetString("Path");
+
 				if (resources.find(childUID) == resources.end())
 				{
-					std::string childLib = GetLibraryPath(childUID);
-					int childType = refNode.GetInt("Type");
-					std::string childAssetPath = refNode.GetString("Path");
-
+					CreateResource(childAssetPath, childLib, childUID, (Resource::Type)childType);
+				}
+				else
+				{
 					CreateResource(childAssetPath, childLib, childUID, (Resource::Type)childType);
 				}
 
@@ -263,11 +325,21 @@ bool ModuleResources::ImportFile(const std::string& assetPath, const std::string
 }
 
 bool ModuleResources::CreateResource(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type)
-{	
+{
+	// CASO: RECARGA (El recurso ya existe)
 	if (resources.find(uid) != resources.end())
 	{
-		resources[uid]->UnloadFromMemory_Internal();
-		resources[uid]->LoadToMemory_Internal();
+		Resource* res = resources[uid];
+
+		res->UnloadFromMemory_Internal();
+
+		if (!res->childs.empty())
+		{
+			res->childs.clear();
+		}
+
+		res->LoadToMemory_Internal();
+
 		LOG("Reloaded resource %s", assetPath.c_str());
 		return true;
 	}
@@ -278,9 +350,8 @@ bool ModuleResources::CreateResource(const std::string& assetPath, const std::st
 		case Resource::mesh: ret = new ResourceMesh(uid); break;
 		case Resource::model: ret = new ResourceModel(uid); break;
 		case Resource::scene: ret = new ResourceScene(uid); break;
-		//case Resource::bone: ret = (Resource*) new ResourceBone(uid); break;
-		//case Resource::animation: ret = (Resource*) new ResourceAnimation(uid); break;
 	}
+
 	if (ret != nullptr)
 	{
 		resources[uid] = ret;
@@ -296,7 +367,6 @@ bool ModuleResources::CreateResource(const std::string& assetPath, const std::st
 
 	return true;
 }
-
 
 bool ModuleResources::CreateInternalResources()
 {
@@ -616,10 +686,42 @@ void ModuleResources::RemoveResource(UID uid)
 	{
 		Resource* resource = it->second;
 
+		if (!resource->childs.empty())
+		{
+			std::vector<UID> childrenToDelete = resource->childs;
+			for (UID childUID : childrenToDelete)
+			{
+				if (childUID != uid) RemoveResource(childUID);
+			}
+			resource->childs.clear();
+		}
+
+		for (auto& [otherID, otherRes] : resources)
+		{
+			if (otherRes->GetType() == Resource::Type::model)
+			{
+				ResourceModel* model = (ResourceModel*)otherRes;
+			}
+		}
+
+		Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::ResourceDestroyed, uid));
+
+		if (!resource->IsInteralResource())
+		{
+			std::string libPath = resource->GetLibraryFile();
+
+			if (std::remove(libPath.c_str()) == 0)
+			{
+				LOG("Deleted Library file: %s", libPath.c_str());
+			}
+			else
+			{
+				LOG("Warning: Could not delete Library file (or didn't exist): %s", libPath.c_str());
+			}
+		}
+
 		resource->UnloadFromMemory_Internal();
-
 		delete resource;
-
 		resources.erase(it);
 
 		LOG("Resource removed/destroyed: UID %u", uid);

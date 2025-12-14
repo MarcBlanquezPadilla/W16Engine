@@ -132,12 +132,7 @@ bool Interface::Update()
 			}
 			if (ImGui::MenuItem("Save Scene"))
 			{
-				Engine::GetInstance().moduleLoader->SaveScene("Assets/Scenes/scene.wscene");
-			}
-			if (ImGui::MenuItem("Load Scene"))
-			{
-				Engine::GetInstance().moduleScene->NewScene();
-				Engine::GetInstance().moduleLoader->LoadScene("Assets/Scenes/scene.wscene");
+				showSaveSceneModal = true;
 			}
 			ImGui::EndMenu();
 		}
@@ -217,6 +212,45 @@ bool Interface::Update()
 		{
 			if (window->is_active) window->Draw();
 		}
+	}
+
+	//SAVE SCREEN MODAL
+	if (showSaveSceneModal)
+	{
+		ImGui::OpenPopup("Save Scene As");
+	}
+
+	if (ImGui::BeginPopupModal("Save Scene As", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text("Enter the name for your scene:");
+
+		if (ImGui::InputText("##sceneName", saveSceneNameBuffer, 64, ImGuiInputTextFlags_EnterReturnsTrue))
+		{
+			showSaveSceneModal = false;
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::Separator();
+
+		if (ImGui::Button("Save", ImVec2(120, 0)))
+		{
+			std::string scenePath = "Assets/";
+			scenePath += saveSceneNameBuffer;
+			scenePath += ".wscene";
+			Engine::GetInstance().moduleLoader->SaveScene(scenePath);
+			showSaveSceneModal = false;
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Cancel", ImVec2(120, 0)))
+		{
+			showSaveSceneModal = false;
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
 	}
 
 	return true;

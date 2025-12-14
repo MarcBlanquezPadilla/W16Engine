@@ -24,7 +24,7 @@ void Mesh::Update()
 
 void Mesh::CleanUp()
 {
-    if (resourceUID != 0)
+    if (resource)
     {
         Engine::GetInstance().moduleResources->ReleaseResource(resourceUID);
         resource->RemoveReference(this);

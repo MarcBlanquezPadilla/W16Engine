@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<Data UID="918962310" Type="1" FileHash="4098799318" ReferedObjects="3">
-	<ReferedObject UID="54904517" Name="Baker_house" Path="Assets/BakerHouse1.fbx" Type="2" />
-	<ReferedObject UID="2853924959" Name="Baker_house.png" Path="Assets/Baker_house.png" Type="0" />
-	<ReferedObject UID="4192366972" Name="Chimney" Path="Assets/BakerHouse1.fbx" Type="2" />
-</Data>
