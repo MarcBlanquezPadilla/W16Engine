@@ -20,7 +20,7 @@ public:
 
 	ModuleLoader(bool startEnabled);
 
-	virtual ~ModuleLoader();
+	~ModuleLoader() override;
 
 	bool Awake() override;
 	bool Start() override;

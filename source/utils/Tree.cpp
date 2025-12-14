@@ -51,7 +51,13 @@ Tree::Tree(TreeType type, int maxDepth, int maxObjectsPerNode) : type(type), max
 
 Tree::~Tree()
 {
+    Clear();
 
+    if (rootNode != nullptr)
+    {
+        delete rootNode;
+        rootNode = nullptr;
+    }
 }
 
 void Tree::Build(std::vector<GameObject*> gameObjects, AABB worldLimits)
@@ -281,12 +287,10 @@ void Tree::QueryRay(TreeNode* node, Ray ray, std::vector<GameObject*>& results)
 {
     if (!node) return;
 
-    // Test ray-AABB intersection
     float t;
     if (!ray.RayIntersectsAABB(node->limits, t))
         return;
 
-    // Agregar objetos de este nodo (evitando duplicados)
     for (GameObject* obj : node->gameObjects)
     {
         if (std::find(results.begin(), results.end(), obj) == results.end())
@@ -295,7 +299,6 @@ void Tree::QueryRay(TreeNode* node, Ray ray, std::vector<GameObject*>& results)
         }
     }
 
-    // Si no es hoja, consultar hijos recursivamente
     if (!node->isLeaf)
     {
         for (TreeNode* child : node->children)

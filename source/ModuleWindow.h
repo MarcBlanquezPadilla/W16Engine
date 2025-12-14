@@ -11,11 +11,11 @@ public:
 
 	ModuleWindow(bool startEnabled);
 
-	virtual ~ModuleWindow();
+	~ModuleWindow() override;
 
-	bool Awake();
+	bool Awake() override;
 
-	bool CleanUp();
+	bool CleanUp() override;
 
 	void SetTitle(const char* title);
 

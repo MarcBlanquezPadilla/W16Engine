@@ -20,7 +20,7 @@ public:
 
 	ModuleEditor(bool startEnabled);
 
-	virtual ~ModuleEditor();
+	~ModuleEditor() override;
 
 	bool Awake();
 

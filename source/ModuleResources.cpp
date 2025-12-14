@@ -78,7 +78,25 @@ bool ModuleResources::CleanUp()
 {
 	bool ret = true;
 	
+	LOG("Deleting all resources");
+
+	for (auto& item : resources)
+	{
+		Resource* res = item.second;
+
+		res->UnloadFromMemory_Internal();
+
+		if (res != nullptr)
+		{
+			delete res;
+			res = nullptr;
+		}
+	}
+
+	resources.clear();
+
 	return true;
+
 }
 
 bool ModuleResources::CheckChangesInAssetsFolder()
@@ -645,36 +663,44 @@ void ModuleResources::ReleaseResource(UID uid)
 
 void ModuleResources::MoveResource(const std::string& oldPath, const std::string& newPath)
 {
-	UID uid = 0;
+	bool anyUpdated = false;
 
 	for (auto& [id, resource] : resources)
 	{
 		if (resource->assetPath == oldPath)
 		{
-			uid = id;
-			break;
+			resource->assetPath = newPath;
+			anyUpdated = true;
 		}
 	}
 
-	if (uid == 0)
+	if (anyUpdated)
 	{
-		uid = Find(newPath);
-	}
-
-	if (uid != 0)
-	{
-		Resource* res = RequestResource(uid);
-		if (res)
-		{
-			res->assetPath = newPath;
-			LOG("Resource updated in memory: %s -> %s (UID: %u)", oldPath.c_str(), newPath.c_str(), uid);
-		}
-
-		ReleaseResource(uid);
+		LOG("Resources moved successfully in memory from %s to %s", oldPath.c_str(), newPath.c_str());
 	}
 	else
 	{
-		LOG("Error: Could not find UID for moved resource. Old: %s", oldPath.c_str());
+		LOG("Warning: Moved file %s but found no resources in memory to update.", oldPath.c_str());
+	}
+}
+
+void ModuleResources::MoveFolder(const std::string& oldPath, const std::string& newPath)
+{
+	for (auto& [uid, resource] : resources)
+	{
+		std::string& resPath = resource->assetPath;
+		std::string resourceStartPath = resource->assetPath;
+		if (resPath.find(oldPath) == 0)
+		{
+			if (resPath.length() > oldPath.length() && resPath[oldPath.length()] == '/')
+			{
+				std::string newResPath = newPath + resPath.substr(oldPath.length());
+
+				resource->assetPath = newResPath;
+
+				LOG("Resource updated in memory: %s -> %s (UID: %u)", resourceStartPath.c_str(), newResPath.c_str(), uid);
+			}
+		}
 	}
 }
 

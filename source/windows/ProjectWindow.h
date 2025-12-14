@@ -51,6 +51,8 @@ private:
 
     unsigned int GetIconTextureWithExtension(const std::string& extension);
    
+    bool ExecuteRename(DirectoryNode* node, const std::string& newName);
+
     void OnEvent(const Event& event);
 
 private:
@@ -74,4 +76,9 @@ private:
     bool expandTreeToSelection = false;
     bool dragging = false;
     bool isFocused = false;
+    bool windowChanged = false;
+
+private:
+    DirectoryNode* renamingNode = nullptr;
+    char renameBuffer[128];
 };

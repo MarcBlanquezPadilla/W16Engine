@@ -22,6 +22,9 @@ class ImporterModel : public Importer
 	};
 
 public:
+
+	~ImporterModel() override;
+	
 	bool Import_Internal() override;
 
 	bool SaveMeta() override;

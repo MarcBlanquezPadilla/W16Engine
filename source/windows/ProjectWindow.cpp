@@ -12,7 +12,7 @@
 
 ProjectWindow::ProjectWindow(bool active) : UIWindow("Project", active)
 {
-    
+    currentNode = nullptr;
 }
 
 ProjectWindow::~ProjectWindow()
@@ -51,13 +51,18 @@ void ProjectWindow::Awake()
 
 void ProjectWindow::CleanUp()
 {
+    if (rootNode != nullptr)
+    {
+        delete rootNode;
+        rootNode = nullptr;
+    }
     Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
 }
 
 void ProjectWindow::Draw()
 {
     isFocused = false;
-
+    windowChanged = false;
     nodesToDelete.clear();
 
     if (!is_active) return;
@@ -99,8 +104,6 @@ void ProjectWindow::Draw()
 
     ImGui::Columns(1);
 
-    bool changed = false;
-
     //MOVING
     if (dragging && ImGui::IsMouseReleased(0))
     {
@@ -122,7 +125,7 @@ void ProjectWindow::Draw()
                         
                         if (MoveAssetToFolder(metaPath, pathToDrop))
                         {
-                            changed = true;
+                            windowChanged = true;
                             Engine::GetInstance().moduleResources->MoveResource(originalPath, newAssetPath);
                             LOG("%s moved to %s", newFilename.c_str(), pathToDrop.c_str());
                         }
@@ -137,7 +140,7 @@ void ProjectWindow::Draw()
                     }
                     else
                     {
-                        changed = true;
+                        windowChanged = true;
                     }
                 }
             }
@@ -174,7 +177,7 @@ void ProjectWindow::Draw()
             if (DeleteAsset(pathToDelete))
             {
                 Engine::GetInstance().moduleResources->RemoveResource(uid);
-                changed = true;
+                windowChanged = true;
             }
         }
 
@@ -182,7 +185,7 @@ void ProjectWindow::Draw()
         nodesToDelete.clear();
     }
 
-    if (changed)
+    if (windowChanged)
     {
         Engine::GetInstance().moduleResources->PublishAssetChangedEvent();
     }
@@ -305,9 +308,21 @@ void ProjectWindow::DrawFolderContent()
                 SelectNode(child);
             }
 
+
+
             if (ImGui::MenuItem("Delete")) 
             {
                 nodesToDelete = selectedNodes;
+                ImGui::CloseCurrentPopup();
+            }
+
+            if (ImGui::MenuItem("Rename"))
+            {
+                renamingNode = child;
+
+                std::string nameWithoutExt = GetFileNameNoExtension(child->name);
+                strcpy_s(renameBuffer, sizeof(renameBuffer), nameWithoutExt.c_str());
+
                 ImGui::CloseCurrentPopup();
             }
 
@@ -368,17 +383,32 @@ void ProjectWindow::DrawFolderContent()
             );
         }
 
-        float textWidth = ImGui::CalcTextSize(GetFileName(child->name).c_str()).x;
 
-        if (textWidth < thumbnailSize)
+        if (renamingNode == child)
         {
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (thumbnailSize - textWidth) * 0.5f);
+            ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
+
+            ImGui::SetKeyboardFocusHere();
+
+            ImGui::PushItemWidth(thumbnailSize);
+            if (ImGui::InputText("##rename", renameBuffer, IM_ARRAYSIZE(renameBuffer), flags))
+            {
+                windowChanged = ExecuteRename(child, std::string(renameBuffer));
+                renamingNode = nullptr;
+            }
+            ImGui::PopItemWidth();
+
+            if (!ImGui::IsItemActive() && (ImGui::IsMouseClicked(0) || ImGui::IsMouseClicked(1)))
+            {
+                renamingNode = nullptr;
+            }
         }
-
-        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + thumbnailSize);
-        ImGui::Text(child->name.c_str());
-        ImGui::PopTextWrapPos();
-
+        else
+        {
+            ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + thumbnailSize);
+            ImGui::Text(child->name.c_str());
+            ImGui::PopTextWrapPos();
+        }
 
         ImGui::EndGroup();
 
@@ -546,6 +576,47 @@ void ProjectWindow::SelectNode(DirectoryNode* direcoryNode)
     if (std::find(selectedNodes.begin(), selectedNodes.end(), direcoryNode) == selectedNodes.end())
     {
         selectedNodes.push_back(direcoryNode);
+    }
+}
+
+bool ProjectWindow::ExecuteRename(DirectoryNode* node, const std::string& newName)
+{
+    std::string directory = GetPreviousPath(node->path);
+    std::string extension = node->extension.empty() ? "" : "." + node->extension;
+
+    std::string oldPath = node->path;
+    std::string oldMetaPath = oldPath + ".meta";
+
+    std::string newPath = directory + "/" + newName + extension;
+    std::string newMetaPath = newPath + ".meta";
+
+    if (DoesFileExist(newPath))
+    {
+        LOG("Error: A file with that name already exists.");
+        return false;
+    }
+
+    if (std::rename(oldPath.c_str(), newPath.c_str()) == 0)
+    {
+        if (DoesFileExist(oldMetaPath)) std::rename(oldMetaPath.c_str(), newMetaPath.c_str());
+
+
+        if (node->isDirectory)
+        {
+            Engine::GetInstance().moduleResources->MoveFolder(oldPath, newPath);
+        }
+        else
+        {
+            Engine::GetInstance().moduleResources->MoveResource(oldPath, newPath);
+        }
+
+        LOG("Renamed %s to %s", oldPath.c_str(), newPath.c_str());
+        return true;
+    }
+    else
+    {
+        LOG("Error renaming file from %s to %s", oldPath.c_str(), newPath.c_str());
+        return false;
     }
 }
 

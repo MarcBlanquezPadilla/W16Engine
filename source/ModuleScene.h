@@ -16,7 +16,7 @@ public:
 
 	ModuleScene(bool startEnabled) ;
 
-	virtual ~ModuleScene();
+	~ModuleScene() override;
 
 	bool Awake();
 	bool Start();

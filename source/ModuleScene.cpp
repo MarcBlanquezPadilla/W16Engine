@@ -227,10 +227,13 @@ void ModuleScene::DestroyGameObject(GameObject* gameObject)
 {
 	if (!gameObject || gameObject->pendingToDelete) return;
 
+	for (GameObject* child : gameObject->childs)
+	{
+		DestroyGameObject(child);
+	}
+
 	gameObject->pendingToDelete = true;
-
 	objectsPendingToDelete.push_back(gameObject);
-
 }
 
 void ModuleScene::AddToRoots(GameObject* go)
@@ -314,10 +317,10 @@ AABB ModuleScene::GetWorldLimits()
 	bool hasMeshes = false;
 
 	for (GameObject* gameObject : GetAllGameObjects())
-	{ 
+	{
 		AABB objectAABB;
 		if (!gameObject || !gameObject->TryGetGlobalAABB(objectAABB)) continue;
-		
+
 		hasMeshes = true;
 		mapLimits.min = glm::min(mapLimits.min, objectAABB.min);
 		mapLimits.max = glm::max(mapLimits.max, objectAABB.max);
@@ -327,6 +330,12 @@ AABB ModuleScene::GetWorldLimits()
 	{
 		mapLimits.min = glm::vec3(-100.0f);
 		mapLimits.max = glm::vec3(100.0f);
+	}
+	else
+	{
+		float margin = 1.0f;
+		mapLimits.min -= glm::vec3(margin);
+		mapLimits.max += glm::vec3(margin);
 	}
 
 	return mapLimits;

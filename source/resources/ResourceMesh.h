@@ -22,7 +22,7 @@ class ResourceMesh : public Resource
 {
 public:
 	ResourceMesh(UID uid);
-	virtual ~ResourceMesh();
+	~ResourceMesh() override;
 
 	bool LoadToMemory_Internal() override;
 	bool UnloadFromMemory_Internal() override;

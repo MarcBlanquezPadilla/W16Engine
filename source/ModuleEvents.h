@@ -14,7 +14,7 @@ class ModuleEvents : public Module
 {
 public:
     ModuleEvents(bool startEnabled);
-    virtual ~ModuleEvents();
+    ~ModuleEvents() override;
     
     bool Awake();
 

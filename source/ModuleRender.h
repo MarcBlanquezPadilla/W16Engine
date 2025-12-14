@@ -38,7 +38,7 @@ public:
 
 	ModuleRender(bool startEnabled);
 
-	virtual ~ModuleRender();
+	~ModuleRender() override;
 
 	bool Awake();
 

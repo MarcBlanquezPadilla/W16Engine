@@ -278,6 +278,9 @@ bool Interface::CleanUp()
 		}
 	}
 
+	toolBar->CleanUp();
+	delete toolBar;
+
 	LOG("Turning off ImGui");
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL3_Shutdown();

@@ -15,7 +15,7 @@ class ModuleResources : public Module
 public:
 	ModuleResources(bool startEnabled);
 
-	virtual ~ModuleResources();
+	~ModuleResources() override;
 
 	bool Awake() override;
 	bool Start() override;
@@ -34,6 +34,7 @@ public:
 	void ReleaseResource(UID uid);
 	void RemoveResource(UID uid);
 	void MoveResource(const std::string& oldPath, const std::string& newPath);
+	void MoveFolder(const std::string& oldPath, const std::string& newPath);
 	Resource::Type GetTypeFromExtension(const std::string& path);
 
 	//EVENTS

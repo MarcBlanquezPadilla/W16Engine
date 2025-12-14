@@ -5,7 +5,7 @@ class ResourceTexture : public Resource
 {
 public:
     ResourceTexture(UID uid);
-    virtual ~ResourceTexture();
+    ~ResourceTexture() override;
 
     bool LoadToMemory_Internal() override;
     bool UnloadFromMemory_Internal() override;

@@ -33,7 +33,7 @@ public:
 
 	ModuleInput(bool startEnabled);
 
-	virtual ~ModuleInput();
+	~ModuleInput() override;
 
 	bool Awake();
 

@@ -25,6 +25,7 @@ public:
 	bool Update();
 
 	bool CleanUp();
+	bool CleanUpRecursive();
 
 	void AddChild(GameObject* gameObject);
 	void RemoveChild(GameObject* childToRemove);

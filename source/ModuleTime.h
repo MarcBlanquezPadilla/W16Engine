@@ -8,7 +8,7 @@ public:
 
 	ModuleTime(bool startEnabled);
 
-	virtual ~ModuleTime();
+	~ModuleTime() override;
 
 	bool Awake() override;
 

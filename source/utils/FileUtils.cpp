@@ -271,3 +271,10 @@ bool DeleteAsset(const std::string& path)
     LOG("Deleted asset successfully: %s", path.c_str());
     return true;
 }
+
+std::string GetFileNameNoExtension(const std::string& filePath)
+{
+    std::filesystem::path path(filePath);
+
+    return path.stem().string();
+}

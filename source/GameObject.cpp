@@ -76,6 +76,27 @@ bool GameObject::CleanUp()
 	return true;
 }
 
+bool GameObject::CleanUpRecursive()
+{
+	for (auto const& pair : components)
+	{
+		pair.second->CleanUp();
+		delete pair.second;
+	}
+	components.clear();
+
+	for (GameObject* child : childs)
+	{
+		child->CleanUpRecursive();
+		delete child;
+		child = nullptr;
+	}
+
+	childs.clear();
+
+	return true;
+}
+
 Component* GameObject::AddComponent(ComponentType type)
 {
 	if (components.count(type) > 0)

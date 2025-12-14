@@ -23,6 +23,11 @@
 #include <fstream>
 #include <sstream>
 
+ImporterModel::~ImporterModel()
+{
+
+}
+
 bool ImporterModel::Import_Internal()
 {
 	Assimp::Importer importer;
@@ -92,9 +97,15 @@ bool ImporterModel::Import_Internal()
 	//SAVE META
 	SaveMeta();
 
-	modelGameObject->CleanUp();
-	delete modelGameObject;
-	modelGameObject = nullptr;
+	referedUIDs.clear();
+	UIDsByName.clear();
+	if (modelGameObject) 
+	{
+		modelGameObject->CleanUpRecursive();
+		delete modelGameObject;
+		modelGameObject = nullptr;
+	}
+
 	return true;
 }
 
@@ -134,6 +145,7 @@ bool ImporterModel::ProcessNode(aiNode* node, const aiScene* scene, GameObject* 
 			else
 			{
 				LOG("Error processing mesh %s, skipping.", assimpMesh->mName.C_Str());
+				meshGameObject->CleanUpRecursive();
 				delete meshGameObject;
 			}
 		}
@@ -147,6 +159,11 @@ bool ImporterModel::ProcessNode(aiNode* node, const aiScene* scene, GameObject* 
 		if (ProcessNode(node->mChildren[i], scene, childNodeGO))
 		{
 			targetGameObject->AddChild(childNodeGO);
+		}
+		else
+		{
+			childNodeGO->CleanUpRecursive();
+			delete childNodeGO;
 		}
 	}
 

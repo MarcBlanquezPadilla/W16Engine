@@ -7,7 +7,7 @@ class ResourceModel : public Resource
 {
 public:
     ResourceModel(UID uid);
-    virtual ~ResourceModel();
+    ~ResourceModel() override;
 
     bool LoadToMemory_Internal() override;
     bool UnloadFromMemory_Internal() override;

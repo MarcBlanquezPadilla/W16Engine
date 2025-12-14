@@ -9,7 +9,9 @@ class Importer
 {
 
 public:
-	
+    Importer() {};
+
+    virtual ~Importer() {};
     bool Import(const std::string assetPath, const std::string libraryPath, const UID uid, const int type);
 
 protected:

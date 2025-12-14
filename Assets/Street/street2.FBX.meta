@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<Data UID="3965336166" Type="1" FileHash="1829670150" ReferedObjects="38">
+	<ReferedObject UID="140508027" Name="building_016_c.tga" Path="Assets/Street/building_016_c.tga" Type="0" />
+	<ReferedObject UID="145126298" Name="City_building_035" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="214752881" Name="City_building_032" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="313244485" Name="building05 _c.tga" Path="Assets/Street/building05 _c.tga" Type="0" />
+	<ReferedObject UID="327427152" Name="Plane001" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="419469112" Name="building 01_c.tga" Path="Assets/Street/building 01_c.tga" Type="0" />
+	<ReferedObject UID="602852505" Name="Line002" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="885912886" Name="City_building_041" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="1227984016" Name="City_building_008" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="1326666100" Name="City_building_037" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="1503566549" Name="City_building_007" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="1584811504" Name="City_building_028" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="1664297224" Name="Building_V01_C.png" Path="Assets/Street/Building_V01_C.png" Type="0" />
+	<ReferedObject UID="1720573331" Name="City_building_004" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="2239264133" Name="building03_c.tga" Path="Assets/Street/building03_c.tga" Type="0" />
+	<ReferedObject UID="2271788474" Name="City_building_016" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="2293583670" Name="City_building_014" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="2358607378" Name="City_building_034" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="2420700395" Name="City_building_022" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="2512145867" Name="City_building_036" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="2600635291" Name="City_building_013" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="2683910247" Name="City_building_026" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="2741071893" Name="City_building_011" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="2784416840" Name="City_building_039" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="3041894411" Name="City_building_001" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="3050063873" Name="building_025_c.tga" Path="Assets/Street/building_025_c.tga" Type="0" />
+	<ReferedObject UID="3072740953" Name="Object010" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="3141453809" Name="City_building_024" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="3305684834" Name="building 06_ c.tga" Path="Assets/Street/building 06_ c.tga" Type="0" />
+	<ReferedObject UID="3340157527" Name="City_building_038" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="3361354951" Name="Building_V02_C.png" Path="Assets/Street/Building_V02_C.png" Type="0" />
+	<ReferedObject UID="3493720753" Name="City_building_017" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="3620635821" Name="City_building_040" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="3775528369" Name="City_building_031" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="3848189599" Name="City_building_030" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="4048039195" Name="City_building_033" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="4238069526" Name="City_building_010" Path="Assets/Street/street2.FBX" Type="2" />
+	<ReferedObject UID="4282496556" Name="City_building_023" Path="Assets/Street/street2.FBX" Type="2" />
+</Data>

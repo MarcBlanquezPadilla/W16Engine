@@ -6,7 +6,7 @@ class ResourceScene : public Resource
 {
 public:
     ResourceScene(UID uid);
-    virtual ~ResourceScene();
+    ~ResourceScene() override;
 
     bool LoadToMemory_Internal() override; 
     bool UnloadFromMemory_Internal() override;

@@ -15,7 +15,7 @@ ModuleWindow::ModuleWindow(bool startEnabled) : Module(startEnabled)
 
 ModuleWindow::~ModuleWindow()
 {
-
+	CleanUp();
 }
 
 bool ModuleWindow::Awake()
@@ -122,6 +122,9 @@ bool ModuleWindow::CleanUp()
 	{
 		SDL_DestroyWindow(window);
 	}
+
+	context = nullptr;
+	window = nullptr;
 
 	SDL_Quit();
 	return true;
