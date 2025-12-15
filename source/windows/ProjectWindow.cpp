@@ -47,6 +47,7 @@ void ProjectWindow::Awake()
 
     //EVENTS
     Engine::GetInstance().moduleEvents->Subscribe(Event::Type::AssetsChanged, this);
+    Engine::GetInstance().moduleEvents->Subscribe(Event::Type::FileDropped, this);
 }
 
 void ProjectWindow::CleanUp()
@@ -628,6 +629,15 @@ void ProjectWindow::OnEvent(const Event& event)
     {
         {
             RefreshTree();
+        }
+        break;
+    }
+
+    case Event::Type::FileDropped:
+    {
+        {
+            std::string endPath = DoesFileExist(currentNode->path) ? currentNode->path : rootPath;
+            MoveAssetToFolder(event.data.string.filePath, currentNode->path);
         }
         break;
     }

@@ -43,7 +43,6 @@ ModuleLoader::~ModuleLoader()
 
 bool ModuleLoader::Awake()
 {
-	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::FileDropped, this);
 	return true;
 }
 
@@ -52,43 +51,14 @@ bool ModuleLoader::Start()
 {
 	bool ret = true;
 
-	std::string modelPath = "Assets/BakerHouse.fbx";
-
-	LOG("Loading initial model: %s", modelPath.c_str());
-
-	if (!LoadModel(modelPath))
-	{
-		LOG("ERROR: Failed to load the initial model. Check if the file exists in the build directory.");
-		ret = false;
-	}
-
 	return ret;
 }
 
 bool ModuleLoader::CleanUp()
 {
-	Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
 	return true;
 }
 
-
-void ModuleLoader::HandleAssetDrop(const std::string& path)
-{
-	/*std::string extension = GetFileExtension(path);
-
-	if (extension == "fbx" || extension == "obj")
-	{
-		LoadModel(path);
-	}
-	else if (extension == "png" || extension == "dds" || extension == "jpg" || extension == "tga")
-	{
-		LoadTextureToGameObject(path, nullptr);
-	}
-	else
-	{
-		LOG("Error loading file, incompatible format: %s", extension.c_str());
-	}*/
-}
 
 #pragma region Models
 
@@ -412,20 +382,3 @@ bool ModuleLoader::LoadSceneFromMemory(Config& sceneConfig)
 }
 
 #pragma endregion
-
-void ModuleLoader::OnEvent(const Event& event)
-{
-	switch (event.type)
-	{
-	case Event::Type::FileDropped:
-	{
-		{
-			HandleAssetDrop(event.data.string.filePath);
-		}
-		break;
-	}
-
-	default:
-		break;
-	}
-}

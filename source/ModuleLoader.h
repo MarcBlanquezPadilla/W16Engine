@@ -1,7 +1,6 @@
 
 #pragma once
 #include "Module.h"
-#include "EventListener.h"
 #include <string>
 #include <vector>
 
@@ -14,7 +13,7 @@ struct aiMaterial;
 struct aiScene;
 struct aiNode;
 
-class ModuleLoader : public Module, public EventListener
+class ModuleLoader : public Module
 {
 public:
 
@@ -26,8 +25,6 @@ public:
 	bool Start() override;
 
 	bool CleanUp() override;
-
-	void HandleAssetDrop(const std::string& path);
 
 	//LOAD TO SCENE
 	void LoadAsset(const std::string& assetPath);
@@ -51,6 +48,4 @@ public:
 	bool SaveSceneToMemory(Config& sceneConfig);
 	bool LoadSceneFromMemory(Config& sceneConfig);
 
-	//EVENTS
-	void OnEvent(const Event& event) override;
 };
