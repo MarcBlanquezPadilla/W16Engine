@@ -7,6 +7,7 @@
 #include <vector>
 #include <functional>
 
+#define MAX_KEYS SDL_SCANCODE_COUNT
 #define NUM_MOUSE_BUTTONS 5
 #define MAX_GAMEPAD_BUTTONS SDL_GAMEPAD_BUTTON_COUNT
 

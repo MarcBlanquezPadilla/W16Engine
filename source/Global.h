@@ -16,7 +16,7 @@ static UID GenerateNewUID()
 #define WINDOW_HEIGHT 720
 #define WINDOW_SCALE 1
 
-#define VERSION "1.0"
+#define VERSION "2.0"
 #define NAME "W16 Motor"
 #define DEVELOPER_1 "Marc Blanquez"
 #define DEVELOPER_2 "Arnau Balasch"
@@ -31,6 +31,9 @@ static UID GenerateNewUID()
 #define CUBE 1
 #define PYRAMID 2
 #define SPHERE 3
+
+#define GAMEOBJECTS_DRAG "OBJECTS_DRAG"
+#define ASSETS_DRAG "ASSETS_DRAG"
 
 #define DEBUG_R 0.0f
 #define DEBUG_G 1.0f

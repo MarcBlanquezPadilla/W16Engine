@@ -33,7 +33,6 @@ void InspectorWindow::Draw()
         return;
     }
 
-    // 1. Obtener la lista de seleccionados
     const std::vector<GameObject*>& selectedObjects = Engine::GetInstance().moduleEditor->GetSelectedGameObjects();
 
     if (selectedObjects.empty())
@@ -42,21 +41,17 @@ void InspectorWindow::Draw()
     }
     else if (selectedObjects.size() == 1)
     {
-        // CASO SIMPLE: Solo uno seleccionado -> Dibujar normal
         DrawGameObjectInfo(selectedObjects[0]);
     }
     else
     {
-        // CASO MULTIPLE: Iterar
         ImGui::Text("%d Objects Selected", selectedObjects.size());
         ImGui::Separator();
 
         for (GameObject* go : selectedObjects)
         {
-            // PushID es VITAL para que ImGui distinga los botones de cada objeto
             ImGui::PushID(go);
 
-            // Usamos un Header para cada objeto para no saturar la ventana
             if (ImGui::CollapsingHeader(go->name.c_str()))
             {
                 DrawGameObjectInfo(go);
@@ -75,14 +70,9 @@ void InspectorWindow::DrawGameObjectInfo(GameObject* gameObject)
 {
     if (gameObject == nullptr) return;
 
-    // --- (TU CÓDIGO ORIGINAL COPIADO AQUÍ) ---
-
-    char name_buffer[64];
+    char name_buffer[256];
     sprintf_s(name_buffer, "%s", gameObject->name.c_str());
 
-    // Ojo: Quitamos el checkbox del nombre para evitar conflictos con el CollapsingHeader en multi-selección,
-    // o usamos PushID extra si quieres mantenerlo.
-    // Aquí asumo que quieres editar el nombre:
     if (ImGui::InputText("Name", name_buffer, sizeof(name_buffer)))
     {
         gameObject->name = name_buffer;
@@ -102,7 +92,6 @@ void InspectorWindow::DrawGameObjectInfo(GameObject* gameObject)
         gameObject->SetStatic(isStatic);
     }
 
-    // Dibujar Componentes
     for (auto const& pair : gameObject->components)
     {
         if (pair.second) pair.second->OnEditor();
@@ -112,7 +101,6 @@ void InspectorWindow::DrawGameObjectInfo(GameObject* gameObject)
     ImGui::Separator();
     ImGui::Spacing();
 
-    // Botón Add Component
     float buttonWidth = ImGui::GetContentRegionAvail().x * 0.6f;
     float centerPos = (ImGui::GetContentRegionAvail().x - buttonWidth) * 0.5f;
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + centerPos);
@@ -124,7 +112,6 @@ void InspectorWindow::DrawGameObjectInfo(GameObject* gameObject)
 
     if (ImGui::BeginPopup("AddComponentPopup"))
     {
-        // ... (Tu lógica de añadir componentes igual que antes) ...
         if (gameObject->GetComponent(ComponentType::Camera) == nullptr)
         {
             if (ImGui::MenuItem("Camera")) { gameObject->AddComponent(ComponentType::Camera); ImGui::CloseCurrentPopup(); }

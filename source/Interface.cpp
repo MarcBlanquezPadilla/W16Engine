@@ -1,5 +1,4 @@
 #include "Interface.h"
-#include "imgui.h"
 
 #include "Engine.h"
 #include "ModuleWindow.h"
@@ -277,9 +276,14 @@ bool Interface::CleanUp()
 			delete windows[i];
 		}
 	}
+	hierarchy = nullptr;
+	scene = nullptr;
+	inspector = nullptr;
+	project = nullptr;
 
 	toolBar->CleanUp();
 	delete toolBar;
+	toolBar = nullptr;
 
 	LOG("Turning off ImGui");
 	ImGui_ImplOpenGL3_Shutdown();

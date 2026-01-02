@@ -3,12 +3,12 @@
 #include <stdlib.h>
 #include "utils/Log.h"
 
-#ifdef _DEBUG // Solo para modo Debug
-
-#pragma comment(lib, "C:/Programming Tools/Visual Leak Detector/lib/Win64/vld.lib")
-#include "C:/Programming Tools/Visual Leak Detector/include/vld.h"
-
-#endif
+//#ifdef _DEBUG // Solo para modo Debug
+//
+//#pragma comment(lib, "C:/Programming Tools/Visual Leak Detector/lib/Win64/vld.lib")
+//#include "C:/Programming Tools/Visual Leak Detector/include/vld.h"
+//
+//#endif
 
 int main()
 {

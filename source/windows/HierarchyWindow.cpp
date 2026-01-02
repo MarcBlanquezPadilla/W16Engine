@@ -27,7 +27,6 @@ void HierarchyWindow::Draw()
 
     if (!ImGui::Begin(name, &is_active))
     {
-        dragging = false;
         ImGui::End();
         return;
     }
@@ -41,8 +40,6 @@ void HierarchyWindow::Draw()
 
     ModuleScene* scene = Engine::GetInstance().moduleScene;
     ModuleLoader* loader = Engine::GetInstance().moduleLoader;
-
-    objectToDrop = nullptr;
 
     for (GameObject* go : scene->GetRootGameObjects())
     {
@@ -63,56 +60,27 @@ void HierarchyWindow::Draw()
     }
 
     ImVec2 contentSize = ImGui::GetContentRegionAvail();
-    ImVec2 p_min = ImGui::GetCursorScreenPos();
-    ImVec2 p_max = ImVec2(p_min.x + contentSize.x, p_min.y + contentSize.y);
     ImGui::Dummy(contentSize);
 
-    const std::vector<GameObject*>& selectedObjects = Engine::GetInstance().moduleEditor->GetSelectedGameObjects();
-
-    if (dragging && ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly))
+    if (ImGui::BeginDragDropTarget())
     {
-        ImGui::GetWindowDrawList()->AddRect(
-            p_min,
-            p_max,
-            IM_COL32(0, 255, 255, 255),
-            0.0f,
-            0,
-            1.0f
-        );
-    }
-
-    if (dragging && ImGui::IsMouseReleased(0))
-    {
-        if (objectToDrop != nullptr)
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(GAMEOBJECTS_DRAG))
         {
-            for (GameObject* movingObj : selectedObjects)
+            uint32_t* uidsIdx = (uint32_t*)payload->Data;
+            int objectCount = payload->DataSize / sizeof(uint32_t);
+
+            for (int i = 0; i < objectCount; i++)
             {
-                if (movingObj != objectToDrop && !movingObj->IsDescendant(objectToDrop) && movingObj->parent != objectToDrop)
+                uint32_t draggedUID = uidsIdx[i];
+                GameObject* draggedGO = Engine::GetInstance().moduleScene->GetObjectByUUID(draggedUID);
+
+                if (draggedGO != nullptr)
                 {
-                    movingObj->SetParent(objectToDrop);
+                    draggedGO->SetParent(nullptr);
                 }
             }
         }
-        else if (ImGui::IsWindowHovered())
-        {
-            for (GameObject* movingObj : selectedObjects)
-            {
-                movingObj->SetParent(nullptr);
-            }
-        }
-
-        dragging = false;
-        objectToDrop = nullptr;
-    }
-
-    if (dragging && !selectedObjects.empty())
-    {
-        ImGui::SetTooltip("Moving %d objects", selectedObjects.size());
-    }
-    else if (dragging && selectedObjects.empty())
-    {
-        dragging = false;
-        objectToDrop = nullptr;
+        ImGui::EndDragDropTarget();
     }
 
     ImGui::End();
@@ -140,41 +108,72 @@ void HierarchyWindow::DrawGameObjectNode(GameObject* go)
 
     bool node_open = ImGui::TreeNodeEx((void*)go, flags, go->name.c_str());
 
+    bool ctrl = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
+    bool shift = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
+    bool erase = !(ctrl || shift);
+
     if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0))
     {
-        objectToSelect = go;
+        if (!isSelected)
+        {
+            Engine::GetInstance().moduleEditor->SetSelected(go, erase);
+        }
     }
 
-    if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(0) && !dragging)
+    if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(0))
     {
-        bool ctrlPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
-        bool shiftPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
-        bool eraseSelecteds = !(ctrlPressed || shiftPressed);
-
-        if (objectToSelect == go) Engine::GetInstance().moduleEditor->SetSelected(go, eraseSelecteds);
-        objectToSelect = nullptr;
+        if (!ImGui::IsMouseDragging(0) && !ctrl && isSelected)
+        {
+            Engine::GetInstance().moduleEditor->SetSelected(go, erase);
+        }
     }
 
-    if (ImGui::IsItemHovered() && ImGui::IsMouseDragging(0) && !dragging)
+    if (ImGui::BeginDragDropSource())
     {
-        bool ctrlPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
-        bool shiftPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
-        bool eraseSelecteds = !(ctrlPressed || shiftPressed);
-        if (!isSelected) Engine::GetInstance().moduleEditor->SetSelected(go, eraseSelecteds);
-        dragging = true;
+        if (!isSelected) {
+            Engine::GetInstance().moduleEditor->SetSelected(go, true);
+        }
+
+        const std::vector<GameObject*>& currentSelection = Engine::GetInstance().moduleEditor->GetSelectedGameObjects();
+
+        std::vector<uint32_t> uidsToSend;
+        uidsToSend.reserve(currentSelection.size());
+
+        for (GameObject* s : currentSelection)
+        {
+            uidsToSend.push_back(s->UUID);
+        }
+
+        ImGui::SetDragDropPayload(GAMEOBJECTS_DRAG, uidsToSend.data(), uidsToSend.size() * sizeof(uint32_t));
+
+        ImGui::Text("Moviendo %d objetos", (int)uidsToSend.size());
+
+        ImGui::EndDragDropSource();
     }
 
-    if (dragging && ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly))
+    if (ImGui::BeginDragDropTarget())
     {
-        objectToDrop = go;
-        ImGui::GetWindowDrawList()->AddRect(
-            ImGui::GetItemRectMin(),
-            ImGui::GetItemRectMax(),
-            IM_COL32(0, 255, 255, 255),
-            0.0f,
-            0,
-            1.0f
-        );
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(GAMEOBJECTS_DRAG))
+        {
+            uint32_t* uidsIdx = (uint32_t*)payload->Data;
+            int objectCount = payload->DataSize / sizeof(uint32_t);
+
+            for (int i = 0; i < objectCount; i++)
+            {
+                uint32_t draggedUID = uidsIdx[i];
+
+                GameObject* draggedGO = Engine::GetInstance().moduleScene->GetObjectByUUID(draggedUID);
+
+                if (draggedGO != nullptr)
+                {
+                    if (draggedGO != go && !go->IsDescendant(draggedGO))
+                    {
+                        draggedGO->SetParent(go);
+                    }
+                }
+            }
+        }
+        ImGui::EndDragDropTarget();
     }
 
     if (node_open)

@@ -6,9 +6,9 @@
 
 void Log(const char file[], int line, const char* format, ...)
 {
-    static char tmp_string[4096];
-    static char tmp_string2[4096];
-    static va_list ap;
+    char tmp_string[4096];
+    char tmp_string2[4096];
+    va_list ap;
 
     va_start(ap, format);
     vsprintf_s(tmp_string, 4096, format, ap);

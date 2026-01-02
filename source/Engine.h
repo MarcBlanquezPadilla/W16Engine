@@ -28,6 +28,7 @@ class ModuleResources;
 
 class Engine
 {
+
 public:
 
 	static Engine& GetInstance();
@@ -67,7 +68,6 @@ public:
 	ModuleLoader* moduleLoader;
 	ModuleEvents* moduleEvents;
 	ModuleResources* moduleResources;
-
 
 private:
 

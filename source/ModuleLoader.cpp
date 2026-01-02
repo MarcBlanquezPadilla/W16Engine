@@ -59,7 +59,6 @@ bool ModuleLoader::CleanUp()
 	return true;
 }
 
-
 #pragma region Models
 
 bool ModuleLoader::LoadModel(const std::string& filePath)
@@ -94,7 +93,6 @@ bool ModuleLoader::LoadModel(const std::string& filePath)
 
 		//RELEASE RESOURCE
 		Engine::GetInstance().moduleResources->ReleaseResource(modelUID);
-
 
 		return true;
 	}

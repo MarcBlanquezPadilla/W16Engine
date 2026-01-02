@@ -26,9 +26,6 @@ public:
 
 	bool CleanUp() override;
 
-	//LOAD TO SCENE
-	void LoadAsset(const std::string& assetPath);
-
 	//MODELS
 	bool LoadModel(const std::string& filePath);
 

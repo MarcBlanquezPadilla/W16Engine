@@ -308,6 +308,18 @@ void ModuleScene::QueryRayToDynamic(Ray ray, std::vector<GameObject*>& results)
 
 #pragma region Getters
 
+GameObject* ModuleScene::GetObjectByUUID(UID uuid)
+{
+	for (GameObject* gameObject : GetAllGameObjects())
+	{
+		if (gameObject->UUID == uuid)
+		{
+			return gameObject;
+		}
+	}
+	return nullptr;
+}
+
 AABB ModuleScene::GetWorldLimits()
 {
 	AABB mapLimits;

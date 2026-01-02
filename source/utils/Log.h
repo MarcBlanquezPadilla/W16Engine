@@ -27,6 +27,10 @@ public:
         return messages;
     }
 
+    void EraseMessages() {
+        messages.clear();
+    }
+
 private:
     std::vector<std::string> messages;
 };

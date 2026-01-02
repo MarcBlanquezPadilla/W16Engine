@@ -5,6 +5,7 @@
 #include "../ModuleResources.h"
 #include "../ModuleEditor.h"
 #include "../Engine.h"
+#include "../Global.h"
 #include "../utils/Log.h"
 #include "../utils/FileUtils.h"
 
@@ -81,7 +82,6 @@ void ProjectWindow::Draw()
 
     isFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
 
-    pathToDrop = "";
 
     ImGui::Columns(2, "ProjectColumns", true);
 
@@ -105,64 +105,8 @@ void ProjectWindow::Draw()
 
     ImGui::Columns(1);
 
-    //MOVING
-    if (dragging && ImGui::IsMouseReleased(0))
-    {
-        
-        if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && pathToDrop != "" && IsFileDirectory(pathToDrop))
-        {
-            for (DirectoryNode* node : selectedNodes)
-            {
-                std::string originalPath = node->path;
-                std::string metaPath = GetMetaPath(node->path);
-
-                if (MoveAssetToFolder(originalPath, pathToDrop))
-                {
-                    std::string newFilename = GetFileName(originalPath);
-                    std::string newAssetPath = pathToDrop + "/" + newFilename;
-
-                    if (DoesFileExist(metaPath))
-                    {
-                        
-                        if (MoveAssetToFolder(metaPath, pathToDrop))
-                        {
-                            windowChanged = true;
-                            Engine::GetInstance().moduleResources->MoveResource(originalPath, newAssetPath);
-                            LOG("%s moved to %s", newFilename.c_str(), pathToDrop.c_str());
-                        }
-                        else
-                        {
-                            std::string restoreFolder = GetPreviousPath(originalPath);
-
-                            LOG("ERROR: Meta failed to move. Undoing asset move to save references.");
-
-                            MoveAssetToFolder(newAssetPath, restoreFolder);
-                        }
-                    }
-                    else
-                    {
-                        windowChanged = true;
-                    }
-                }
-            }
-        }
-
-        dragging = false;
-        pathToDrop = "";
-    }
-
-    if (dragging && !selectedNodes.empty())
-    {
-        ImGui::SetTooltip("Moving %d objects", selectedNodes.size());
-    }
-    else if (dragging && selectedNodes.empty())
-    {
-        dragging = false;
-        pathToDrop = "";
-    }
-
     //DELETE
-    if (!dragging && ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && selectedNodes.size() > 0 && Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_DELETE) == KEY_DOWN)
+    if (!ImGui::IsMouseDragging(0) && ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && selectedNodes.size() > 0 && Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_DELETE) == KEY_DOWN)
     {
         nodesToDelete = selectedNodes;
     }
@@ -237,18 +181,31 @@ void ProjectWindow::DrawTreeNodeRecursive(DirectoryNode* node)
 
     bool isOpen = ImGui::TreeNodeEx(node->name.c_str(), flags);
 
-    if (dragging && node->isDirectory && ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly))
+    if (ImGui::BeginDragDropTarget())
     {
-        pathToDrop = node->path;
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSETS_DRAG))
+        {
+            const char* dataPtr = (const char*)payload->Data;
+            const char* endPtr = dataPtr + payload->DataSize;
 
-        ImGui::GetWindowDrawList()->AddRect(
-            ImGui::GetItemRectMin(),
-            ImGui::GetItemRectMax(),
-            IM_COL32(0, 255, 255, 255),
-            0.0f,
-            0,
-            1.0f
-        );
+            while (dataPtr < endPtr)
+            {
+                std::string path = dataPtr;
+                if (path.empty()) break;
+
+                if (path != node->path && path.find(node->path) == std::string::npos)
+                {
+                    MoveAssetToFolder(path, node->path);
+                    std::string metaPath = path + ".meta";
+                    if (DoesFileExist(metaPath)) MoveAssetToFolder(metaPath, node->path);
+                    LOG("Movido %s a %s (Tree View)", path.c_str(), node->path.c_str());
+                }
+
+                dataPtr += path.length() + 1;
+            }
+            windowChanged = true;
+        }
+        ImGui::EndDragDropTarget();
     }
 
     if (ImGui::IsItemClicked())
@@ -298,18 +255,100 @@ void ProjectWindow::DrawFolderContent()
         ImGui::ImageButton("##icon", iconTexture, ImVec2(thumbnailSize, thumbnailSize));
         if (isSelected) ImGui::PopStyleColor();
 
+        if (ImGui::BeginDragDropSource())
+        {
+            if (!isSelected) {
+                selectedNodes.clear();
+                selectedNodes.push_back(child);
+            }
+
+            std::string payloadBuffer;
+            for (DirectoryNode* node : selectedNodes)
+            {
+                payloadBuffer += node->path;
+                payloadBuffer += '\0';
+            }
+
+            ImGui::SetDragDropPayload(ASSETS_DRAG, payloadBuffer.c_str(), payloadBuffer.size());
+            if (selectedNodes.size() == 1)
+                ImGui::Text("Moviendo %s", child->name.c_str());
+            else
+                ImGui::Text("Moviendo %d archivos", selectedNodes.size());
+
+            ImGui::EndDragDropSource();
+        }
+
+        if (child->isDirectory)
+        {
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSETS_DRAG))
+                {
+                    const char* dataPtr = (const char*)payload->Data;
+                    const char* endPtr = dataPtr + payload->DataSize;
+
+                    while (dataPtr < endPtr)
+                    {
+                        std::string path = dataPtr;
+                        if (path.empty()) break;
+
+                        std::string fileName = GetFileName(path);
+                        std::string destination = child->path + "/" + fileName;
+
+                        MoveAssetToFolder(path, child->path);
+
+                        std::string metaPath = path + ".meta";
+                        if (DoesFileExist(metaPath)) MoveAssetToFolder(metaPath, child->path);
+
+                        LOG("Movido %s a %s", path.c_str(), child->path.c_str());
+
+                        dataPtr += path.length() + 1;
+                    }
+                    windowChanged = true;
+                }
+                ImGui::EndDragDropTarget();
+            }
+        }
+
+
+        bool ctrl = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
+        bool shift = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
+        bool erase = !(ctrl || shift);
+
+        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0))
+        {
+            if (!isSelected)
+            {
+               SelectNode(child, erase);
+            }
+        }
+
+        if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(0))
+        {
+            if (!ImGui::IsMouseDragging(0) && !ctrl && isSelected)
+            {
+                SelectNode(child, erase);
+            }
+        }
+
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+        {
+            if (child->isDirectory) { selectedNodes.clear(); ChangeCurrentNode(child); }
+            else {
+                Resource::Type type = Engine::GetInstance().moduleResources->GetTypeFromExtension(child->path);
+                if (type == Resource::model) Engine::GetInstance().moduleLoader->LoadModel(child->path);
+                else if (type == Resource::scene) Engine::GetInstance().moduleLoader->CleanAndLoadScene(child->path);
+            }
+        }
+
 
         if (ImGui::BeginPopupContextItem("ItemContext"))
         {
             bool isSelected = std::find(selectedNodes.begin(), selectedNodes.end(), child) != selectedNodes.end();
             if (!isSelected)
             {
-                if (!Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL))
-                    selectedNodes.clear();
-                SelectNode(child);
+                SelectNode(child, false);
             }
-
-
 
             if (ImGui::MenuItem("Delete")) 
             {
@@ -329,61 +368,6 @@ void ProjectWindow::DrawFolderContent()
 
             ImGui::EndPopup();
         }
-
-        if (!dragging && ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-        {
-            bool ctrlPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
-            bool shiftPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
-            bool eraseSelecteds = !(ctrlPressed || shiftPressed);
-            if (eraseSelecteds) selectedNodes.clear();
-           SelectNode(child);
-        }
-
-        if (!dragging && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-        {
-            if (IsFileDirectory(child->path))
-            {
-                selectedNodes.clear();
-                ChangeCurrentNode(child);
-            }
-            else
-            {
-                Resource::Type type = Engine::GetInstance().moduleResources->GetTypeFromExtension(child->path);
-                switch (type) {
-                    case Resource::texture: Engine::GetInstance().moduleLoader->LoadTextureToGameObjects(child->path, Engine::GetInstance().moduleEditor->GetSelectedGameObjects()); break;
-                    case Resource::model: Engine::GetInstance().moduleLoader->LoadModel(child->path); break;
-                    case Resource::scene: Engine::GetInstance().moduleLoader->CleanAndLoadScene(child->path); break;
-                }
-            }
-        }
-
-        if (!dragging && ImGui::IsItemHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-        {
-            if (!isSelected)
-            {
-                bool ctrlPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
-                bool shiftPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
-                bool eraseSelecteds = !(ctrlPressed || shiftPressed);
-                if (eraseSelecteds) selectedNodes.clear();
-                SelectNode(child);
-            }
-            
-            dragging = true;
-        }
-
-        if (dragging && child->isDirectory && ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly))
-        {
-            pathToDrop = child->path;
-            ImGui::GetWindowDrawList()->AddRect(
-                ImGui::GetItemRectMin(),
-                ImGui::GetItemRectMax(),
-                IM_COL32(0, 255, 255, 255),
-                0.0f,
-                0,
-                1.0f
-            );
-        }
-
 
         if (renamingNode == child)
         {
@@ -422,8 +406,6 @@ void ProjectWindow::DrawFolderContent()
 
     if (ImGui::BeginPopupContextWindow("BackgroundContext", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
     {
-        
-
         if (ImGui::MenuItem("Refresh"))
         {
             Engine::GetInstance().moduleResources->CheckForFilesModifications();
@@ -572,8 +554,9 @@ DirectoryNode* ProjectWindow::FindNodeByPath(DirectoryNode* node, const std::str
     return nullptr;
 }
 
-void ProjectWindow::SelectNode(DirectoryNode* direcoryNode)
+void ProjectWindow::SelectNode(DirectoryNode* direcoryNode, bool eraseSelecteds = true)
 {
+    if (eraseSelecteds) selectedNodes.clear();
     if (std::find(selectedNodes.begin(), selectedNodes.end(), direcoryNode) == selectedNodes.end())
     {
         selectedNodes.push_back(direcoryNode);

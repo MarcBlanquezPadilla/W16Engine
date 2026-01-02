@@ -1,4 +1,5 @@
 #pragma once
+#include "Global.h"
 #include "Module.h"
 #include "EventListener.h"
 #include "utils/Config.h"
@@ -50,6 +51,7 @@ public:
 	std::vector<GameObject*> GetAllGameObjects() const { return allGameObjects; };
 	std::vector<GameObject*> GetStaticGameObjects() const { return staticGameObjects; };
 	std::vector<GameObject*> GetDynamicGameObjects() const { return dynamicGameObjects; };
+	GameObject* GetObjectByUUID(UID uuid);
 	AABB GetWorldLimits();
 	Tree* GetTree() { return staticTree; }
 

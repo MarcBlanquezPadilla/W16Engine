@@ -356,22 +356,19 @@ void ModuleEditor::TestMouseRay(int mouseX, int mouseY, int width, int height)
 
 void ModuleEditor::SetSelected(GameObject* gameObject, bool eraseSelecteds)
 {
-
-	if (eraseSelecteds && gameObject != nullptr)
+	if (eraseSelecteds)
 	{
 		for (GameObject* go : selectedGameObjects) {
-			Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
-			if (mesh) { mesh->drawStencil = false; mesh->drawNormals = false; mesh->drawMesh = false; }
+			if (go != nullptr)
+			{
+				Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
+				if (mesh) { mesh->drawStencil = false; mesh->drawNormals = false; mesh->drawMesh = false; }
+			}
 		}
 		selectedGameObjects.clear();
-	}
-	if (gameObject == nullptr)
-	{
-		if (eraseSelecteds) {
+	};
 
-		}
-		return;
-	}
+	if (gameObject == nullptr) return;
 
 	auto it = std::find(selectedGameObjects.begin(), selectedGameObjects.end(), gameObject);
 

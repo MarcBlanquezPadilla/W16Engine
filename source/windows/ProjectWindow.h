@@ -45,7 +45,7 @@ private:
 
     void ChangeCurrentNode(DirectoryNode* direcoryNode);
     DirectoryNode* FindNodeByPath(DirectoryNode* root, const std::string& path);
-    void SelectNode(DirectoryNode* direcoryNode);
+    void SelectNode(DirectoryNode* direcoryNode, bool eraseSelecteds);
 
     void AddAssetToScene(DirectoryNode* direcoryNode);
 
@@ -64,8 +64,6 @@ private:
     std::vector<DirectoryNode*> selectedNodes = {};
     std::vector<DirectoryNode*> nodesToDelete = {};
 
-    std::string pathToDrop;
-
     unsigned int folderIconTextureID = 0;
     unsigned int fileIconTextureID = 0;
     unsigned int modelIconTextureID = 0;
@@ -74,7 +72,6 @@ private:
     unsigned int sceneIconTextureID = 0;
 
     bool expandTreeToSelection = false;
-    bool dragging = false;
     bool isFocused = false;
     bool windowChanged = false;
 

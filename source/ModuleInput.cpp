@@ -5,9 +5,6 @@
 
 #include "utils/Log.h"
 
-
-#define MAX_KEYS 300
-
 ModuleInput::ModuleInput(bool startEnabled) : Module(startEnabled)
 {
 	name = "input";
@@ -72,9 +69,10 @@ bool ModuleInput::Start()
 bool ModuleInput::PreUpdate()
 {
 	static SDL_Event event;
-	const bool* keys = SDL_GetKeyboardState(NULL);
+	int numKeys;
+	const bool* keys = SDL_GetKeyboardState(&numKeys);
 	mouseWheelY = 0;
-	for (int i = 0; i < MAX_KEYS; ++i)
+	for (int i = 0; i < MAX_KEYS && i < numKeys; ++i)
 	{
 		if (keys[i] == 1)
 		{
@@ -203,7 +201,7 @@ bool ModuleInput::CleanUp()
 {
 	LOG("Quitting SDL event subsystem");
 	SDL_QuitSubSystem(SDL_INIT_EVENTS);
-	delete keyboard;
+	delete [] keyboard;
 
 	if (controller != nullptr) {
 		SDL_CloseGamepad(controller);

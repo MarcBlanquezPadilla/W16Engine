@@ -2,13 +2,17 @@
 #include "imgui.h"
 #include "ImGuizmo.h"
 #include "../Engine.h"
+#include "../Global.h"
 #include "../ModuleEditor.h"
 #include "../CameraLens.h"
 #include "../EditorCamera.h"
 #include "../ModuleRender.h"
+#include "../ModuleResources.h"
+#include "../ModuleLoader.h"
 #include "../ModuleWindow.h"
 #include "../ModuleInput.h"
 #include "../utils/Log.h"
+#include "../utils/FileUtils.h"
 #include "../components/Transform.h"
 #include "../GameObject.h"
 
@@ -84,6 +88,32 @@ void SceneWindow::Draw()
 	ImVec2 winPos = ImGui::GetCursorScreenPos();
 
 	ImGui::Image((ImTextureID)(intptr_t)textureID, viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+
+	if(ImGui::BeginDragDropTarget())
+	{
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSETS_DRAG))
+		{
+			const char* dataPtr = (const char*)payload->Data;
+			const char* endPtr = dataPtr + payload->DataSize;
+
+			while (dataPtr < endPtr)
+			{
+				std::string path = dataPtr;
+				if (path.empty()) break;
+
+				if (!IsFileDirectory(path))
+				{
+					Resource::Type type = Engine::GetInstance().moduleResources->GetTypeFromExtension(path);
+					if (type == Resource::model) Engine::GetInstance().moduleLoader->LoadModel(path);
+					else if (type == Resource::scene) Engine::GetInstance().moduleLoader->CleanAndLoadScene(path);
+					else if (type == Resource::texture) Engine::GetInstance().moduleLoader->LoadTextureToGameObjects(path, Engine::GetInstance().moduleEditor->GetSelectedGameObjects());
+				}
+
+				dataPtr += path.length() + 1;
+			}
+		}
+		ImGui::EndDragDropTarget();
+	}
 
 	//PICKING
 	if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0) && !ImGuizmo::IsOver())

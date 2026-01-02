@@ -32,10 +32,10 @@ Engine::Engine() {
     AddModule(moduleEvents);
     AddModule(moduleWindow);
     AddModule(moduleInput);
+    AddModule(moduleScene);
     AddModule(moduleRender);
     AddModule(moduleResources);
     AddModule(moduleLoader);
-    AddModule(moduleScene);
     AddModule(moduleEditor);
 }
 
@@ -48,7 +48,8 @@ bool Engine::Awake() {
         ret = module->Awake();
         if (!ret) {
 
-            continue;
+            LOG("CRITICAL: %s failed in Awake!", module->name.c_str());
+            return false;
         }
     }
 
@@ -66,7 +67,8 @@ bool Engine::Start() {
         ret = module->Start();
         if (!ret) {
 
-            continue;
+            LOG("CRITICAL: %s failed in Start!", module->name.c_str());
+            return false;
         }
     }
 
@@ -82,7 +84,8 @@ bool Engine::PreUpdate() {
         ret = module->PreUpdate();
         if (!ret) {
 
-            continue;
+            LOG("CRITICAL: %s failed in Pre Update!", module->name.c_str());
+            return false;
         }
     }
 
@@ -98,7 +101,8 @@ bool Engine::Update() {
         ret = module->Update();
         if (!ret) {
 
-            continue;
+            LOG("CRITICAL: %s failed in Update!", module->name.c_str());
+            return false;
         }
     }
 
@@ -120,7 +124,8 @@ bool Engine::PostUpdate() {
         ret = module->PostUpdate();
         if (!ret) {
 
-            continue;
+            LOG("CRITICAL: %s failed in Post Update!", module->name.c_str());
+            return false;
         }
     }
 
@@ -139,7 +144,7 @@ bool Engine::CleanUp() {
 
         if (module->CleanUp() == false)
         {
-            LOG("Error cleaning up module %s", module->name.c_str());
+            LOG("CRITICAL: %s failed Cleaning Up!", module->name.c_str());
             ret = false;
         }
 

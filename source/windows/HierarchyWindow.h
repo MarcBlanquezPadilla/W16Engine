@@ -16,7 +16,5 @@ public:
     bool isFocused;
 
 private:
-    GameObject* objectToDrop = nullptr;
     GameObject* objectToSelect = nullptr;
-    bool dragging = false;
 };
