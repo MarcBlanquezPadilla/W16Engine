@@ -1,6 +1,7 @@
 #pragma once
 #include "Resource.h"
 #include "../geometry/Vertex.h"
+#include "../geometry/Bone.h"
 #include "../utils/AABB.h"
 #include <vector>
 
@@ -17,6 +18,7 @@ struct StencilData
 	unsigned int VAO = 0;
 	unsigned int VBO = 0;
 };
+
 
 class ResourceMesh : public Resource
 {
@@ -36,6 +38,7 @@ public:
 
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
+	std::vector<Bone> bones;
 
 	AABB localAABB;
 

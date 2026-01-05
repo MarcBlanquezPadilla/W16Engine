@@ -3,8 +3,6 @@
 #include "../Global.h"
 #include "../utils/Log.h"
 
-
-
 struct Vertex
 {
     glm::vec3 position;
@@ -28,7 +26,5 @@ struct Vertex
                 return;
             }
         }
-        
-        LOG("Vertex exceeds max bone influence limit (%d). Discarding lowest weights.", MAX_BONE_INFLUENCE);
     }
 };

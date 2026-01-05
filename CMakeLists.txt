@@ -99,6 +99,7 @@ add_executable(W16Engine
 	source/geometry/Plane.h
 	source/geometry/Plane.cpp
 	source/geometry/Vertex.h
+	source/geometry/Bone.h
 	source/resources/Resource.h
 	source/resources/Resource.cpp
 	source/resources/ResourceUser.h

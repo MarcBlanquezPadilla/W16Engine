@@ -399,6 +399,7 @@ bool ModuleResources::CreateInternalResources()
 	{
 		std::vector<Vertex> vertices;
 		std::vector<unsigned int> indices;
+		std::vector<Bone> noBones;
 
 		vertices = {
 
@@ -443,7 +444,7 @@ bool ModuleResources::CreateInternalResources()
 
 		ImporterMesh* importer = new ImporterMesh();
 
-		importer->Import(cubePath, CUBE, Resource::Type::mesh, vertices, indices);
+		importer->Import(cubePath, CUBE, Resource::Type::mesh, vertices, indices, noBones);
 
 		delete importer;	
 	}
@@ -455,6 +456,7 @@ bool ModuleResources::CreateInternalResources()
 	{
 		std::vector<Vertex> vertices;
 		std::vector<unsigned int> indices;
+		std::vector<Bone> noBones;
 		glm::vec3 apex = glm::vec3(0.0f, 0.5f, 0.0f);
 
 		vertices = {
@@ -489,7 +491,7 @@ bool ModuleResources::CreateInternalResources()
 		};
 
 		ImporterMesh* importer = new ImporterMesh();
-		importer->Import(pyramidPath, PYRAMID, Resource::Type::mesh, vertices, indices);
+		importer->Import(pyramidPath, PYRAMID, Resource::Type::mesh, vertices, indices, noBones);
 		delete importer;
 	}
 	CreateResource("Internal resource", pyramidPath, PYRAMID, Resource::Type::mesh);
@@ -500,6 +502,7 @@ bool ModuleResources::CreateInternalResources()
 	{
 		std::vector<Vertex> vertices;
 		std::vector<unsigned int> indices;
+		std::vector<Bone> noBones;
 
 		const int sectors = 36;
 		const int stacks = 18;
@@ -545,7 +548,7 @@ bool ModuleResources::CreateInternalResources()
 
 		ImporterMesh* importer = new ImporterMesh();
 
-		importer->Import(spherePath, SPHERE, Resource::Type::mesh, vertices, indices);
+		importer->Import(spherePath, SPHERE, Resource::Type::mesh, vertices, indices, noBones);
 
 		delete importer;
 	}

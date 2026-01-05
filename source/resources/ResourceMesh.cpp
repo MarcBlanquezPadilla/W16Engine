@@ -37,6 +37,7 @@ bool ResourceMesh::LoadToMemory_Internal()
 	UID fileUID = 0;
 	int fileType = 0;
 
+	// 1. LEER CABECERA
 	file.read(reinterpret_cast<char*>(&fileUID), sizeof(UID));
 	file.read(reinterpret_cast<char*>(&fileType), sizeof(int));
 
@@ -46,8 +47,13 @@ bool ResourceMesh::LoadToMemory_Internal()
 		file.close(); return false;
 	}
 
+	// 2. LEER TAMAÑOS (Ahora son 3)
+	// Necesitamos una variable temporal para bones porque no es miembro directo de la clase (es el tamaño del vector)
+	uint32_t numBones = 0;
+
 	file.read(reinterpret_cast<char*>(&numVertices), sizeof(uint32_t));
 	file.read(reinterpret_cast<char*>(&numIndices), sizeof(uint32_t));
+	file.read(reinterpret_cast<char*>(&numBones), sizeof(uint32_t)); // --- NUEVO ---
 
 	if (numVertices == 0)
 	{
@@ -55,25 +61,52 @@ bool ResourceMesh::LoadToMemory_Internal()
 		file.close(); return false;
 	}
 
+	// 3. REDIMENSIONAR VECTORES
 	vertices.resize(numVertices);
 	indices.resize(numIndices);
+	bones.resize(numBones); // --- NUEVO: Asegúrate de tener std::vector<BoneInfo> bones en el .h
 
+	// 4. LEER DATOS MASIVOS (Vértices e Índices)
+	// Nota: sizeof(Vertex) ahora incluye automáticamente boneIDs y weights, así que esto leerá todo de golpe.
 	file.read(reinterpret_cast<char*>(vertices.data()), numVertices * sizeof(Vertex));
 	file.read(reinterpret_cast<char*>(indices.data()), numIndices * sizeof(unsigned int));
 
+	// 5. LEER HUESOS (--- BLOQUE NUEVO ---)
+	// No podemos leerlo de golpe (.read total) porque los strings tienen tamaño variable.
+	for (unsigned int i = 0; i < numBones; i++)
+	{
+		// A. Tamaño del nombre
+		uint32_t nameSize = 0;
+		file.read(reinterpret_cast<char*>(&nameSize), sizeof(uint32_t));
+
+		// B. Caracteres del nombre
+		if (nameSize > 0)
+		{
+			bones[i].name.resize(nameSize);
+			file.read(&bones[i].name[0], nameSize);
+		}
+
+		// C. Matriz Offset (Bind Pose inversa)
+		file.read(reinterpret_cast<char*>(&bones[i].offsetMatrix), sizeof(glm::mat4));
+	}
+
 	file.close();
 
+	// 6. CÁLCULOS FINALES (AABB)
 	localAABB.SetNegativeInfinity();
 	for (const auto& v : vertices)
 	{
 		localAABB.Enclose(v.position);
 	}
 
+	// 7. GENERAR BUFFERS GPU
+	// Importante: Asegúrate de que GenerateBuffers() configura los atributos 3 (IDs) y 4 (Pesos)
 	if (!GenerateBuffers()) return false;
 
+	// Si usas Stencil o algo extra
 	GenerateStencilBuffers();
 
-	LOG("Mesh loaded: %s", libraryPath.c_str());
+	LOG("Mesh loaded: %s (Bones: %d)", libraryPath.c_str(), numBones);
 	return true;
 }
 
