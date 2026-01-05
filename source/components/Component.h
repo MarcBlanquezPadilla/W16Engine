@@ -7,7 +7,8 @@ enum class ComponentType {
     Transform,
     Mesh,
     Texture,
-    Camera
+    Camera,
+    Animation
 };
 
 class Component

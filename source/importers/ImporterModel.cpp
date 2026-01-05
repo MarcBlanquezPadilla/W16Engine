@@ -5,6 +5,7 @@
 #include "ImporterModel.h"
 #include "ImporterMesh.h"
 #include "ImporterTexture.h"
+#include "ImporterAnimation.h"
 
 #include "../GameObject.h"
 #include "../components/Transform.h"
@@ -62,6 +63,58 @@ bool ImporterModel::Import_Internal()
 				}
 			}
 		}
+	}
+
+	if (scene->HasAnimations())
+	{
+		for (unsigned int i = 0; i < scene->mNumAnimations; i++)
+		{
+			ImporterAnimation* animImporter = new ImporterAnimation();
+			aiAnimation* assimpAnim = scene->mAnimations[i];
+
+			// 1. Obtener nombre y buscar UID persistente
+			std::string animName = assimpAnim->mName.C_Str();
+			if (animName.empty()) animName = "Animation_" + std::to_string(i);
+
+			UID animUID = 0;
+
+			// Si ya existe en el meta (reimportación), mantenemos el UID
+			if (UIDsByName.find(animName) != UIDsByName.end())
+			{
+				animUID = UIDsByName[animName];
+			}
+			else
+			{
+				animUID = GenerateNewUID();
+			}
+
+			// 2. Importar la animación a la librería
+			// Asegúrate de que tu función GetLibraryPath funciona con Resource::Type::animation
+			// O construye la ruta manualmente si es necesario (ej: "Library/Animations/" + uid)
+			std::string libPath = GetLibraryPath(animUID);
+
+			bool success = animImporter->Import(libPath, animUID, assimpAnim);
+
+			if (success)
+			{
+				// 3. Añadir a la lista de referencias para que salga en el .meta
+				ImportMeshData importData;
+				importData.name = animName;
+				importData.type = Resource::Type::animation; // Asegúrate de tener este enum
+				importData.path = assetPath; // Pertenece a este archivo FBX 
+
+				referedUIDs.emplace(animUID, importData);
+
+				LOG("Animation '%s' imported successfully.", animName.c_str());
+			}
+			else
+			{
+				LOG("Failed to import animation '%s'.", animName.c_str());
+			}
+			delete animImporter;
+		}
+
+		
 	}
 
 	GameObject* modelGameObject = new GameObject(true, GetFileName(assetPath));

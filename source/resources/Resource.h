@@ -18,8 +18,6 @@ public:
 		model,
 		mesh,
 		scene,
-		audio,
-		bone,
 		animation,
 		unknown
 	};

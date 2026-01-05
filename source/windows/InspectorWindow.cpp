@@ -124,6 +124,10 @@ void InspectorWindow::DrawGameObjectInfo(GameObject* gameObject)
         {
             if (ImGui::MenuItem("Texture")) { gameObject->AddComponent(ComponentType::Texture); ImGui::CloseCurrentPopup(); }
         }
+        if (gameObject->GetComponent(ComponentType::Animation) == nullptr)
+        {
+            if (ImGui::MenuItem("Animation")) { gameObject->AddComponent(ComponentType::Animation); ImGui::CloseCurrentPopup(); }
+        }
 
         ImGui::EndPopup();
     }

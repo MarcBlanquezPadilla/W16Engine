@@ -7,6 +7,7 @@
 #include "components/Transform.h"
 #include "components/Texture.h"
 #include "components/Camera.h"
+#include "components/Animation.h"
 #include "utils/Log.h"
 #include "utils/AABB.h"
 #include "utils/Config.h"
@@ -123,6 +124,9 @@ Component* GameObject::AddComponent(ComponentType type)
 	case ComponentType::Camera:
 		component = new Camera(this);
 		break;
+	case ComponentType::Animation:
+		component = new Animation(this);
+		break;
 	}
 
 	if (component != nullptr)
@@ -186,6 +190,27 @@ void GameObject::AddChild(GameObject* gameObject)
 	gameObject->name = newName;
 	gameObject->parent = this;
 	childs.push_back(gameObject);
+}
+
+
+GameObject* GameObject::FindChild(const std::string& nameToFind)
+{
+	if (name == nameToFind)
+	{
+		return this;
+	}
+
+	for (GameObject* child : childs)
+	{
+		GameObject* found = child->FindChild(nameToFind);
+
+		if (found != nullptr)
+		{
+			return found;
+		}
+	}
+
+	return nullptr;
 }
 
 void GameObject::Save(Config& gameObjectNode)

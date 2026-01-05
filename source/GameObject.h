@@ -27,12 +27,14 @@ public:
 	bool CleanUp();
 	bool CleanUpRecursive();
 
+
+
 	void AddChild(GameObject* gameObject);
 	void RemoveChild(GameObject* childToRemove);
 	std::vector<GameObject*> GetChilds() { return childs;}
 	void SetParent(GameObject* newParent);
-
 	bool IsDescendant(GameObject* potentialParent);
+	GameObject* FindChild(const std::string& findName);
 
 	void Save(Config& gameObjectNode);
 	void Load(Config& gameObjectNode);

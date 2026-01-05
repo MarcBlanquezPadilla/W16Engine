@@ -59,6 +59,8 @@ add_executable(W16Engine
 	source/components/Texture.h
 	source/components/Camera.cpp
 	source/components/Camera.h
+	source/components/Animation.cpp
+	source/components/Animation.h
 	source/windows/UIWindow.h
 	source/windows/ConfigWindow.cpp
 	source/windows/ConfigWindow.h
@@ -108,6 +110,8 @@ add_executable(W16Engine
 	source/resources/ResourceModel.cpp
 	source/resources/ResourceMesh.h
 	source/resources/ResourceMesh.cpp
+	source/resources/ResourceAnimation.h
+	source/resources/ResourceAnimation.cpp
 	source/importers/Importer.h
 	source/importers/Importer.cpp
 	source/importers/ImporterTexture.h
@@ -116,6 +120,8 @@ add_executable(W16Engine
 	source/importers/ImporterScene.cpp
 	source/importers/ImporterMesh.h
 	source/importers/ImporterMesh.cpp
+	source/importers/ImporterAnimation.h
+	source/importers/ImporterAnimation.cpp
 	source/importers/ImporterModel.h
 	source/importers/ImporterModel.cpp
 )

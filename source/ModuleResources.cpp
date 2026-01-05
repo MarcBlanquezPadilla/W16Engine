@@ -17,6 +17,7 @@
 #include "resources/ResourceScene.h"
 #include "resources/ResourceModel.h"
 #include "resources/ResourceMesh.h"
+#include "resources/ResourceAnimation.h"
 
 #include <vector>
 #include <string>
@@ -368,6 +369,7 @@ bool ModuleResources::CreateResource(const std::string& assetPath, const std::st
 		case Resource::mesh: ret = new ResourceMesh(uid); break;
 		case Resource::model: ret = new ResourceModel(uid); break;
 		case Resource::scene: ret = new ResourceScene(uid); break;
+		case Resource::animation: ret = new ResourceAnimation(uid); break;
 	}
 
 	if (ret != nullptr)

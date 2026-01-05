@@ -44,3 +44,5 @@ static UID GenerateNewUID()
 #define GRID_COLOR 0.7f,0.7f,0.7f,0.2f
 #define STENCIL_COLOR 0.0f,1.0f,1.0f,1.0f
 #define CAMERA_COLOR 1.0f,1.0f,1.0f,1.0f
+
+#define MAX_BONE_INFLUENCE 4

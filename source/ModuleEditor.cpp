@@ -320,7 +320,9 @@ void ModuleEditor::TestMouseRay(int mouseX, int mouseY, int width, int height)
 		const auto& vertices = mesh->GetResource()->vertices;
 		const auto& indices = mesh->GetResource()->indices;
 
-		for (size_t i = 0; i < indices.size(); i += 3)
+		if (vertices.empty() || indices.size() < 3) continue;
+
+		for (size_t i = 0; i + 2 < indices.size(); i += 3)
 		{
 			glm::vec3 v0 = vertices[indices[i]].position;
 			glm::vec3 v1 = vertices[indices[i + 1]].position;
