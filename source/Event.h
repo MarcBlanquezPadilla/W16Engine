@@ -37,7 +37,7 @@ struct Event
         StaticChanged,
 
         //TRANSFORM
-        TransformChanged,
+        StaticTransformChanged,
 
         //UTILS
         CastRay,

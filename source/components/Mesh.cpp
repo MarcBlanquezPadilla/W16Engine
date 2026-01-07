@@ -144,7 +144,7 @@ AABB Mesh::GetGlobalAABB()
     {
         glm::mat4 globalMatrix;
 
-        if (owner->TryGetGlobalMatrix(globalMatrix))
+        if (owner->GetGlobalMatrix(globalMatrix))
         {
             return r->localAABB.GetGlobalAABB(globalMatrix);
         }

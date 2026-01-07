@@ -27,6 +27,7 @@ public:
     ResourceMesh* GetResource() const;
     UID GetMeshUID() const { return resourceUID; }
     AABB GetGlobalAABB();
+    const std::vector<GameObject*> GetBones() { return boneGameObjects; };
     void LinkBones();
 
     void OnResourceLost(UID resourceUID) override;

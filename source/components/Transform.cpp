@@ -78,6 +78,8 @@ glm::mat4 Transform::GetGlobalMatrix()
 
 void Transform::InvalidateGlobalMatrix()
 {
+    if (dirtyGlobalMatrix) return;
+
     dirtyGlobalMatrix = true;
 
     if (owner != nullptr)
@@ -147,7 +149,7 @@ void Transform::SetScale(glm::vec3 _scale)
 void Transform::OnTransformChanged()
 {
     InvalidateGlobalMatrix();
-    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::TransformChanged, owner));
+    if (owner->GetStatic()) Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::StaticTransformChanged, owner));
 }
 
 void Transform::OnEditor()

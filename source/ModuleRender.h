@@ -115,6 +115,9 @@ private:
 	GLint modelMatrixLoc;
 	GLint viewMatrixLoc;
 	GLint projectionMatrixLoc;
+	GLint hasUVsLoc;
+	GLint hasBonesLoc = 0;;
+	GLint finalBonesMatricesLoc= 0;
 
 	//NORMAL DRAW
 	unsigned int normalShaderProgram;
@@ -150,7 +153,7 @@ private:
 	unsigned int defaultTextureID;
 	unsigned int checkerTextureID;
 
-	GLint hasUVsLoc;
+
 
 	std::string glVersion;
 	std::string glslVersion;

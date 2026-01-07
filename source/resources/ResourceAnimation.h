@@ -5,20 +5,13 @@
 #include <vector>
 #include <string>
 
-template <typename T>
-struct AnimationKey
-{
-    double time;
-    T value;
-};
-
 struct Channel
 {
     std::string name;
 
-    std::vector<AnimationKey<glm::vec3>> positionKeys;
-    std::vector<AnimationKey<glm::quat>> rotationKeys;
-    std::vector<AnimationKey<glm::vec3>> scaleKeys;
+    std::vector<glm::vec3> positionKeys;
+    std::vector<glm::quat> rotationKeys;
+    std::vector<glm::vec3> scaleKeys;
 };
 
 class ResourceAnimation : public Resource

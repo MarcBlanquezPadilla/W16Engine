@@ -28,7 +28,7 @@ bool ModuleScene::Awake()
 	staticTree = new Tree(TreeType::Octree, 6, 8);
 	staticTreeDirty = true;
 
-	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::TransformChanged, this);
+	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::StaticTransformChanged, this);
 	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::StaticChanged, this);
 
 	return ret;
@@ -280,7 +280,7 @@ void ModuleScene::QueryRayToDynamic(Ray ray, std::vector<GameObject*>& results)
 	{
 		AABB aabb;
 		glm::mat4 globalMatrix;
-		if (obj->GetStatic() || !obj->TryGetGlobalAABB(aabb) || !obj->TryGetGlobalMatrix(globalMatrix)) continue;
+		if (obj->GetStatic() || !obj->TryGetGlobalAABB(aabb) || !obj->GetGlobalMatrix(globalMatrix)) continue;
 
 		float dist;
 		if (ray.RayIntersectsAABB(aabb, dist))
@@ -340,12 +340,10 @@ void ModuleScene::OnEvent(const Event& event)
 {
 	switch (event.type)
 	{
-	case Event::Type::TransformChanged:
+	case Event::Type::StaticTransformChanged:
 	{
 		{
-			GameObject* gameObject = event.data.gameObject.gameObject;
-			if(!gameObject) return;
-			if (gameObject->GetStatic()) 
+			if(!event.data.gameObject.gameObject) return;
 				MarkStaticTreeDirty();
 		}
 		break;

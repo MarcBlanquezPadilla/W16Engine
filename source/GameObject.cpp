@@ -27,6 +27,7 @@ GameObject::GameObject(bool _enabled, std::string _name) : enabled(_enabled), na
 	UUID = GenerateUUID();
 	parent = nullptr;
 	transform = nullptr;
+	isStatic = false;
 	childs.clear();
 	components.clear();
 	AddComponent(ComponentType::Transform);
@@ -36,7 +37,6 @@ GameObject::~GameObject()
 {
 
 }
-
 
 bool GameObject::Update()
 {
@@ -304,7 +304,7 @@ void GameObject::Load(Config& gameObjectNode)
 	}
 }
 
-bool GameObject::TryGetGlobalMatrix(glm::mat4& globalMatrix)
+bool GameObject::GetGlobalMatrix(glm::mat4& globalMatrix)
 {
 	if (transform)
 	{

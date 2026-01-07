@@ -11,20 +11,44 @@ struct Vertex
 
     int boneIDs[MAX_BONE_INFLUENCE] = { -1, -1, -1, -1 };
 
-    // Pesos: ¿Cuánto le afecta? (ej: 0.8 al hueso 0, 0.2 al hueso 5)
     float weights[MAX_BONE_INFLUENCE] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-    // Función auxiliar para añadir datos fácilmente desde el Importer
-    void AddBoneData(int boneID, float weight)
+    void Vertex::AddBoneData(int boneID, float weight)
     {
-        for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+        // 1. PRIMER INTENTO: BUSCAR HUECO LIBRE
+        for (int i = 0; i < 4; i++) // Asumiendo MAX_BONE_INFLUENCE = 4
         {
-            if (boneIDs[i] == -1) // Buscamos hueco libre
+            if (boneIDs[i] == -1)
             {
                 boneIDs[i] = boneID;
                 weights[i] = weight;
-                return;
+                return; // Entró limpio, nos vamos.
             }
         }
+
+        // 2. SEGUNDO INTENTO: EL ARRAY ESTÁ LLENO, ¿VALE LA PENA ENTRAR?
+        // Buscamos cuál es el hueso más débil que tenemos guardado
+        int smallestIndex = -1;
+        float smallestWeight = weight; // Empezamos comparando con el nuevo
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (weights[i] < smallestWeight)
+            {
+                smallestWeight = weights[i];
+                smallestIndex = i;
+            }
+        }
+
+        // Si encontramos uno más débil que el nuevo, lo reemplazamos
+        if (smallestIndex != -1)
+        {
+            boneIDs[smallestIndex] = boneID;
+            weights[smallestIndex] = weight;
+        }
+
+        // Si no encontramos ninguno más débil (smallestIndex sigue siendo -1),
+        // significa que el nuevo peso es basura comparado con los que ya tenemos.
+        // Lo descartamos y no hacemos nada.
     }
 };

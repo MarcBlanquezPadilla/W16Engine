@@ -49,7 +49,7 @@ public:
 	//COMPONENTS
 	Component* AddComponent(ComponentType type);
 	Component* GetComponent(ComponentType type);
-	bool TryGetGlobalMatrix(glm::mat4& globalMatrix);
+	bool GetGlobalMatrix(glm::mat4& globalMatrix);
 	bool TryGetGlobalAABB(AABB& globalAABB);
 	bool TryGetComponent(ComponentType type, Component*& component);
 

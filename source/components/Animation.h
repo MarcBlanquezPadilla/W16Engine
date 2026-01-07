@@ -3,8 +3,20 @@
 #include "../resources/ResourceAnimation.h"
 #include <map>
 #include <string>
+#include <vector> // Importante para std::vector
 
 class GameObject;
+class Transform;
+
+// ESTRUCTURA DE CACHÉ OPTIMIZADA
+struct AnimLink {
+    const Channel* channel;
+    Transform* transform;
+
+    mutable int lastPosIndex = 0;
+    mutable int lastRotIndex = 0;
+    mutable int lastSclIndex = 0;
+};
 
 class Animation : public Component
 {
@@ -12,26 +24,26 @@ public:
     Animation(GameObject* owner);
     virtual ~Animation();
 
-    void Update() override; // Aquí actualizaremos el tiempo y los huesos
+    void Update() override;
 
-    ComponentType GetType() override {
-        return ComponentType::Animation;
-    };
+    ComponentType GetType() override { return ComponentType::Animation; };
 
-    // Gestión de la animación
     void SetAnimation(UID animUID);
     void Play();
     void Stop();
     void Pause();
 
-    void OnEditor() override; // Para verlo en el inspector
+    void OnEditor() override;
 
 private:
-    // Esta función busca los GameObjects hijos que coincidan con los nombres de los canales
+    void RebuildAnimCache();
     void InvalidateBoneMap();
+
+    // GETTERS CORREGIDOS: Reciben 'int&' (referencia al índice específico)
     glm::vec3 GetPositionValue(const Channel& channel, float currentAnimTime);
     glm::quat GetRotationValue(const Channel& channel, float currentAnimTime);
     glm::vec3 GetScaleValue(const Channel& channel, float currentAnimTime);
+
     void UpdateTransformations(const ResourceAnimation* animation, float currentAnimTime);
 
 public:
@@ -42,13 +54,11 @@ public:
     bool playing = false;
     float speed = 1.0f;
 
-    float currentTime = 0.0f; // Tiempo actual en Ticks (no en segundos)
+    float currentTime = 0.0f;
 
 private:
-    // CACHÉ: Nombre del hueso -> Puntero al GameObject
-    // Ejemplo: "Mixamorig:LeftHand" -> GameObject* (0x00...)
-    std::map<std::string, GameObject*> boneMap;
+    std::map<std::string, GameObject*> boneMap; // Solo se usa al cargar
+    std::vector<AnimLink> animCache;            // Se usa en cada frame (Rápido)
 
-    // Auxiliar para dibujar el esqueleto (Debug)
     bool debugDraw = false;
 };

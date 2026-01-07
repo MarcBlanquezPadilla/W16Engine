@@ -18,7 +18,7 @@ Animation::~Animation()
 {
     if (currentAnimation)
     {
-        currentAnimation->UnloadFromMemory(); // Importante liberar al borrar el componente
+        currentAnimation->UnloadFromMemory();
     }
 }
 
@@ -40,7 +40,10 @@ void Animation::SetAnimation(UID uid)
         if (currentAnimation)
         {
             currentAnimation->LoadToMemory();
+            int numChannels = currentAnimation->channels.size();
+
             InvalidateBoneMap();
+            RebuildAnimCache();
         }
     }
 }
@@ -59,7 +62,7 @@ void Animation::Stop()
 // EL CORAZÓN DEL SISTEMA
 void Animation::Update()
 {
-    if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_I) == KEY_DOWN) SetAnimation(3783009225);
+    if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_I) == KEY_DOWN) SetAnimation(3573241609);
 
     if (!playing || !currentAnimation) return;
 
@@ -149,127 +152,125 @@ void Animation::OnEditor()
 
 glm::vec3 Animation::GetPositionValue(const Channel& channel, float currentAnimTime)
 {
-    // 1. Caso base: Solo hay una key
-    if (channel.positionKeys.size() == 1) return channel.positionKeys[0].value;
+    // 1. CALCULO DIRECTO DEL ÍNDICE (O(1))
+    // Convertimos el tiempo (float) directamente a entero (int).
+    // Ej: 15.7 -> 15
+    int frameIndex = (int)currentAnimTime;
 
-    // 2. Buscar entre qué dos keys estamos
-    // Iteramos hasta encontrar la key justo ANTES de nuestro tiempo actual
-    int p0_index = -1;
-    for (int i = 0; i < channel.positionKeys.size() - 1; i++)
-    {
-        if (currentAnimTime < channel.positionKeys[i + 1].time)
-        {
-            p0_index = i;
-            break;
-        }
-    }
+    // 2. SEGURIDAD RÁPIDA (Solo comprobamos bordes)
+    int numKeys = channel.positionKeys.size();
 
-    // Seguridad: si nos pasamos de tiempo (final de la anim), devolvemos la última
-    if (p0_index == -1) return channel.positionKeys.back().value;
+    // Si nos salimos por arriba, devolvemos la última
+    if (frameIndex >= numKeys - 1) return channel.positionKeys.back();
+    // Si es negativo (raro), la primera
+    if (frameIndex < 0) return channel.positionKeys[0];
 
-    // 3. Calcular factor de interpolación (0.0 a 1.0)
-    int p1_index = p0_index + 1;
-    const auto& key0 = channel.positionKeys[p0_index];
-    const auto& key1 = channel.positionKeys[p1_index];
+    // 3. INTERPOLACIÓN (Suavizado entre frames)
+    // Aunque esté baked a 30FPS, si el juego va a 60FPS necesitamos interpolar
+    // para que no se vea a saltos.
+    const auto& key0 = channel.positionKeys[frameIndex];
+    const auto& key1 = channel.positionKeys[frameIndex + 1];
 
-    float deltaTime = (float)(key1.time - key0.time);
-    float factor = (currentAnimTime - (float)key0.time) / deltaTime;
+    // El factor es simplemente la parte decimal del tiempo
+    // Ej: Tiempo 15.7 -> frame 15, factor 0.7
+    float factor = currentAnimTime - (float)frameIndex;
 
-    // Seguridad numérica
-    if (factor < 0.0f) factor = 0.0f;
-    if (factor > 1.0f) factor = 1.0f;
-
-    // 4. Interpolación Lineal (LERP) para posición [cite: 66]
-    return glm::mix(key0.value, key1.value, factor);
+    return glm::mix(key0, key1, factor);
 }
 
 glm::quat Animation::GetRotationValue(const Channel& channel, float currentAnimTime)
 {
-    if (channel.rotationKeys.size() == 1) return channel.rotationKeys[0].value;
+    int frameIndex = (int)currentAnimTime;
+    int numKeys = channel.rotationKeys.size();
 
-    int p0_index = -1;
-    for (int i = 0; i < channel.rotationKeys.size() - 1; i++)
-    {
-        if (currentAnimTime < channel.rotationKeys[i + 1].time)
-        {
-            p0_index = i;
-            break;
-        }
-    }
+    if (frameIndex >= numKeys - 1) return channel.rotationKeys.back();
+    if (frameIndex < 0) return channel.rotationKeys[0];
 
-    if (p0_index == -1) return channel.rotationKeys.back().value;
+    const auto& key0 = channel.rotationKeys[frameIndex];
+    const auto& key1 = channel.rotationKeys[frameIndex + 1];
 
-    int p1_index = p0_index + 1;
-    const auto& key0 = channel.rotationKeys[p0_index];
-    const auto& key1 = channel.rotationKeys[p1_index];
+    float factor = currentAnimTime - (float)frameIndex;
 
-    float deltaTime = (float)(key1.time - key0.time);
-    float factor = (currentAnimTime - (float)key0.time) / deltaTime;
-
-    if (factor < 0.0f) factor = 0.0f;
-    if (factor > 1.0f) factor = 1.0f;
-
-    // 4. Interpolación Esférica (SLERP) para rotación [cite: 67]
-    // glm::slerp maneja el camino más corto automáticamente
-    return glm::slerp(key0.value, key1.value, factor);
+    // AQUÍ SÍ USAMOS SLERP (Para evitar glitches de rotación)
+    return glm::slerp(key0, key1, factor);
 }
 
 glm::vec3 Animation::GetScaleValue(const Channel& channel, float currentAnimTime)
 {
-    if (channel.scaleKeys.size() == 1) return channel.scaleKeys[0].value;
+    int frameIndex = (int)currentAnimTime;
+    int numKeys = channel.scaleKeys.size();
 
-    int p0_index = -1;
-    for (int i = 0; i < channel.scaleKeys.size() - 1; i++)
-    {
-        if (currentAnimTime < channel.scaleKeys[i + 1].time)
-        {
-            p0_index = i;
-            break;
-        }
-    }
+    if (frameIndex >= numKeys - 1) return channel.scaleKeys.back();
+    if (frameIndex < 0) return channel.scaleKeys[0];
 
-    if (p0_index == -1) return channel.scaleKeys.back().value;
+    const auto& key0 = channel.scaleKeys[frameIndex];
+    const auto& key1 = channel.scaleKeys[frameIndex + 1];
 
-    int p1_index = p0_index + 1;
-    const auto& key0 = channel.scaleKeys[p0_index];
-    const auto& key1 = channel.scaleKeys[p1_index];
+    float factor = currentAnimTime - (float)frameIndex;
 
-    float deltaTime = (float)(key1.time - key0.time);
-    float factor = (currentAnimTime - (float)key0.time) / deltaTime;
-
-    if (factor < 0.0f) factor = 0.0f;
-    if (factor > 1.0f) factor = 1.0f;
-
-    // 4. Interpolación Lineal (LERP) para escala
-    return glm::mix(key0.value, key1.value, factor);
+    return glm::mix(key0, key1, factor);
 }
+
+// =============================================================
+// UPDATE LIMPIO (Sin Strings, Sin Mapas)
+// =============================================================
 
 void Animation::UpdateTransformations(const ResourceAnimation* animation, float currentAnimTime)
 {
-    // Recorremos todos los canales (huesos) que tiene la animación
-    for (const auto& channel : animation->channels)
+    // Iteramos sobre la CACHÉ (std::vector), acceso secuencial rapidísimo
+    for (const auto& link : animCache)
     {
-        // Buscamos el GameObject en nuestro mapa caché
+        // Usamos los punteros directos que guardamos en RebuildAnimCache
+        // Y pasamos los índices por referencia para que se actualicen solos
+
+        glm::vec3 position = GetPositionValue(*link.channel, currentAnimTime);
+        glm::quat rotation = GetRotationValue(*link.channel, currentAnimTime);
+        glm::vec3 scale = GetScaleValue(*link.channel, currentAnimTime);
+
+        // Aplicamos la transformación en BATCH (Todo de golpe)
+        // (Asegúrate de haber implementado SetLocalTransform en Transform.cpp como hablamos)
+        link.transform->SetPosition(position);
+        link.transform->SetQuaternionRotation(rotation);
+        link.transform->SetScale(scale);
+    }
+}
+
+void Animation::RebuildAnimCache()
+{
+    animCache.clear();
+    if (!currentAnimation || !owner) return;
+
+    // Reservamos memoria para evitar realocaciones
+    animCache.reserve(currentAnimation->channels.size());
+
+    for (const auto& channel : currentAnimation->channels)
+    {
+        // 1. Buscamos el GameObject (Lento, pero solo 1 vez)
         auto it = boneMap.find(channel.name);
 
         if (it != boneMap.end())
         {
             GameObject* boneGO = it->second;
-            Transform* transform = (Transform*)boneGO->GetComponent(ComponentType::Transform);
 
-            if (transform)
+            // 2. Buscamos el Transform (Lento, pero solo 1 vez)
+            Transform* t = (Transform*)boneGO->GetComponent(ComponentType::Transform);
+
+            if (t)
             {
-                // 1. Calculamos valores interpolados
-                glm::vec3 position = GetPositionValue(channel, currentAnimTime);
-                glm::quat rotation = GetRotationValue(channel, currentAnimTime);
-                glm::vec3 scale = GetScaleValue(channel, currentAnimTime);
+                // 3. ¡ÉXITO! Creamos el Enlace Directo
+                AnimLink link;
+                link.channel = &channel; // Guardamos puntero al canal
+                link.transform = t;      // Guardamos puntero al transform
 
-                // 2. Aplicamos al Transform
-                // IMPORTANTE: Las animaciones siempre son locales respecto al padre
-                transform->SetPosition(position);
-                transform->SetQuaternionRotation(rotation); // Asegúrate de tener este setter
-                transform->SetScale(scale);
+                // Reseteamos índices
+                link.lastPosIndex = 0;
+                link.lastRotIndex = 0;
+                link.lastSclIndex = 0;
+
+                animCache.push_back(link);
             }
         }
     }
+
+    LOG("AnimCache reconstruida. %d huesos enlazados.", animCache.size());
 }

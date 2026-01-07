@@ -13,7 +13,6 @@ ResourceAnimation::~ResourceAnimation()
 
 bool ResourceAnimation::LoadToMemory_Internal()
 {
-    // libraryPath viene de la clase padre Resource
     std::ifstream file(libraryPath, std::ios::in | std::ios::binary);
 
     if (!file.is_open())
@@ -22,27 +21,25 @@ bool ResourceAnimation::LoadToMemory_Internal()
         return false;
     }
 
-    // 1. LEER CABECERA (Saltamos UID y Tipo porque ya los sabemos, pero hay que avanzar el cursor)
-    // El Importer guardó: UID (4 u 8 bytes) + Type (4 bytes)
-    // Si tu UID es 'unsigned int' son 4 bytes, si es 'unsigned long long' son 8. 
-    // Asumiré que UID es 4 bytes (uint32) por seguridad, ajusta si es uint64.
-    file.seekg(sizeof(UID) + sizeof(int));
+    // 1. CABECERA (Igual que antes)
+    file.seekg(sizeof(UID) + sizeof(int)); // Ajusta si UID es uint64_t
 
-    // 2. LEER DATOS GLOBALES
+    // 2. GLOBALES (Igual que antes)
     file.read((char*)&duration, sizeof(double));
     file.read((char*)&ticksPerSecond, sizeof(double));
 
-    // 3. LEER CANALES
+    // 3. CANALES
     uint32_t numChannels = 0;
     file.read((char*)&numChannels, sizeof(uint32_t));
 
+    channels.clear(); // Buena práctica limpiar antes
     channels.reserve(numChannels);
 
     for (uint32_t i = 0; i < numChannels; i++)
     {
         Channel channel;
 
-        // A. Nombre
+        // A. Nombre (Igual)
         uint32_t nameSize = 0;
         file.read((char*)&nameSize, sizeof(uint32_t));
 
@@ -52,7 +49,7 @@ bool ResourceAnimation::LoadToMemory_Internal()
             file.read(&channel.name[0], nameSize);
         }
 
-        // B. Tamaños de keys
+        // B. Tamaños (Igual)
         uint32_t numPos = 0;
         uint32_t numRot = 0;
         uint32_t numScl = 0;
@@ -61,23 +58,29 @@ bool ResourceAnimation::LoadToMemory_Internal()
         file.read((char*)&numRot, sizeof(uint32_t));
         file.read((char*)&numScl, sizeof(uint32_t));
 
-        // C. Leer Keys (Lectura en bloque rapida)
+        // C. LEER KEYS (¡AQUÍ ESTÁ EL CAMBIO!) 
+        // Leemos bloques de glm::vec3 y glm::quat directamente.
+        // Ya no leemos el 'double time' porque no existe en el archivo optimizado.
+
         if (numPos > 0)
         {
             channel.positionKeys.resize(numPos);
-            file.read((char*)channel.positionKeys.data(), numPos * sizeof(AnimationKey<glm::vec3>));
+            // sizeof(glm::vec3) son 12 bytes (float x, y, z)
+            file.read((char*)channel.positionKeys.data(), numPos * sizeof(glm::vec3));
         }
 
         if (numRot > 0)
         {
             channel.rotationKeys.resize(numRot);
-            file.read((char*)channel.rotationKeys.data(), numRot * sizeof(AnimationKey<glm::quat>));
+            // sizeof(glm::quat) son 16 bytes (float w, x, y, z)
+            file.read((char*)channel.rotationKeys.data(), numRot * sizeof(glm::quat));
         }
 
         if (numScl > 0)
         {
             channel.scaleKeys.resize(numScl);
-            file.read((char*)channel.scaleKeys.data(), numScl * sizeof(AnimationKey<glm::vec3>));
+            // sizeof(glm::vec3) son 12 bytes
+            file.read((char*)channel.scaleKeys.data(), numScl * sizeof(glm::vec3));
         }
 
         channels.push_back(channel);
