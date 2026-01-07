@@ -151,7 +151,7 @@ void SceneWindow::Draw()
 
 		for (GameObject* go : selectedObjects)
 		{
-			Transform* t = (Transform*)go->GetComponent(ComponentType::Transform);
+			Transform* t = (Transform*)go->transform;
 			if (t) {
 				centerPos += t->GetGlobalPosition();
 				validTransforms++;
@@ -183,7 +183,7 @@ void SceneWindow::Draw()
 			initialCenterPos = centerPos;
 
 			for (GameObject* go : selectedObjects) {
-				Transform* t = (Transform*)go->GetComponent(ComponentType::Transform);
+				Transform* t = (Transform*)go->transform;
 				if (t) {
 					initialPositions.push_back(t->GetGlobalPosition());
 					initialScales.push_back(t->GetScale());
@@ -217,7 +217,7 @@ void SceneWindow::Draw()
 				int idx = 0;
 				for (GameObject* go : selectedObjects)
 				{
-					Transform* t = (Transform*)go->GetComponent(ComponentType::Transform);
+					Transform* t = (Transform*)go->transform;
 					if (t && idx < initialPositions.size() && idx < initialScales.size())
 					{
 						glm::vec3 finalScale = initialScales[idx] * newScale;
@@ -234,7 +234,7 @@ void SceneWindow::Draw()
 
 						glm::mat4 parentInverse = glm::mat4(1.0f);
 						if (go->parent) {
-							Transform* pT = (Transform*)go->parent->GetComponent(ComponentType::Transform);
+							Transform* pT = (Transform*)go->parent->transform;
 							if (pT) parentInverse = glm::inverse(pT->GetGlobalMatrix());
 						}
 						glm::vec3 localPos = glm::vec3(parentInverse * glm::vec4(newPosition, 1.0f));
@@ -251,7 +251,7 @@ void SceneWindow::Draw()
 
 				for (GameObject* go : selectedObjects)
 				{
-					Transform* t = (Transform*)go->GetComponent(ComponentType::Transform);
+					Transform* t = (Transform*)go->transform;
 					if (t)
 					{
 						glm::mat4 objectGlobal = t->GetGlobalMatrix();
@@ -259,7 +259,7 @@ void SceneWindow::Draw()
 
 						glm::mat4 parentInverse = glm::mat4(1.0f);
 						if (go->parent) {
-							Transform* pT = (Transform*)go->parent->GetComponent(ComponentType::Transform);
+							Transform* pT = (Transform*)go->parent->transform;
 							if (pT) parentInverse = glm::inverse(pT->GetGlobalMatrix());
 						}
 

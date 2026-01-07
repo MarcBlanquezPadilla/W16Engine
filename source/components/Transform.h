@@ -37,8 +37,8 @@ public:
     glm::quat GetQuaterionRotation();
     glm::vec3 GetScale();
 
-    glm::mat4 GetLocalMatrix();
-    glm::mat4 GetGlobalMatrix();
+    const glm::mat4& GetLocalMatrix();
+    const glm::mat4& GetGlobalMatrix();
     void InvalidateGlobalMatrix();
 
 

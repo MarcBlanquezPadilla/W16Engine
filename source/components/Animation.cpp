@@ -62,7 +62,7 @@ void Animation::Stop()
 // EL CORAZÓN DEL SISTEMA
 void Animation::Update()
 {
-    if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_I) == KEY_DOWN) SetAnimation(3573241609);
+    if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_I) == KEY_DOWN) SetAnimation(2075231193);
 
     if (!playing || !currentAnimation) return;
 
@@ -253,7 +253,7 @@ void Animation::RebuildAnimCache()
             GameObject* boneGO = it->second;
 
             // 2. Buscamos el Transform (Lento, pero solo 1 vez)
-            Transform* t = (Transform*)boneGO->GetComponent(ComponentType::Transform);
+            Transform* t = (Transform*)boneGO->transform;
 
             if (t)
             {
@@ -262,10 +262,6 @@ void Animation::RebuildAnimCache()
                 link.channel = &channel; // Guardamos puntero al canal
                 link.transform = t;      // Guardamos puntero al transform
 
-                // Reseteamos índices
-                link.lastPosIndex = 0;
-                link.lastRotIndex = 0;
-                link.lastSclIndex = 0;
 
                 animCache.push_back(link);
             }

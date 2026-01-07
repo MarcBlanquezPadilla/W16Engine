@@ -46,7 +46,7 @@ void Camera::Update()
 
 void Camera::UpdateTransform()
 {
-    Transform* transform = (Transform*)owner->GetComponent(ComponentType::Transform);
+    Transform* transform = (Transform*)owner->transform;
 
     if (transform && lens)
     {

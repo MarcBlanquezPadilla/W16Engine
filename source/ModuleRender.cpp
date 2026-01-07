@@ -268,11 +268,12 @@ void ModuleRender::BuildRenderListsRecursive(GameObject* gameObject, const Camer
 	{
 		if (gameObject && gameObject->transform)
 		{
-			gameObject->GetGlobalMatrix(globalModelMatrix);
 			Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
 
 			if (mesh && mesh->enabled && mesh->GetResource() && mesh->GetResource()->IsLoadedToMemory())
 			{
+				gameObject->GetGlobalMatrix(globalModelMatrix);
+				
 				const AABB& globalAABB = mesh->GetGlobalAABB();
 
 				if (camera->GetFrustum()->InFrustum(globalAABB))

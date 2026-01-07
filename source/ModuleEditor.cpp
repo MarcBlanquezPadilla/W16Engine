@@ -308,7 +308,7 @@ void ModuleEditor::TestMouseRay(int mouseX, int mouseY, int width, int height)
 	{
 		GameObject* go = gameObject;
 		Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
-		Transform* transform = (Transform*)go->GetComponent(ComponentType::Transform);
+		Transform* transform = (Transform*)go->transform;
 
 		glm::mat4 modelMatrix = transform->GetGlobalMatrix();
 		glm::mat4 inverseModel = glm::inverse(modelMatrix);

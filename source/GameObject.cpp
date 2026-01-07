@@ -420,7 +420,7 @@ void GameObject::RemoveChild(GameObject* childToRemove)
 
 		childToRemove->parent = nullptr;
 
-		Transform* childTransform = (Transform*)childToRemove->GetComponent(ComponentType::Transform);
+		Transform* childTransform = (Transform*)childToRemove->transform;
 		if (childTransform)
 		{
 			glm::mat4 globalMatrix = childTransform->GetGlobalMatrix();

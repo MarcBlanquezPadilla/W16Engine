@@ -124,7 +124,7 @@ bool EditorCamera::PreUpdate()
 
 		for (GameObject* go : gameObjects)
 		{
-			Transform* transform = (Transform*)go->GetComponent(ComponentType::Transform);
+			Transform* transform = (Transform*)go->transform;
 			if (transform)
 			{
 				centerPosition += transform->GetGlobalPosition();
@@ -159,7 +159,7 @@ bool EditorCamera::PreUpdate()
 
 		for (GameObject* go : gameObjects)
 		{
-			Transform* transform = (Transform*)go->GetComponent(ComponentType::Transform);
+			Transform* transform = (Transform*)go->transform;
 			if (transform)
 			{
 				centerPosition += transform->GetGlobalPosition();

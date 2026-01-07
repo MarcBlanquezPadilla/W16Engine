@@ -12,10 +12,6 @@ class Transform;
 struct AnimLink {
     const Channel* channel;
     Transform* transform;
-
-    mutable int lastPosIndex = 0;
-    mutable int lastRotIndex = 0;
-    mutable int lastSclIndex = 0;
 };
 
 class Animation : public Component

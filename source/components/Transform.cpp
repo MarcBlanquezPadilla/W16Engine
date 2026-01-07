@@ -49,7 +49,7 @@ void Transform::Load(Config& componentNode)
     SetScale(componentNode.GetVector3("Scale"));
 }
 
-glm::mat4 Transform::GetLocalMatrix()
+const glm::mat4& Transform::GetLocalMatrix()
 {
     if (dirtyLocalMatrix)
     {
@@ -64,7 +64,7 @@ glm::mat4 Transform::GetLocalMatrix()
     return localMatrix;
 }
 
-glm::mat4 Transform::GetGlobalMatrix()
+const glm::mat4& Transform::GetGlobalMatrix()
 {
     if (dirtyGlobalMatrix)
     {
