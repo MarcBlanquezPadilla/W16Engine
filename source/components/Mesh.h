@@ -27,6 +27,7 @@ public:
     ResourceMesh* GetResource() const;
     UID GetMeshUID() const { return resourceUID; }
     AABB GetGlobalAABB();
+    void LinkBones();
 
     void OnResourceLost(UID resourceUID) override;
 
@@ -39,4 +40,8 @@ public:
 private:
     UID resourceUID = 0;
     mutable ResourceMesh* resource = nullptr;
+
+    std::vector<GameObject*> boneGameObjects;
+    bool debugSkeleton = false;
+    bool bonesLinked = false;
 };

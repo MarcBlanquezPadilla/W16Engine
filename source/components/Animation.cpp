@@ -59,7 +59,7 @@ void Animation::Stop()
 // EL CORAZÓN DEL SISTEMA
 void Animation::Update()
 {
-    if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_I) == KEY_DOWN) SetAnimation(1041867955);
+    if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_I) == KEY_DOWN) SetAnimation(3783009225);
 
     if (!playing || !currentAnimation) return;
 

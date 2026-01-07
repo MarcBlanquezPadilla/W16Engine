@@ -4,6 +4,7 @@
 #include "EventListener.h"
 #include "utils/Config.h"
 #include <vector>
+#include <unordered_map>
 
 class GameObject;
 class Tree;
@@ -48,7 +49,7 @@ public:
 
 	//GETTERS
 	std::vector<GameObject*> GetRootGameObjects() const { return rootGameObjects; };
-	std::vector<GameObject*> GetAllGameObjects() const { return allGameObjects; };
+	std::unordered_map<UID, GameObject*> GetAllGameObjects() const { return allGameObjects; };
 	std::vector<GameObject*> GetStaticGameObjects() const { return staticGameObjects; };
 	std::vector<GameObject*> GetDynamicGameObjects() const { return dynamicGameObjects; };
 	GameObject* GetObjectByUUID(UID uuid);
@@ -62,7 +63,7 @@ public:
 	Config sceneBackup;
 
 private:
-	std::vector<GameObject*> allGameObjects;
+	std::unordered_map<UID, GameObject*> allGameObjects;
 	std::vector<GameObject*> rootGameObjects;
 	std::vector<GameObject*> dynamicGameObjects;
 	std::vector<GameObject*> staticGameObjects;

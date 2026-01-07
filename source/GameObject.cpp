@@ -132,6 +132,7 @@ Component* GameObject::AddComponent(ComponentType type)
 	if (component != nullptr)
 	{
 		components[type] = component;
+		component->owner = this;
 		component->Start();
 		component->OnEnable();
 	}

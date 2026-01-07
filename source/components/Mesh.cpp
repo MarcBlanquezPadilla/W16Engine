@@ -19,7 +19,18 @@ Mesh::~Mesh()
 
 void Mesh::Update()
 {
+    if (!bonesLinked)
+    {
+        if (resource != nullptr)
+        {
+            LinkBones(); // <--- LLAMADA CLAVE
 
+            if (!boneGameObjects.empty() || resource->bones.empty())
+            {
+                bonesLinked = true;
+            }
+        }
+    }
 }
 
 void Mesh::CleanUp()
@@ -66,13 +77,55 @@ void Mesh::SetResource(UID uid)
     if (res != nullptr && res->GetType() == Resource::Type::mesh)
     {
         resource = (ResourceMesh*)res;
-
         resource->AddReference(this);
+        bonesLinked = false;
+        boneGameObjects.clear();
     }
     else
     {
         resource = nullptr;
     }
+}
+
+void Mesh::LinkBones()
+{
+    if (!resource) return;
+
+    // Si el resource no tiene huesos, no hacemos nada
+    if (resource->bones.empty()) {
+        boneGameObjects.clear();
+        return;
+    }
+
+    // 1. Limpiamos y preparamos el vector
+    boneGameObjects.clear();
+    boneGameObjects.resize(resource->bones.size());
+
+    // 2. Buscamos la raíz del modelo (subimos hasta encontrar el Animator o el tope)
+    GameObject* root = owner;
+    for (int i = 0; root->parent != nullptr; i++) {
+        root = root->parent;
+        // Si tuvieras un componente Animator, podrías parar aquí.
+    }
+
+    // 3. Enlazamos los nombres del Resource con los GameObjects de la Scene [cite: 9]
+    for (size_t i = 0; i < resource->bones.size(); ++i)
+    {
+        std::string boneName = resource->bones[i].name;
+        GameObject* foundBone = root->FindChild(boneName);
+
+        if (foundBone)
+        {
+            boneGameObjects[i] = foundBone;
+        }
+        else
+        {
+            // Si no lo encuentra, null (y luego pondremos matriz identidad)
+            boneGameObjects[i] = nullptr;
+            LOG("Warning: Bone '%s' not found for mesh '%s'", boneName.c_str(), owner->name.c_str());
+        }
+    }
+    LOG("Skinning: Linked %d bones for mesh %s", boneGameObjects.size(), owner->name.c_str());
 }
 
 ResourceMesh* Mesh::GetResource() const

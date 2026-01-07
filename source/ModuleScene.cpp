@@ -53,9 +53,9 @@ bool ModuleScene::Update()
 	bool ret = true;
 
 	//GAME OBJECTS
-	for (GameObject* gameObject : allGameObjects)
+	for (auto pair : allGameObjects)
 	{
-		gameObject->Update();
+		pair.second->Update();
 	}
 
 	return ret;
@@ -67,42 +67,21 @@ bool ModuleScene::PostUpdate()
 	{
 		for (GameObject* go : objectsPendingToDelete)
 		{
-			auto it = std::remove(allGameObjects.begin(), allGameObjects.end(), go);
-			if (it != allGameObjects.end()) allGameObjects.erase(it, allGameObjects.end());
+			// 1. Lo sacamos de todas las listas (usando la función que acabamos de arreglar)
+			RemoveGameObject(go);
 
-			if (go->parent == nullptr)
-			{
-				auto itR = std::remove(rootGameObjects.begin(), rootGameObjects.end(), go);
-				if (itR != rootGameObjects.end()) rootGameObjects.erase(itR, rootGameObjects.end());
-			}
-
-			auto itS = std::remove(staticGameObjects.begin(), staticGameObjects.end(), go);
-			if (itS != staticGameObjects.end())
-			{
-				staticGameObjects.erase(itS, staticGameObjects.end());
-				MarkStaticTreeDirty();
-			}
-
-			auto itD = std::remove(dynamicGameObjects.begin(), dynamicGameObjects.end(), go);
-			if (itD != dynamicGameObjects.end())
-			{
-				dynamicGameObjects.erase(itD, dynamicGameObjects.end());
-			}
-
-			if (go->parent != nullptr)
-			{
-				go->parent->RemoveChild(go);
-			}
-
+			// 2. Lo matamos de verdad (Memoria)
 			go->CleanUp();
 			delete go;
 		}
 
+		// Limpiamos la lista de pendientes
 		objectsPendingToDelete.clear();
 	}
 
 	return true;
 }
+
 bool ModuleScene::CleanUp()
 {
 	bool ret = true;
@@ -118,11 +97,11 @@ bool ModuleScene::CleanUp()
 		staticTree = nullptr;
 	}
 
-	for (GameObject* go : allGameObjects)
+	for (auto pair : allGameObjects)
 	{
-		if (go) {
-			go->CleanUp();
-			delete go;
+		if (pair.second) {
+			pair.second->CleanUp();
+			delete pair.second;
 		}
 	}
 
@@ -142,10 +121,13 @@ bool ModuleScene::NewScene()
 	bool ret = true;
 	LOG("Creating New Scene");
 
-	for (int i = 0; i < allGameObjects.size(); i++)
+	for (auto& pair : allGameObjects)
 	{
-		allGameObjects[i]->CleanUp();
-		delete allGameObjects[i];
+		if (pair.second)
+		{
+			pair.second->CleanUp();
+			delete pair.second;
+		}
 	}
 	allGameObjects.clear();
 	rootGameObjects.clear();
@@ -165,7 +147,7 @@ bool ModuleScene::NewScene()
 
 void ModuleScene::AddGameObject(GameObject* gameObject)
 {
-	allGameObjects.push_back(gameObject);
+	allGameObjects.emplace(gameObject->UUID, gameObject);
 
 	if (gameObject->GetStatic())
 	{
@@ -193,19 +175,23 @@ void ModuleScene::RemoveGameObject(GameObject* go)
 {
 	if (go == nullptr) return;
 
-	for (GameObject* child : go->childs)
+	// Primero borramos recursivamente a los hijos para que no queden huérfanos
+	// (Copia de seguridad: iteramos al revés o con cuidado, pero la recursividad simple vale por ahora)
+	while (!go->childs.empty())
 	{
-		RemoveGameObject(child);
+		RemoveGameObject(go->childs[0]);
 	}
 
-	auto it = std::remove(allGameObjects.begin(), allGameObjects.end(), go);
-	if (it != allGameObjects.end()) allGameObjects.erase(it, allGameObjects.end());
+	// --- AQUÍ LA CORRECCIÓN DEL MAPA ---
+	// Borramos por CLAVE (UID), no por valor
+	allGameObjects.erase(go->UUID);
+	// -----------------------------------
 
+	// Borrado de vectores (esto sigue igual, std::remove funciona aquí)
 	if (go->GetStatic())
 	{
 		auto itS = std::remove(staticGameObjects.begin(), staticGameObjects.end(), go);
-		if (itS != staticGameObjects.end())
-		{
+		if (itS != staticGameObjects.end()) {
 			staticGameObjects.erase(itS, staticGameObjects.end());
 			MarkStaticTreeDirty();
 		}
@@ -213,14 +199,16 @@ void ModuleScene::RemoveGameObject(GameObject* go)
 	else
 	{
 		auto itD = std::remove(dynamicGameObjects.begin(), dynamicGameObjects.end(), go);
-		if (itD != dynamicGameObjects.end())
-		{
-			dynamicGameObjects.erase(itD, dynamicGameObjects.end());
-		}
+		if (itD != dynamicGameObjects.end()) dynamicGameObjects.erase(itD, dynamicGameObjects.end());
 	}
 
 	auto itR = std::remove(rootGameObjects.begin(), rootGameObjects.end(), go);
 	if (itR != rootGameObjects.end()) rootGameObjects.erase(itR, rootGameObjects.end());
+
+	// Desvincular del padre si tiene
+	if (go->parent != nullptr) {
+		go->parent->RemoveChild(go);
+	}
 }
 
 void ModuleScene::DestroyGameObject(GameObject* gameObject)
@@ -310,14 +298,7 @@ void ModuleScene::QueryRayToDynamic(Ray ray, std::vector<GameObject*>& results)
 
 GameObject* ModuleScene::GetObjectByUUID(UID uuid)
 {
-	for (GameObject* gameObject : GetAllGameObjects())
-	{
-		if (gameObject->UUID == uuid)
-		{
-			return gameObject;
-		}
-	}
-	return nullptr;
+	return allGameObjects[uuid];
 }
 
 AABB ModuleScene::GetWorldLimits()
@@ -328,10 +309,10 @@ AABB ModuleScene::GetWorldLimits()
 
 	bool hasMeshes = false;
 
-	for (GameObject* gameObject : GetAllGameObjects())
+	for (auto pair : GetAllGameObjects())
 	{
 		AABB objectAABB;
-		if (!gameObject || !gameObject->TryGetGlobalAABB(objectAABB)) continue;
+		if (!pair.second || !pair.second->TryGetGlobalAABB(objectAABB)) continue;
 
 		hasMeshes = true;
 		mapLimits.min = glm::min(mapLimits.min, objectAABB.min);
