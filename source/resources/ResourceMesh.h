@@ -36,9 +36,9 @@ public:
 	uint32_t numVertices = 0;
 	uint32_t numIndices = 0;
 
-	std::vector<Vertex> vertices;
-	std::vector<unsigned int> indices;
-	std::vector<Bone> bones;
+	std::vector<Vertex> vertices = {};
+	std::vector<unsigned int> indices = {};
+	std::vector<Bone> bones = {};
 
 	AABB localAABB;
 

@@ -310,37 +310,40 @@ void ModuleEditor::TestMouseRay(int mouseX, int mouseY, int width, int height)
 		Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
 		Transform* transform = (Transform*)go->transform;
 
-		glm::mat4 modelMatrix = transform->GetGlobalMatrix();
-		glm::mat4 inverseModel = glm::inverse(modelMatrix);
-
-		Ray localRay;
-		localRay.origin = glm::vec3(inverseModel * glm::vec4(ray.origin, 1.0f));
-		localRay.direction = glm::normalize(glm::vec3(inverseModel * glm::vec4(ray.direction, 0.0f)));
-
-		const auto& vertices = mesh->GetResource()->vertices;
-		const auto& indices = mesh->GetResource()->indices;
-
-		if (vertices.empty() || indices.size() < 3) continue;
-
-		for (size_t i = 0; i + 2 < indices.size(); i += 3)
+		if (mesh->GetResource() && mesh->GetResource()->IsLoadedToMemory())
 		{
-			glm::vec3 v0 = vertices[indices[i]].position;
-			glm::vec3 v1 = vertices[indices[i + 1]].position;
-			glm::vec3 v2 = vertices[indices[i + 2]].position;
+			glm::mat4 modelMatrix = transform->GetGlobalMatrix();
+			glm::mat4 inverseModel = glm::inverse(modelMatrix);
 
-			glm::vec2 baryPosition;
-			float distance;
+			Ray localRay;
+			localRay.origin = glm::vec3(inverseModel * glm::vec4(ray.origin, 1.0f));
+			localRay.direction = glm::normalize(glm::vec3(inverseModel * glm::vec4(ray.direction, 0.0f)));
 
-			if (glm::intersectRayTriangle(localRay.origin, localRay.direction, v0, v1, v2, baryPosition, distance))
+			const auto& vertices = mesh->GetResource()->vertices;
+			const auto& indices = mesh->GetResource()->indices;
+
+			if (vertices.empty() || indices.size() < 3) continue;
+
+			for (size_t i = 0; i + 2 < indices.size(); i += 3)
 			{
-				glm::vec3 localHitPoint = localRay.origin + localRay.direction * distance;
-				glm::vec3 worldHitPoint = glm::vec3(modelMatrix * glm::vec4(localHitPoint, 1.0f));
-				float worldDistance = glm::distance(ray.origin, worldHitPoint);
+				glm::vec3 v0 = vertices[indices[i]].position;
+				glm::vec3 v1 = vertices[indices[i + 1]].position;
+				glm::vec3 v2 = vertices[indices[i + 2]].position;
 
-				if (worldDistance < minDistance)
+				glm::vec2 baryPosition;
+				float distance;
+
+				if (glm::intersectRayTriangle(localRay.origin, localRay.direction, v0, v1, v2, baryPosition, distance))
 				{
-					minDistance = worldDistance;
-					closestHit = go;
+					glm::vec3 localHitPoint = localRay.origin + localRay.direction * distance;
+					glm::vec3 worldHitPoint = glm::vec3(modelMatrix * glm::vec4(localHitPoint, 1.0f));
+					float worldDistance = glm::distance(ray.origin, worldHitPoint);
+
+					if (worldDistance < minDistance)
+					{
+						minDistance = worldDistance;
+						closestHit = go;
+					}
 				}
 			}
 		}

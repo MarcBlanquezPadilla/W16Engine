@@ -38,7 +38,7 @@ ModuleResources::~ModuleResources()
 bool ModuleResources::Awake()
 {
 	bool ret = true;
-	checkChangesInterval = 100.0f;
+	checkChangesInterval = 1.0f;
 
 	CreateInternalResources();
 	CheckChangesInAssetsFolder();

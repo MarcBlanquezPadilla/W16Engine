@@ -1,42 +1,42 @@
 <?xml version="1.0"?>
-<Data UID="2931999412" Type="1" FileHash="57955457" ReferedObjects="39">
-	<ReferedObject UID="467435488" Name="City_building_030" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="746379879" Name="Building_V01_C.png" Path="Assets/Street/Building_V01_C.png" Type="0" />
-	<ReferedObject UID="877227313" Name="City_building_031" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="1138991891" Name="City_building_007" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="1245364074" Name="City_building_017" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="1360578069" Name="City_building_032" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="1425179400" Name="City_building_039" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="1449527366" Name="City_building_008" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="1450710720" Name="City_building_028" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="2052222864" Name="building03_c.tga" Path="Assets/Street/building03_c.tga" Type="0" />
-	<ReferedObject UID="2116129769" Name="City_building_016" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="2322960722" Name="City_building_041" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="2453415018" Name="City_building_010" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="2455230041" Name="City_building_036" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="2593820810" Name="City_building_024" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="2613042871" Name="Object010" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="2833377893" Name="City_building_011" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="2849724845" Name="City_building_034" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="2869160015" Name="City_building_001" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="2885124032" Name="building05 _c.tga" Path="Assets/Street/building05 _c.tga" Type="0" />
-	<ReferedObject UID="2887767212" Name="City_building_033" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="2914219750" Name="Plane001" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="2945062177" Name="City_building_035" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="3092815856" Name="City_building_026" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="3096994928" Name="City_building_022" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="3131296372" Name="City_building_037" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="3274347475" Name="Dummy001" Path="Assets/Street/scene.DAE" Type="4" />
-	<ReferedObject UID="3429543775" Name="building 01_c.tga" Path="Assets/Street/building 01_c.tga" Type="0" />
-	<ReferedObject UID="3604143104" Name="City_building_014" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="3676874586" Name="City_building_023" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="3733920848" Name="City_building_038" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="3776371716" Name="Building_V02_C.png" Path="Assets/Street/Building_V02_C.png" Type="0" />
-	<ReferedObject UID="3844388415" Name="Line002" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="4103124748" Name="building_016_c.tga" Path="Assets/Street/building_016_c.tga" Type="0" />
-	<ReferedObject UID="4214429007" Name="City_building_040" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="4214834882" Name="building 06_ c.tga" Path="Assets/Street/building 06_ c.tga" Type="0" />
-	<ReferedObject UID="4228911733" Name="City_building_004" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="4238119028" Name="City_building_013" Path="Assets/Street/scene.DAE" Type="2" />
-	<ReferedObject UID="4281702845" Name="building_025_c.tga" Path="Assets/Street/building_025_c.tga" Type="0" />
+<Data UID="611194846" Type="1" FileHash="57955457" ReferedObjects="39">
+	<ReferedObject UID="70975650" Name="City_building_028" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="125284263" Name="City_building_031" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="174864998" Name="Building_V02_C.png" Path="Assets/Street/Building_V02_C.png" Type="0" />
+	<ReferedObject UID="245144978" Name="City_building_008" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="470429755" Name="building 01_c.tga" Path="Assets/Street/building 01_c.tga" Type="0" />
+	<ReferedObject UID="632784657" Name="City_building_040" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="655134428" Name="City_building_038" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="754562688" Name="City_building_022" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="756526321" Name="building_025_c.tga" Path="Assets/Street/building_025_c.tga" Type="0" />
+	<ReferedObject UID="1000307042" Name="City_building_024" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="1030930190" Name="City_building_030" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="1230904293" Name="City_building_034" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="1468981876" Name="City_building_016" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="1780217853" Name="City_building_007" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="2114793268" Name="Building_V01_C.png" Path="Assets/Street/Building_V01_C.png" Type="0" />
+	<ReferedObject UID="2204064450" Name="City_building_023" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="2224769019" Name="City_building_032" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="2356666969" Name="City_building_001" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="2546800468" Name="building03_c.tga" Path="Assets/Street/building03_c.tga" Type="0" />
+	<ReferedObject UID="2706923968" Name="City_building_013" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="2742630898" Name="City_building_010" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="2958836728" Name="City_building_035" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="2980311226" Name="Line002" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="3056441369" Name="City_building_014" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="3180531888" Name="City_building_011" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="3189845948" Name="Dummy001" Path="Assets/Street/scene.DAE" Type="4" />
+	<ReferedObject UID="3406887847" Name="City_building_004" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="3465343682" Name="Object010" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="3606792191" Name="building_016_c.tga" Path="Assets/Street/building_016_c.tga" Type="0" />
+	<ReferedObject UID="3686838989" Name="City_building_026" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="3697813101" Name="Plane001" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="3703644729" Name="building 06_ c.tga" Path="Assets/Street/building 06_ c.tga" Type="0" />
+	<ReferedObject UID="3704615392" Name="building05 _c.tga" Path="Assets/Street/building05 _c.tga" Type="0" />
+	<ReferedObject UID="3752591525" Name="City_building_017" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="4028359295" Name="City_building_039" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="4118750519" Name="City_building_033" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="4187433713" Name="City_building_037" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="4198320388" Name="City_building_041" Path="Assets/Street/scene.DAE" Type="2" />
+	<ReferedObject UID="4211392728" Name="City_building_036" Path="Assets/Street/scene.DAE" Type="2" />
 </Data>

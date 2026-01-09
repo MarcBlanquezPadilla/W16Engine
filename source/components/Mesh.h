@@ -1,6 +1,7 @@
 #pragma once
 #include "Component.h"
 #include "../Global.h"
+#include "../EventListener.h"
 #include "../utils/AABB.h"
 #include "../resources/ResourceUser.h"
 
@@ -8,7 +9,7 @@ class ResourceMesh;
 class GameObject;
 class Config;
 
-class Mesh : public Component, public ResourceUser
+class Mesh : public Component, public ResourceUser, public EventListener
 {
 public:
     Mesh(GameObject* owner);
@@ -34,6 +35,7 @@ public:
     const std::vector<glm::mat4>& GetCachedBones() { return cachedBoneMatrices; };
 
     void OnResourceLost(UID resourceUID) override;
+    void OnEvent(const Event& event) override;
 
 public:
 

@@ -3,6 +3,7 @@
 #include "../GameObject.h"
 #include "../Engine.h"
 #include "../ModuleResources.h"
+#include "../ModuleEvents.h"
 #include "../utils/Time.h"
 #include "../utils/Log.h"
 #include "imgui.h"
@@ -11,39 +12,52 @@
 
 Animation::Animation(GameObject* owner) : Component(owner)
 {
+    Engine::GetInstance().moduleEvents->Subscribe(Event::Type::GameObjectDestroyed, this);
 }
 
 Animation::~Animation()
 {
-    if (currentAnimation)
+    CleanUp();
+}
+
+void Animation::CleanUp()
+{
+    Engine::GetInstance().moduleEvents->Unsubscribe(Event::Type::GameObjectDestroyed, this);
+    if (resource)
     {
-        currentAnimation->UnloadFromMemory();
+        resource->UnloadFromMemory();
+        resource->RemoveReference(this);
+        resource = nullptr;
+        resourceUID = 0;
     }
 }
 
 void Animation::SetAnimation(UID uid)
 {
-    // 1. Limpieza si ya teníamos una
-    if (currentAnimation)
+    if (resource)
     {
-        currentAnimation->UnloadFromMemory();
-        currentAnimation = nullptr;
+        resource->UnloadFromMemory();
+        resource->RemoveReference(this);
+        resource = nullptr;
     }
 
-    animationUID = uid;
+    resourceUID = uid;
 
-    // 2. Pedir recurso al módulo
-    if (uid != 0)
+    resource = (ResourceAnimation*)Engine::GetInstance().moduleResources->RequestResource(uid);
+    if (resource)
     {
-        currentAnimation = (ResourceAnimation*)Engine::GetInstance().moduleResources->RequestResource(uid);
-        if (currentAnimation)
-        {
-            currentAnimation->LoadToMemory();
-            int numChannels = currentAnimation->channels.size();
 
-            InvalidateBoneMap();
-            RebuildAnimCache();
-        }
+        resource->LoadToMemory();
+        resource->AddReference(this);
+        int numChannels = resource->channels.size();
+
+        InvalidateBoneMap();
+        RebuildAnimCache();
+    }
+    else
+    {
+        resource = nullptr;
+        resourceUID = 0;
     }
 }
 
@@ -77,45 +91,48 @@ void Animation::Stop()
 // EL CORAZÓN DEL SISTEMA
 void Animation::Update()
 {
-    if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_I) == KEY_DOWN) SetAnimation(2075231193);
+    if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_I) == KEY_DOWN) SetAnimation(3007017118);
 
-    if (!playing || !currentAnimation) return;
+    if (!playing || !resource) return;
+
+    if (invalidatingFlag)
+    {
+        InvalidateBoneMap();
+        RebuildAnimCache();
+        invalidatingFlag = false;
+    }
 
     float dt = Time::deltaTime;
-    currentTime += dt * currentAnimation->ticksPerSecond * speed;
+    currentTime += dt * resource->ticksPerSecond * speed;
 
-    if (currentTime >= currentAnimation->duration)
+    if (currentTime >= resource->duration)
     {
         if (loop)
         {
-            currentTime = fmod(currentTime, currentAnimation->duration);
+            currentTime = fmod(currentTime, resource->duration);
         }
         else
         {
-            currentTime = currentAnimation->duration;
+            currentTime = resource->duration;
             playing = false;
         }
     }
 
-    UpdateTransformations(currentAnimation, currentTime);
+    UpdateTransformations(resource, currentTime);
 }
 
 void Animation::InvalidateBoneMap()
 {
     boneMap.clear();
-    if (!currentAnimation || !owner) return;
+    if (!resource || !owner) return;
 
-    for (const auto& channel : currentAnimation->channels)
+    for (const auto& channel : resource->channels)
     {
         GameObject* bone = owner->FindChild(channel.name);
 
         if (bone)
         {
             boneMap[channel.name] = bone;
-        }
-        else
-        {
-            LOG("Warning: Animation channel '%s' not found in GameObject hierarchy.", channel.name.c_str());
         }
     }
 }
@@ -125,7 +142,7 @@ void Animation::OnEditor()
     if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen))
     {
         // Mostrar UID o Nombre
-        ImGui::Text("Anim UID: %d", animationUID);
+        ImGui::Text("Anim UID: %d", resource);
 
         // Botones de control
         if (ImGui::Button("Play")) Play();
@@ -133,9 +150,9 @@ void Animation::OnEditor()
         if (ImGui::Button("Stop")) Stop();
 
         // Slider de tiempo (scrubbing)
-        if (currentAnimation)
+        if (resource)
         {
-            float duration = (float)currentAnimation->duration;
+            float duration = (float)resource->duration;
             if (ImGui::SliderFloat("Time", &currentTime, 0.0f, duration))
             {
                 // Si movemos el slider, actualizamos la pose manualmente
@@ -144,7 +161,7 @@ void Animation::OnEditor()
             ImGui::Checkbox("Loop", &loop);
             ImGui::DragFloat("Speed", &speed, 0.1f, 0.0f, 5.0f);
 
-            ImGui::Text("Bones mapped: %d / %d", boneMap.size(), currentAnimation->channels.size());
+            ImGui::Text("Bones mapped: %d / %d", boneMap.size(), resource->channels.size());
         }
         else
         {
@@ -241,12 +258,12 @@ void Animation::UpdateTransformations(const ResourceAnimation* animation, float 
 void Animation::RebuildAnimCache()
 {
     animCache.clear();
-    if (!currentAnimation || !owner) return;
+    if (!resource || !owner) return;
 
     // Reservamos memoria para evitar realocaciones
-    animCache.reserve(currentAnimation->channels.size());
+    animCache.reserve(resource->channels.size());
 
-    for (const auto& channel : currentAnimation->channels)
+    for (const auto& channel : resource->channels)
     {
         // 1. Buscamos el GameObject (Lento, pero solo 1 vez)
         auto it = boneMap.find(channel.name);
@@ -275,4 +292,43 @@ void Animation::RebuildAnimCache()
     }
 
     LOG("AnimCache reconstruida. %d huesos enlazados.", animCache.size());
+}
+
+void Animation::OnEvent(const Event& event)
+{
+    switch (event.type)
+    {
+    case Event::Type::GameObjectDestroyed:
+    {
+        if (boneMap.empty()) return;
+
+        GameObject* deletedGO = event.data.gameObject.gameObject;
+
+        for (auto pair : boneMap)
+        {
+            if (pair.second == deletedGO)
+            {
+                pair.second = nullptr;
+
+                // B. Activamos la bandera para reconstruir en el siguiente Update
+                invalidatingFlag = true;
+            }
+        }
+
+        break;
+    }
+
+    default:
+        break;
+    }
+}
+
+void Animation::OnResourceLost(UID lostUID)
+{
+    if (resourceUID == lostUID)
+    {
+        LOG("Animation resource deleted! Removing reference in Component.");
+        resource = nullptr;
+        resourceUID = 0;
+    }
 }

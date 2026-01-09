@@ -33,7 +33,6 @@ void ModuleEvents::Subscribe(Event::Type eventType, EventListener* listener)
     if (std::find(listeners[eventType].begin(), listeners[eventType].end(), listener) == listeners[eventType].end())
     {
         listeners[eventType].push_back(listener);
-        LOG("Listener subscribed to event type %d", static_cast<int>(eventType));
     }
 }
 

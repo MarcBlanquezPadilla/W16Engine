@@ -2,6 +2,7 @@
 #include "../GameObject.h"
 #include "../Engine.h"
 #include "../ModuleResources.h"
+#include "../ModuleEvents.h"
 #include "../resources/ResourceMesh.h"
 #include "../components/Transform.h"
 #include "../utils/Config.h"
@@ -10,6 +11,7 @@
 
 Mesh::Mesh(GameObject* owner) : Component(owner)
 {
+    Engine::GetInstance().moduleEvents->Subscribe(Event::Type::GameObjectDestroyed, this);
 }
 
 Mesh::~Mesh()
@@ -40,6 +42,7 @@ void Mesh::Update()
 
 void Mesh::CleanUp()
 {
+    Engine::GetInstance().moduleEvents->Unsubscribe(Event::Type::GameObjectDestroyed,this);
     if (resource)
     {
         Engine::GetInstance().moduleResources->ReleaseResource(resourceUID);
@@ -231,4 +234,30 @@ void Mesh::UpdateSkinningMatrices()
     }
 
     hasSkinningData = true;
+}
+
+void Mesh::OnEvent(const Event& event)
+{
+    switch (event.type)
+    {
+    case Event::Type::GameObjectDestroyed:
+    {
+        if (boneGameObjects.empty()) return;
+
+        GameObject* deletedGO = event.data.gameObject.gameObject;
+
+        for (size_t i = 0; i < boneGameObjects.size(); ++i)
+        {
+            if (boneGameObjects[i] == deletedGO)
+            {
+                boneGameObjects[i] = nullptr;
+            }
+        }
+
+        break;
+    }
+
+    default:
+        break;
+    }
 }

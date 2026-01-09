@@ -1,6 +1,7 @@
 #pragma once
 #include "Component.h"
 #include "../resources/ResourceAnimation.h"
+#include "../EventListener.h"
 #include <map>
 #include <string>
 #include <vector> // Importante para std::vector
@@ -18,11 +19,13 @@ struct AnimLink {
     glm::vec3 originalScl;
 };
 
-class Animation : public Component
+class Animation : public Component, public ResourceUser, public EventListener
 {
 public:
     Animation(GameObject* owner);
     virtual ~Animation();
+
+    void CleanUp() override;
 
     void Update() override;
 
@@ -36,6 +39,10 @@ public:
 
     void OnEditor() override;
 
+    void OnEvent(const Event& event) override;
+    void OnResourceLost(UID resourceUID) override;
+
+
 private:
     void RebuildAnimCache();
     void InvalidateBoneMap();
@@ -46,9 +53,10 @@ private:
 
     void UpdateTransformations(const ResourceAnimation* animation, float currentAnimTime);
 
+
 public:
-    UID animationUID = 0;
-    ResourceAnimation* currentAnimation = nullptr;
+    UID resourceUID = 0;
+    ResourceAnimation* resource = nullptr;
 
     bool loop = true;
     bool playing = false;
@@ -61,4 +69,5 @@ private:
     std::vector<AnimLink> animCache;
 
     bool debugDraw = false;
+    bool invalidatingFlag = false;
 };
