@@ -37,16 +37,16 @@ void Transform::CleanUp()
 
 void Transform::Save(Config& componentNode)
 {
-    componentNode.SetVector3("Position", GetPosition());
-    componentNode.SetQuat("Rotation", GetQuaterionRotation());
-    componentNode.SetVector3("Scale", GetScale());
+    componentNode.SetVector3("Position", GetLocalPosition());
+    componentNode.SetQuat("Rotation", GetLocalQuaterionRotation());
+    componentNode.SetVector3("Scale", GetLocalScale());
 }
 
 void Transform::Load(Config& componentNode)
 {
-    SetPosition(componentNode.GetVector3("Position"));
-    SetQuaternionRotation(componentNode.GetQuat("Rotation"));
-    SetScale(componentNode.GetVector3("Scale"));
+    SetLocalPosition(componentNode.GetVector3("Position"));
+    SetLocalQuaternionRotation(componentNode.GetQuat("Rotation"));
+    SetLocalScale(componentNode.GetVector3("Scale"));
 }
 
 const glm::mat4& Transform::GetLocalMatrix()
@@ -94,34 +94,34 @@ void Transform::InvalidateGlobalMatrix()
     }
 }
 
-glm::vec3 Transform::GetPosition()
+glm::vec3 Transform::GetLocalPosition()
 {
     return position;
 }
 
-glm::vec3 Transform::GetEulerRotation()
+glm::vec3 Transform::GetLocalEulerRotation()
 {
     return eulerRotation;
 }
 
-glm::quat Transform::GetQuaterionRotation()
+glm::quat Transform::GetLocalQuaterionRotation()
 {
     return rotation;
 }
 
-glm::vec3 Transform::GetScale()
+glm::vec3 Transform::GetLocalScale()
 {
     return scale;
 }
 
-void Transform::SetPosition(glm::vec3 _position)
+void Transform::SetLocalPosition(const glm::vec3& _position)
 {
     dirtyLocalMatrix = true;
     position = _position;
     OnTransformChanged();
 }
 
-void Transform::SetEulerRotation(glm::vec3 _rotation)
+void Transform::SetLocalEulerRotation(const glm::vec3& _rotation)
 {
     dirtyLocalMatrix = true;
     eulerRotation = _rotation;
@@ -131,7 +131,7 @@ void Transform::SetEulerRotation(glm::vec3 _rotation)
     OnTransformChanged();
 }
 
-void Transform::SetQuaternionRotation(glm::quat _rotationQuat)
+void Transform::SetLocalQuaternionRotation(const glm::quat& _rotationQuat)
 {
     dirtyLocalMatrix = true;
     rotation = _rotationQuat;
@@ -139,7 +139,7 @@ void Transform::SetQuaternionRotation(glm::quat _rotationQuat)
     OnTransformChanged();
 }
 
-void Transform::SetScale(glm::vec3 _scale)
+void Transform::SetLocalScale(const glm::vec3& _scale)
 {
     dirtyLocalMatrix = true;
     scale = _scale;
@@ -158,24 +158,24 @@ void Transform::OnEditor()
     {
         //ATRIBUTES
         ImGui::Text("Position");
-        glm::vec3 current_position = GetPosition();
+        glm::vec3 current_position = GetLocalPosition();
         if (ImGui::InputFloat3("##Pos", &current_position.x))
         {
-            SetPosition(current_position);
+            SetLocalPosition(current_position);
         }
 
         ImGui::Text("Rotation");
-        glm::vec3 current_euler_degrees = GetEulerRotation();
+        glm::vec3 current_euler_degrees = GetLocalEulerRotation();
         if (ImGui::InputFloat3("##Rot", &current_euler_degrees.x))
         {
-            SetEulerRotation(current_euler_degrees);
+            SetLocalEulerRotation(current_euler_degrees);
         }
 
         ImGui::Text("Scale");
-        glm::vec3 current_scale = GetScale();
+        glm::vec3 current_scale = GetLocalScale();
         if (ImGui::InputFloat3("##Scale", &current_scale.x))
         {
-            SetScale(current_scale);
+            SetLocalScale(current_scale);
         }
     }
 }
@@ -204,4 +204,81 @@ glm::vec3 Transform::GetGlobalPosition()
     glm::mat4 globalMatrix = GetGlobalMatrix();
 
     return glm::vec3(globalMatrix[3]);
+}
+
+glm::quat Transform::GetGlobalQuaterionRotation()
+{
+    glm::mat4 globalMat = GetGlobalMatrix();
+
+    glm::vec3 scale;
+    glm::quat rotation;
+    glm::vec3 translation;
+    glm::vec3 skew;
+    glm::vec4 perspective;
+
+    glm::decompose(globalMat, scale, rotation, translation, skew, perspective);
+
+    return rotation;
+}
+
+glm::vec3 Transform::GetGlobalScale()
+{
+    glm::mat4 globalMat = GetGlobalMatrix();
+
+    glm::vec3 globalScale;
+    globalScale.x = glm::length(glm::vec3(globalMat[0]));
+    globalScale.y = glm::length(glm::vec3(globalMat[1]));
+    globalScale.z = glm::length(glm::vec3(globalMat[2]));
+
+    return globalScale;
+}
+
+void Transform::SetGlobalPosition(const glm::vec3& targetPos)
+{
+    if (owner->parent == nullptr)
+    {
+        SetLocalPosition(targetPos);
+        return;
+    }
+
+    glm::mat4 parentGlobal = owner->parent->transform->GetGlobalMatrix();
+    glm::mat4 parentInverse = glm::inverse(parentGlobal);
+
+    glm::vec4 localPos4 = parentInverse * glm::vec4(targetPos, 1.0f);
+
+    SetLocalPosition(glm::vec3(localPos4));
+}
+
+void Transform::SetGlobalQuaternionRotation(const glm::quat& targetRot)
+{
+    if (owner->parent == nullptr)
+    {
+        SetLocalQuaternionRotation(targetRot);
+        return;
+    }
+
+    glm::quat parentGlobalRot = owner->parent->transform->GetGlobalQuaterionRotation();
+    glm::quat parentInverse = glm::inverse(parentGlobalRot);
+
+    glm::quat localRot = parentInverse * targetRot;
+
+    SetLocalQuaternionRotation(localRot);
+}
+
+void Transform::SetGlobalScale(const glm::vec3& targetScale)
+{
+    if (owner->parent == nullptr)
+    {
+        SetLocalScale(targetScale);
+        return;
+    }
+
+    glm::vec3 parentGlobalScale = owner->parent->transform->GetGlobalScale();
+
+    glm::vec3 newLocalScale = targetScale;
+    if (parentGlobalScale.x != 0) newLocalScale.x /= parentGlobalScale.x;
+    if (parentGlobalScale.y != 0) newLocalScale.y /= parentGlobalScale.y;
+    if (parentGlobalScale.z != 0) newLocalScale.z /= parentGlobalScale.z;
+
+    SetLocalScale(newLocalScale);
 }

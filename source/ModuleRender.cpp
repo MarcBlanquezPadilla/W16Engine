@@ -135,7 +135,6 @@ bool ModuleRender::PreUpdate()
 	linesList.clear();
 	normalsList.clear();
 	meshLinesList.clear();
-	selectedMesh = nullptr;
 	mainCamera = nullptr;
 
 	return ret;
@@ -278,6 +277,8 @@ void ModuleRender::BuildRenderListsRecursive(GameObject* gameObject, const Camer
 
 				if (camera->GetFrustum()->InFrustum(globalAABB))
 				{
+					mesh->UpdateSkinningMatrices();
+
 					Texture* texture = (Texture*)gameObject->GetComponent(ComponentType::Texture);
 					unsigned int texToBind = defaultTextureID;
 
@@ -318,93 +319,42 @@ void ModuleRender::DrawRenderList(const std::multimap<float, RenderObject>& map,
 	for (auto pair = map.rbegin(); pair != map.rend(); ++pair)
 	{
 		RenderObject renderObject = pair->second;
+		Mesh* meshComp = renderObject.mesh; // Acceso rápido
 
-		// STENCIL
-		if (renderObject.mesh->drawStencil)
-		{
+		// --- STENCIL (Igual que antes) ---
+		if (meshComp->drawStencil) {
 			glStencilFunc(GL_ALWAYS, 1, 0xFF);
 			glStencilMask(0xFF);
 			stencilList.push_back(renderObject);
 		}
-		else
-		{
+		else {
 			glStencilFunc(GL_ALWAYS, 0, 0xFF);
 			glStencilMask(0x00);
 		}
 
+		// --- TEXTURAS Y UNIFORMS BÁSICOS (Igual que antes) ---
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, renderObject.textToBind);
-
-		// UNIFORMS BÁSICOS
 		glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
 		glUniform1i(hasUVsLoc, true);
 
-		// ====================================================
-		// LÓGICA DE SKINNING
-		// ====================================================
-		bool hasBones = false;
-		Mesh* meshComp = renderObject.mesh;
-		ResourceMesh* rMesh = meshComp->GetResource();
 
-		// Vector estático para no pedir memoria en cada frame (Optimización)
-		static std::vector<glm::mat4> finalBoneMatrices;
-
-		// Comprobamos: 1. Hay recurso, 2. Hay datos de huesos, 3. Se hizo el LinkBones
-		if (rMesh && !rMesh->bones.empty() && !meshComp->GetBones().empty())
+		if (meshComp->HasSkinningData() && !meshComp->GetCachedBones().empty())
 		{
-			// Seguridad: Si los tamaños no coinciden, evitamos crash
-			if (rMesh->bones.size() == meshComp->GetBones().size())
-			{
-				hasBones = true;
+			int amountToUpload = meshComp->GetCachedBones().size();
+			if (amountToUpload > 200) amountToUpload = 200;
 
-				// Ajustamos tamaño del vector
-				if (finalBoneMatrices.size() < rMesh->bones.size())
-					finalBoneMatrices.resize(rMesh->bones.size());
+			glUniformMatrix4fv(finalBonesMatricesLoc, amountToUpload, GL_FALSE, glm::value_ptr(meshComp->GetCachedBones()[0]));
 
-				// [MATEMÁTICA CLAVE] Calculamos la inversa de la matriz global de la malla
-				// Esto nos permite calcular el movimiento RELATIVO de los huesos respecto a la malla.
-				// Sin esto, al mover el personaje, la piel se deformaría el doble[cite: 5, 8].
-					glm::mat4 meshInverseTransform = glm::inverse(renderObject.globalModelMatrix);
-
-				// Iteramos la caché de punteros (Muy rápido)
-				for (size_t i = 0; i < meshComp->GetBones().size(); ++i)
-				{
-					GameObject* boneGO = meshComp->GetBones()[i];
-
-					if (boneGO != nullptr)
-					{
-						Transform* trans = (Transform*)boneGO->transform;
-						if (trans)
-						{
-							// FÓRMULA FINAL: MeshInverse * BoneGlobal * BoneOffset
-							finalBoneMatrices[i] = meshInverseTransform * trans->GetGlobalMatrix() * rMesh->bones[i].offsetMatrix;
-						}
-						else
-						{
-							finalBoneMatrices[i] = glm::mat4(1.0f);
-						}
-					}
-					else
-					{
-						// Si el hueso se ha borrado o no se encontró, matriz identidad
-						finalBoneMatrices[i] = glm::mat4(1.0f);
-					}
-				}
-
-				// Limitar envío para no petar el shader
-				int amountToUpload = rMesh->bones.size();
-				if (amountToUpload > 200) amountToUpload = 200; // Coincide con MAX_BONES del shader
-
-				glUniformMatrix4fv(finalBonesMatricesLoc, amountToUpload, GL_FALSE, glm::value_ptr(finalBoneMatrices[0]));
-			}
+			glUniform1i(hasBonesLoc, true);
+		}
+		else
+		{
+			glUniform1i(hasBonesLoc, false);
 		}
 
-		// Avisar al shader
-		glUniform1i(hasBonesLoc, hasBones);
-		// ====================================================
-
-		glBindVertexArray(renderObject.mesh->GetResource()->meshData.VAO);
-		glDrawElements(GL_TRIANGLES, renderObject.mesh->GetResource()->numIndices, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(meshComp->GetResource()->meshData.VAO);
+		glDrawElements(GL_TRIANGLES, meshComp->GetResource()->numIndices, GL_UNSIGNED_INT, 0);
 	}
 }
 
@@ -584,7 +534,6 @@ bool ModuleRender::CreateShaderFromSources(unsigned int& shaderID, int type, con
 bool ModuleRender::CreateDefaultShader()
 {
 	unsigned int vShader = 0;
-	// --- SHADER ACTUALIZADO PARA SKINNING ---
 	const char* vertexShaderSource = "#version 460 core\n"
 		"layout (location = 0) in vec3 position;\n"
 		"layout (location = 1) in vec2 aTexCoord;\n"
@@ -607,20 +556,15 @@ bool ModuleRender::CreateDefaultShader()
 		"    vec4 totalPosition = vec4(0.0f);\n"
 		"    if (hasBones)\n"
 		"    {\n"
-		// PASO 1: Asegurar que los pesos sumen 1.0 (Normalización) [cite: 3, 5]
-		// Si weights = (0.5, 0.4, 0.0, 0.0) -> Suma 0.9. Dividimos todo por 0.9.
 		"       float weightSum = weights.x + weights.y + weights.z + weights.w;\n"
-		// Evitamos dividir por cero si el vértice no tiene pesos (caso raro)
 		"       if (weightSum > 0.0f) {\n"
 		"           for(int i = 0 ; i < 4 ; i++)\n"
 		"           {\n"
 		"               if(boneIDs[i] == -1 || boneIDs[i] >= MAX_BONES) continue;\n"
-		// Multiplicamos por el peso normalizado (weights[i] / weightSum)
 		"               vec4 localPosition = finalBonesMatrices[boneIDs[i]] * vec4(position, 1.0f);\n"
 		"               totalPosition += localPosition * (weights[i] / weightSum);\n"
 		"           }\n"
 		"       } else {\n"
-		// Si no tiene pesos, usamos la posición estática para que no desaparezca
 		"           totalPosition = vec4(position, 1.0f);\n"
 		"       }\n"
 		"    }\n"
@@ -638,7 +582,6 @@ bool ModuleRender::CreateDefaultShader()
 		return false;
 
 	unsigned int fShader = 0;
-	// El Fragment Shader se queda igual
 	const char* fragmentShaderSource = "#version 460 core\n"
 		"in vec3 localPos;\n"
 		"in vec2 texCoord;\n"

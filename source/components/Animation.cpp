@@ -7,7 +7,6 @@
 #include "../utils/Log.h"
 #include "imgui.h"
 
-//TEST
 #include "../ModuleInput.h"
 
 Animation::Animation(GameObject* owner) : Component(owner)
@@ -48,6 +47,20 @@ void Animation::SetAnimation(UID uid)
     }
 }
 
+void Animation::ResetPose()
+{
+    // Restauramos la T-Pose guardada
+    for (const auto& link : animCache)
+    {
+        if (link.transform)
+        {
+            link.transform->SetLocalPosition(link.originalPos);
+            link.transform->SetLocalQuaternionRotation(link.originalRot);
+            link.transform->SetLocalScale(link.originalScl);
+        }
+    }
+}
+
 void Animation::Play()
 {
     playing = true;
@@ -57,6 +70,8 @@ void Animation::Stop()
 {
     playing = false;
     currentTime = 0.0f;
+
+    ResetPose();
 }
 
 // EL CORAZÓN DEL SISTEMA
@@ -66,31 +81,22 @@ void Animation::Update()
 
     if (!playing || !currentAnimation) return;
 
-    // 1. Calcular paso de tiempo
-    // dt (segundos) * ticksPorSegundo * velocidad
-    float dt = Time::deltaTime; // O GameDeltaTime según tu motor
+    float dt = Time::deltaTime;
     currentTime += dt * currentAnimation->ticksPerSecond * speed;
 
-    // 2. Gestión del Loop
     if (currentTime >= currentAnimation->duration)
     {
         if (loop)
         {
-            // Opción A: Reset a 0 (más brusco pero fácil)
-            // currentTime = 0.0f;
-
-            // Opción B: Módulo (más preciso matemáticas)
             currentTime = fmod(currentTime, currentAnimation->duration);
         }
         else
         {
-            // Fin de la animación
             currentTime = currentAnimation->duration;
             playing = false;
         }
     }
 
-    // 3. AQUÍ IRÁ LA MAGIA DE MOVER LOS HUESOS (Siguiente paso)
     UpdateTransformations(currentAnimation, currentTime);
 }
 
@@ -99,11 +105,8 @@ void Animation::InvalidateBoneMap()
     boneMap.clear();
     if (!currentAnimation || !owner) return;
 
-    // Recorremos los canales de la animación (lo que el archivo dice que se mueve)
     for (const auto& channel : currentAnimation->channels)
     {
-        // Buscamos en la jerarquía del GameObject dueño del componente
-        // Asumo que tienes una función FindChild recursiva en GameObject
         GameObject* bone = owner->FindChild(channel.name);
 
         if (bone)
@@ -229,9 +232,9 @@ void Animation::UpdateTransformations(const ResourceAnimation* animation, float 
 
         // Aplicamos la transformación en BATCH (Todo de golpe)
         // (Asegúrate de haber implementado SetLocalTransform en Transform.cpp como hablamos)
-        link.transform->SetPosition(position);
-        link.transform->SetQuaternionRotation(rotation);
-        link.transform->SetScale(scale);
+        link.transform->SetLocalPosition(position);
+        link.transform->SetLocalQuaternionRotation(rotation);
+        link.transform->SetLocalScale(scale);
     }
 }
 
@@ -262,6 +265,9 @@ void Animation::RebuildAnimCache()
                 link.channel = &channel; // Guardamos puntero al canal
                 link.transform = t;      // Guardamos puntero al transform
 
+                link.originalPos = t->GetLocalPosition();
+                link.originalRot = t->GetLocalQuaterionRotation(); // O GetRotation() local
+                link.originalScl = t->GetLocalScale();
 
                 animCache.push_back(link);
             }

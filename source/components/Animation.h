@@ -12,6 +12,10 @@ class Transform;
 struct AnimLink {
     const Channel* channel;
     Transform* transform;
+
+    glm::vec3 originalPos;
+    glm::quat originalRot;
+    glm::vec3 originalScl;
 };
 
 class Animation : public Component
@@ -25,6 +29,7 @@ public:
     ComponentType GetType() override { return ComponentType::Animation; };
 
     void SetAnimation(UID animUID);
+    void ResetPose();
     void Play();
     void Stop();
     void Pause();
@@ -35,7 +40,6 @@ private:
     void RebuildAnimCache();
     void InvalidateBoneMap();
 
-    // GETTERS CORREGIDOS: Reciben 'int&' (referencia al índice específico)
     glm::vec3 GetPositionValue(const Channel& channel, float currentAnimTime);
     glm::quat GetRotationValue(const Channel& channel, float currentAnimTime);
     glm::vec3 GetScaleValue(const Channel& channel, float currentAnimTime);
@@ -53,8 +57,8 @@ public:
     float currentTime = 0.0f;
 
 private:
-    std::map<std::string, GameObject*> boneMap; // Solo se usa al cargar
-    std::vector<AnimLink> animCache;            // Se usa en cada frame (Rápido)
+    std::map<std::string, GameObject*> boneMap;
+    std::vector<AnimLink> animCache;
 
     bool debugDraw = false;
 };

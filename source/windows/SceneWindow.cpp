@@ -186,7 +186,7 @@ void SceneWindow::Draw()
 				Transform* t = (Transform*)go->transform;
 				if (t) {
 					initialPositions.push_back(t->GetGlobalPosition());
-					initialScales.push_back(t->GetScale());
+					initialScales.push_back(t->GetLocalScale());
 				}
 			}
 			wasUsing = true;
@@ -226,7 +226,7 @@ void SceneWindow::Draw()
 						if (glm::isnan(finalScale.z)) finalScale.z = 0.01f;
 
 						finalScale = glm::max(finalScale, glm::vec3(0.001f));
-						t->SetScale(finalScale);
+						t->SetLocalScale(finalScale);
 
 						glm::vec3 vectorFromCenter = initialPositions[idx] - initialCenterPos;
 						glm::vec3 scaledVector = vectorFromCenter * newScale;
@@ -238,7 +238,7 @@ void SceneWindow::Draw()
 							if (pT) parentInverse = glm::inverse(pT->GetGlobalMatrix());
 						}
 						glm::vec3 localPos = glm::vec3(parentInverse * glm::vec4(newPosition, 1.0f));
-						t->SetPosition(localPos);
+						t->SetLocalPosition(localPos);
 
 						idx++;
 					}
@@ -273,8 +273,8 @@ void SceneWindow::Draw()
 							glm::value_ptr(newScale)
 						);
 
-						t->SetPosition(newPos);
-						t->SetEulerRotation(newEulerRot);
+						t->SetLocalPosition(newPos);
+						t->SetLocalEulerRotation(newEulerRot);
 					}
 				}
 			}

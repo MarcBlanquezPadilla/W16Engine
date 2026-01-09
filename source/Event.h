@@ -55,6 +55,10 @@ struct Event
         //RESOURCES
         ResourceDestroyed,
 
+        //RENDER
+        PreRender,
+        PostRender,
+
         //OTHERS
         Custom,
         Invalid

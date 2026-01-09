@@ -19,6 +19,7 @@ Mesh::~Mesh()
 
 void Mesh::Update()
 {
+
     if (!bonesLinked)
     {
         if (resource != nullptr)
@@ -30,6 +31,10 @@ void Mesh::Update()
                 bonesLinked = true;
             }
         }
+    }
+    else
+    {
+        cachedBones = false;
     }
 }
 
@@ -137,7 +142,7 @@ ResourceMesh* Mesh::GetResource() const
     return resource;
 }
 
-AABB Mesh::GetGlobalAABB()
+ AABB Mesh::GetGlobalAABB()
 {
     ResourceMesh* r = GetResource();
     if (r && r->IsLoadedToMemory())
@@ -193,4 +198,37 @@ void Mesh::OnResourceLost(UID lostUID)
         resource = nullptr;
         resourceUID = 0;
     }
+}
+
+void Mesh::UpdateSkinningMatrices()
+{
+    if (cachedBones) return;
+
+    if (!resource || resource->bones.empty() || GetBones().empty()) {
+        hasSkinningData = false;
+        return;
+    }
+
+    if (cachedBoneMatrices.size() < resource->bones.size()) {
+        cachedBoneMatrices.resize(resource->bones.size());
+    }
+
+    glm::mat4 globalMatrix = owner->transform->GetGlobalMatrix();
+    glm::mat4 meshInverseTransform = glm::inverse(globalMatrix);
+
+    for (size_t i = 0; i < GetBones().size(); ++i)
+    {
+        GameObject* boneGO = GetBones()[i];
+        if (boneGO)
+        {
+            Transform* trans = (Transform*)boneGO->transform;
+            cachedBoneMatrices[i] = meshInverseTransform * trans->GetGlobalMatrix() * resource->bones[i].offsetMatrix;
+        }
+        else
+        {
+            cachedBoneMatrices[i] = glm::mat4(1.0f);
+        }
+    }
+
+    hasSkinningData = true;
 }

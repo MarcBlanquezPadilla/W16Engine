@@ -170,9 +170,9 @@ bool ImporterModel::ProcessNode(aiNode* node, const aiScene* scene, GameObject* 
 	aiVector3D scaling;
 	node->mTransformation.Decompose(scaling, rotation, position);
 
-	targetGameObject->transform->SetPosition(glm::vec3(position.x, position.y, position.z));
-	targetGameObject->transform->SetQuaternionRotation(glm::quat(rotation.w, rotation.x, rotation.y, rotation.z));
-	targetGameObject->transform->SetScale(glm::vec3(scaling.x, scaling.y, scaling.z));
+	targetGameObject->transform->SetLocalPosition(glm::vec3(position.x, position.y, position.z));
+	targetGameObject->transform->SetLocalQuaternionRotation(glm::quat(rotation.w, rotation.x, rotation.y, rotation.z));
+	targetGameObject->transform->SetLocalScale(glm::vec3(scaling.x, scaling.y, scaling.z));
 
 	//PROCESS MESHES
 	if (node->mNumMeshes == 1)

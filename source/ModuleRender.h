@@ -116,7 +116,7 @@ private:
 	GLint viewMatrixLoc;
 	GLint projectionMatrixLoc;
 	GLint hasUVsLoc;
-	GLint hasBonesLoc = 0;;
+	GLint hasBonesLoc = 0;
 	GLint finalBonesMatricesLoc= 0;
 
 	//NORMAL DRAW
@@ -132,7 +132,6 @@ private:
 	GLint outlineViewMatrixLoc;
 	GLint outlineProjectionMatrixLoc;
 	GLint outlineColorLoc;
-	Mesh* selectedMesh;
 
 	//LINES DRAW
 	unsigned int lineShaderProgram;
@@ -152,8 +151,6 @@ private:
 
 	unsigned int defaultTextureID;
 	unsigned int checkerTextureID;
-
-
 
 	std::string glVersion;
 	std::string glslVersion;

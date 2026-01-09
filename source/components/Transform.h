@@ -22,20 +22,26 @@ public:
     void Save(Config& componentNode) override;
     void Load(Config& componentNode) override;
 
-    void SetEulerRotation(glm::vec3 _rotation);
-    void SetQuaternionRotation(glm::quat _rotation);
-    void SetPosition(glm::vec3 _position);
-    void SetScale(glm::vec3 _position);
+    void SetLocalPosition(const glm::vec3& _position);
+    void SetGlobalPosition(const glm::vec3& pos);
+    void SetLocalEulerRotation(const glm::vec3& _rotation);
+    void SetLocalQuaternionRotation(const glm::quat& _rotation);
+    void SetGlobalQuaternionRotation(const glm::quat& rot);
+    void SetLocalScale(const glm::vec3& _position);
+    void SetGlobalScale(const glm::vec3& scale);
     
+    void SetLocalTransform(const glm::vec3& pos, const glm::quat& rot, const glm::vec3& scl);
     void SetLocalMatrix(const glm::mat4& localNatrix);
 
     void OnTransformChanged();
 
-    glm::vec3 GetPosition();
+    glm::vec3 GetLocalPosition();
     glm::vec3 GetGlobalPosition();
-    glm::vec3 GetEulerRotation();
-    glm::quat GetQuaterionRotation();
-    glm::vec3 GetScale();
+    glm::vec3 GetLocalEulerRotation();
+    glm::quat GetLocalQuaterionRotation();
+    glm::quat GetGlobalQuaterionRotation();
+    glm::vec3 GetLocalScale();
+    glm::vec3 GetGlobalScale();
 
     const glm::mat4& GetLocalMatrix();
     const glm::mat4& GetGlobalMatrix();
@@ -43,8 +49,6 @@ public:
 
 
     void OnEditor() override;
-
-
 
 public:
     

@@ -25,10 +25,13 @@ public:
 
     void SetResource(UID uid);
     ResourceMesh* GetResource() const;
-    UID GetMeshUID() const { return resourceUID; }
+    UID GetMeshUID() const { return resourceUID; };
     AABB GetGlobalAABB();
     const std::vector<GameObject*>& GetBones() { return boneGameObjects; };
     void LinkBones();
+    void UpdateSkinningMatrices();
+    const bool& HasSkinningData() { return hasSkinningData; };
+    const std::vector<glm::mat4>& GetCachedBones() { return cachedBoneMatrices; };
 
     void OnResourceLost(UID resourceUID) override;
 
@@ -43,6 +46,9 @@ private:
     mutable ResourceMesh* resource = nullptr;
 
     std::vector<GameObject*> boneGameObjects;
+    std::vector<glm::mat4> cachedBoneMatrices;
     bool debugSkeleton = false;
     bool bonesLinked = false;
+    bool hasSkinningData = false;
+    bool cachedBones = false;
 };
