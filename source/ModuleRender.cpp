@@ -409,7 +409,25 @@ void ModuleRender::DrawNormalsList(const CameraLens* camera)
 		{
 			glUseProgram(normalShaderProgram);
 			glUniformMatrix4fv(normalModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
+
+
 			glUniform4f(normalColorLoc, debugColor.r, debugColor.g, debugColor.b, debugColor.a);
+
+			Mesh* meshComp = renderObject.mesh;
+
+			if (meshComp->HasSkinningData() && !meshComp->GetCachedBones().empty())
+			{
+				int amountToUpload = meshComp->GetCachedBones().size();
+				if (amountToUpload > 200) amountToUpload = 200;
+
+				glUniformMatrix4fv(normalFinalBonesMatricesLoc, amountToUpload, GL_FALSE, glm::value_ptr(meshComp->GetCachedBones()[0]));
+				glUniform1i(normalHasBonesLoc, true);
+			}
+			else
+			{
+				glUniform1i(normalHasBonesLoc, false);
+			}
+
 			glBindVertexArray(renderObject.mesh->GetResource()->meshData.VAO);
 
 			glDrawArrays(GL_POINTS, 0, renderObject.mesh->GetResource()->numVertices);
@@ -430,14 +448,28 @@ void ModuleRender::DrawStencilList(const CameraLens* camera)
 	for (RenderObject renderObject : stencilList)
 	{
 		glUseProgram(outlineShaderProgram);
+
 		glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
 		glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 		glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
 		glUniform4f(outlineColorLoc, stencilColor.r, stencilColor.g, stencilColor.b, stencilColor.a);
-		
+
+		Mesh* meshComp = renderObject.mesh;
+
+		if (meshComp->HasSkinningData() && !meshComp->GetCachedBones().empty())
+		{
+			int amountToUpload = meshComp->GetCachedBones().size();
+			if (amountToUpload > 200) amountToUpload = 200;
+
+			glUniformMatrix4fv(outlineFinalBonesMatricesLoc, amountToUpload, GL_FALSE, glm::value_ptr(meshComp->GetCachedBones()[0]));
+			glUniform1i(outlineHasBonesLoc, true);
+		}
+		else
+		{
+			glUniform1i(outlineHasBonesLoc, false);
+		}
 		glBindVertexArray(renderObject.mesh->GetResource()->stencilData.VAO);
 
-		//OUTLINE
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 		glStencilMask(0x00);
 		glDepthFunc(GL_LEQUAL);
@@ -445,7 +477,6 @@ void ModuleRender::DrawStencilList(const CameraLens* camera)
 
 		glDrawElements(GL_TRIANGLES, renderObject.mesh->GetResource()->numIndices, GL_UNSIGNED_INT, 0);
 
-		//FILL ALL IF OBJECT BEHIND
 		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 		glStencilFunc(GL_ALWAYS, 2, 0xFF);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -485,6 +516,21 @@ void ModuleRender::DrawMeshLinesList(const CameraLens* camera)
 		glUniformMatrix4fv(meshLinesViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
 		glUniformMatrix4fv(meshLinesProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 		glUniform4f(meshLinesColorLoc, debugColor.r, debugColor.g, debugColor.b, debugColor.a);
+
+
+		Mesh* meshComp = renderObject.mesh;
+		if (meshComp->HasSkinningData() && !meshComp->GetCachedBones().empty())
+		{
+			int amountToUpload = meshComp->GetCachedBones().size();
+			if (amountToUpload > 200) amountToUpload = 200;
+
+			glUniformMatrix4fv(meshLinesFinalBonesMatricesLoc, amountToUpload, GL_FALSE, glm::value_ptr(meshComp->GetCachedBones()[0]));
+			glUniform1i(meshLinesHasBonesLoc, true);
+		}
+		else
+		{
+			glUniform1i(meshLinesHasBonesLoc, false);
+		}
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -528,8 +574,6 @@ bool ModuleRender::CreateShaderFromSources(unsigned int& shaderID, int type, con
 	}
 	return true;
 }
-
-
 
 bool ModuleRender::CreateDefaultShader()
 {
@@ -641,10 +685,35 @@ bool ModuleRender::CreateNormalShader()
 	const char* vertexSource = "#version 460 core\n"
 		"layout (location = 0) in vec3 position;\n"
 		"layout (location = 2) in vec3 aNormal;\n"
+		"layout (location = 3) in ivec4 boneIDs;\n"
+		"layout (location = 4) in vec4 weights;\n"
+		"\n"
 		"out VS_OUT { vec3 normal; } vs_out;\n"
+		"\n"
+		"const int MAX_BONES = 200;\n"
+		"uniform mat4 finalBonesMatrices[MAX_BONES];\n"
+		"uniform bool hasBones;\n"
+		"\n"
 		"void main() {\n"
-		"   gl_Position = vec4(position, 1.0);\n"
-		"   vs_out.normal = aNormal;\n"
+		"    vec4 totalLocalPos = vec4(position, 1.0f);\n"
+		"    vec3 totalNormal = aNormal;\n"
+		"\n"
+		"    if (hasBones) {\n"
+		"        mat4 boneTransform = mat4(0.0f);\n"
+		"        float weightSum = weights.x + weights.y + weights.z + weights.w;\n"
+		"        if (weightSum > 0.0f) {\n"
+		"            for(int i = 0; i < 4; i++) {\n"
+		"                if(boneIDs[i] == -1 || boneIDs[i] >= MAX_BONES) continue;\n"
+		"                boneTransform += finalBonesMatrices[boneIDs[i]] * (weights[i] / weightSum);\n"
+		"            }\n"
+		"            // Deformamos posición y normal\n"
+		"            totalLocalPos = boneTransform * vec4(position, 1.0f);\n"
+		"            totalNormal = mat3(boneTransform) * aNormal;\n"
+		"        }\n"
+		"    }\n"
+		"\n"
+		"    gl_Position = totalLocalPos;\n"
+		"    vs_out.normal = normalize(totalNormal);\n"
 		"}\n";
 	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexSource, strlen(vertexSource))) return false;
 
@@ -690,6 +759,8 @@ bool ModuleRender::CreateNormalShader()
 	normalViewMatrixLoc = glGetUniformLocation(normalShaderProgram, "view");
 	normalProjectionMatrixLoc = glGetUniformLocation(normalShaderProgram, "projection");
 	normalColorLoc = glGetUniformLocation(normalShaderProgram, "lineColor");
+	normalHasBonesLoc = glGetUniformLocation(normalShaderProgram, "hasBones");
+	normalFinalBonesMatricesLoc = glGetUniformLocation(normalShaderProgram, "finalBonesMatrices");
 
 	return true;
 }
@@ -700,28 +771,55 @@ bool ModuleRender::CreateOutlineShader()
 	const char* vertexShaderSource = "#version 460 core\n"
 		"layout (location = 0) in vec3 position;\n"
 		"layout (location = 2) in vec3 aNormal;\n"
+		// INPUTS NUEVOS
+		"layout (location = 3) in ivec4 boneIDs;\n"
+		"layout (location = 4) in vec4 weights;\n"
+		"\n"
 		"uniform mat4 model;\n"
 		"uniform mat4 view;\n"
 		"uniform mat4 projection;\n"
 		"uniform float u_outlineThickness = 0.03;\n"
+		"\n"
+		// UNIFORMS NUEVOS
+		"const int MAX_BONES = 200;\n"
+		"uniform mat4 finalBonesMatrices[MAX_BONES];\n"
+		"uniform bool hasBones;\n"
+		"\n"
 		"void main()\n"
 		"{\n"
-		"   vec3 scale = vec3(\n"
-		"       length(model[0].xyz),\n"
-		"       length(model[1].xyz),\n"
-		"       length(model[2].xyz)\n"
-		"   );\n"
-		"   mat4 modelNoScale = model;\n"
-		"   modelNoScale[0].xyz /= scale.x;\n"
-		"   modelNoScale[1].xyz /= scale.y;\n"
-		"   modelNoScale[2].xyz /= scale.z;\n"
-		"   vec3 worldNormal = normalize(mat3(modelNoScale) * aNormal);\n"
-		"   vec4 worldPos = model * vec4(position, 1.0);\n"
-		"   vec4 viewPos = view * worldPos;\n"
-		"   float distance = length(viewPos.xyz);\n"
-		"   float dynamicThickness = u_outlineThickness * (distance * 0.1);\n"
-		"   worldPos.xyz += worldNormal * dynamicThickness;\n"
-		"   gl_Position = projection * view * worldPos;\n"
+		"    vec4 totalLocalPos = vec4(position, 1.0f);\n"
+		"    vec3 totalNormal = aNormal;\n"
+		"\n"
+		"    // LÓGICA DE HUESOS (Si hay huesos, deformamos)\n"
+		"    if (hasBones)\n"
+		"    {\n"
+		"        mat4 boneTransform = mat4(0.0f);\n"
+		"        float weightSum = weights.x + weights.y + weights.z + weights.w;\n"
+		"        if (weightSum > 0.0f) {\n"
+		"            for(int i = 0; i < 4; i++) {\n"
+		"                if(boneIDs[i] == -1 || boneIDs[i] >= MAX_BONES) continue;\n"
+		"                boneTransform += finalBonesMatrices[boneIDs[i]] * (weights[i] / weightSum);\n"
+		"            }\n"
+		"            totalLocalPos = boneTransform * vec4(position, 1.0f);\n"
+		"            totalNormal = mat3(boneTransform) * aNormal;\n"
+		"        }\n"
+		"    }\n"
+		"\n"
+		"    // LÓGICA DE INFLADO (Usando los datos deformados)\n"
+		"    vec3 scale = vec3(length(model[0].xyz), length(model[1].xyz), length(model[2].xyz));\n"
+		"    mat4 modelNoScale = model;\n"
+		"    modelNoScale[0].xyz /= scale.x;\n"
+		"    modelNoScale[1].xyz /= scale.y;\n"
+		"    modelNoScale[2].xyz /= scale.z;\n"
+		"\n"
+		"    vec3 worldNormal = normalize(mat3(modelNoScale) * totalNormal);\n"
+		"    vec4 worldPos = model * totalLocalPos;\n"
+		"    vec4 viewPos = view * worldPos;\n"
+		"    float distance = length(viewPos.xyz);\n"
+		"    float dynamicThickness = u_outlineThickness * (distance * 0.1);\n"
+		"\n"
+		"    worldPos.xyz += worldNormal * dynamicThickness;\n"
+		"    gl_Position = projection * view * worldPos;\n"
 		"}\n";
 
 	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
@@ -756,6 +854,8 @@ bool ModuleRender::CreateOutlineShader()
 	outlineViewMatrixLoc = glGetUniformLocation(outlineShaderProgram, "view");
 	outlineProjectionMatrixLoc = glGetUniformLocation(outlineShaderProgram, "projection");
 	outlineColorLoc = glGetUniformLocation(outlineShaderProgram, "outlineColor");
+	outlineHasBonesLoc = glGetUniformLocation(outlineShaderProgram, "hasBones");
+	outlineFinalBonesMatricesLoc = glGetUniformLocation(outlineShaderProgram, "finalBonesMatrices");
 
 	return true;
 }
@@ -816,12 +916,42 @@ bool ModuleRender::CreateMeshLinesShader()
 	unsigned int vShader = 0;
 	const char* vertexShaderSource = "#version 460 core\n"
 		"layout (location = 0) in vec3 position;\n"
+		// Inputs de huesos
+		"layout (location = 3) in ivec4 boneIDs;\n"
+		"layout (location = 4) in vec4 weights;\n"
+		"\n"
 		"uniform mat4 model; \n"
 		"uniform mat4 view; \n"
 		"uniform mat4 projection; \n"
+		"\n"
+		// Uniforms de huesos
+		"const int MAX_BONES = 200;\n"
+		"uniform mat4 finalBonesMatrices[MAX_BONES];\n"
+		"uniform bool hasBones;\n"
+		"\n"
 		"void main()\n"
 		"{\n"
-		"   gl_Position = projection * view * model * vec4(position, 1.0f);\n"
+		"    vec4 totalPosition = vec4(0.0f);\n"
+		"    if (hasBones)\n"
+		"    {\n"
+		"        float weightSum = weights.x + weights.y + weights.z + weights.w;\n"
+		"        if (weightSum > 0.0f) {\n"
+		"            for(int i = 0 ; i < 4 ; i++)\n"
+		"            {\n"
+		"                if(boneIDs[i] == -1 || boneIDs[i] >= MAX_BONES) continue;\n"
+		"                vec4 localPosition = finalBonesMatrices[boneIDs[i]] * vec4(position, 1.0f);\n"
+		"                totalPosition += localPosition * (weights[i] / weightSum);\n"
+		"            }\n"
+		"        } else {\n"
+		"            totalPosition = vec4(position, 1.0f);\n"
+		"        }\n"
+		"    }\n"
+		"    else\n"
+		"    {\n"
+		"        totalPosition = vec4(position, 1.0f);\n"
+		"    }\n"
+		"\n"
+		"    gl_Position = projection * view * model * totalPosition;\n"
 		"}\n";
 
 	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
@@ -856,6 +986,8 @@ bool ModuleRender::CreateMeshLinesShader()
 	meshLinesViewMatrixLoc = glGetUniformLocation(meshLinesShaderProgram, "view");
 	meshLinesProjectionMatrixLoc = glGetUniformLocation(meshLinesShaderProgram, "projection");
 	meshLinesColorLoc = glGetUniformLocation(meshLinesShaderProgram, "lineColor");
+	meshLinesHasBonesLoc = glGetUniformLocation(meshLinesShaderProgram, "hasBones");
+	meshLinesFinalBonesMatricesLoc = glGetUniformLocation(meshLinesShaderProgram, "finalBonesMatrices");
 
 	return true;
 }
@@ -908,7 +1040,6 @@ void ModuleRender::UpdateViewMatix(glm::mat4 vm)
 #pragma region GPU
 
 bool ModuleRender::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
-
 {
 	//CREATE VAO
 	glGenVertexArrays(1, &meshData.VAO);
@@ -961,10 +1092,18 @@ bool ModuleRender::UploadSmoothedMeshToGPU(StencilData& stencilData, unsigned in
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+
+	glEnableVertexAttribArray(3);
+	glVertexAttribIPointer(3, 4, GL_INT, sizeof(Vertex), (void*)offsetof(Vertex, boneIDs));
+
+	glEnableVertexAttribArray(4);
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, weights));
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);

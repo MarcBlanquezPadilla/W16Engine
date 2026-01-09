@@ -148,12 +148,18 @@ bool ResourceMesh::GenerateStencilBuffers()
 		pair.second = glm::normalize(pair.second);
 	}
 	smothedVertices.reserve(vertices.size());
-	for (const auto& v : vertices) {
-		smothedVertices.push_back({
-			v.position,
-			accumulatedNormals[v.position],
-			v.texCoords
-			});
+	for (const auto& v : vertices)
+	{
+		Vertex newV;
+
+		newV.position = v.position;
+		newV.texCoords = v.texCoords;
+		newV.normal = accumulatedNormals[v.position];
+
+		memcpy(newV.boneIDs, v.boneIDs, sizeof(int) * MAX_BONE_INFLUENCE);
+		memcpy(newV.weights, v.weights, sizeof(float) * MAX_BONE_INFLUENCE);
+
+		smothedVertices.push_back(newV);
 	}
 
 	return Engine::GetInstance().moduleRender->UploadSmoothedMeshToGPU(

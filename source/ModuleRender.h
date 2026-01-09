@@ -125,6 +125,8 @@ private:
 	GLint normalViewMatrixLoc;
 	GLint normalProjectionMatrixLoc;
 	GLint normalColorLoc;
+	GLint normalHasBonesLoc = 0;
+	GLint normalFinalBonesMatricesLoc = 0;
 
 	//STENCIL DRAW
 	unsigned int outlineShaderProgram;
@@ -132,6 +134,9 @@ private:
 	GLint outlineViewMatrixLoc;
 	GLint outlineProjectionMatrixLoc;
 	GLint outlineColorLoc;
+	GLint outlineHasBonesLoc = 0;
+	GLint outlineFinalBonesMatricesLoc = 0;
+
 
 	//LINES DRAW
 	unsigned int lineShaderProgram;
@@ -148,6 +153,8 @@ private:
 	GLint meshLinesViewMatrixLoc;
 	GLint meshLinesProjectionMatrixLoc;
 	GLint meshLinesColorLoc;
+	GLint meshLinesHasBonesLoc = 0;
+	GLint meshLinesFinalBonesMatricesLoc = 0;
 
 	unsigned int defaultTextureID;
 	unsigned int checkerTextureID;
