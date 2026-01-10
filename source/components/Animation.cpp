@@ -23,12 +23,21 @@ Animation::~Animation()
 void Animation::CleanUp()
 {
     Engine::GetInstance().moduleEvents->Unsubscribe(Event::Type::GameObjectDestroyed, this);
-    if (resource)
+
+
+    if (currentAnimation)
     {
-        resource->UnloadFromMemory();
-        resource->RemoveReference(this);
-        resource = nullptr;
-        resourceUID = 0;
+        currentAnimation->UnloadFromMemory();
+        currentAnimation->RemoveReference(this);
+        currentAnimation = nullptr;
+        currentAnimationUID = 0;
+    }
+
+    if (targetAnimation)
+    {
+        targetAnimation->UnloadFromMemory();
+        targetAnimation->RemoveReference(this);
+        targetAnimation = nullptr;
     }
 }
 
@@ -36,42 +45,17 @@ void Animation::AddAnimation(const std::string& name, uint32_t uid)
 {
     if (name.empty() || uid == 0) return;
 
-    animationsLibrary[name] = uid;
-}
+    AnimationData data;
+    data.uid = uid;
+    data.loop = true;
 
-void Animation::SetAnimation(UID uid)
-{
-    if (resource)
-    {
-        resource->UnloadFromMemory();
-        resource->RemoveReference(this);
-        resource = nullptr;
-    }
-
-    resourceUID = uid;
-
-    resource = (ResourceAnimation*)Engine::GetInstance().moduleResources->RequestResource(uid);
-    if (resource)
-    {
-
-        resource->LoadToMemory();
-        resource->AddReference(this);
-        int numChannels = resource->channels.size();
-
-        InvalidateBoneMap();
-        BuildAnimCache();
-    }
-    else
-    {
-        resource = nullptr;
-        resourceUID = 0;
-    }
+    animationsLibrary[name] = data;
 }
 
 void Animation::ResetPose()
 {
-    // Restauramos la T-Pose guardada
-    for (const auto& link : animCache)
+    // Recorremos todo el esqueleto que hemos descubierto hasta ahora
+    for (const auto& link : skeletonCache)
     {
         if (link.transform)
         {
@@ -82,21 +66,68 @@ void Animation::ResetPose()
     }
 }
 
-void Animation::Play(const std::string& name)
+void Animation::Play(const std::string& name, float blendTime)
 {
-    // 1. Buscamos en el mapa
     auto it = animationsLibrary.find(name);
+    if (it == animationsLibrary.end()) return;
 
-    if (it != animationsLibrary.end())
+    // 1. RECUPERAMOS LOS DATOS DE LA LIBRERÍA
+    AnimationData& data = it->second;
+    UID newUID = data.uid;
+    bool shouldLoop = data.loop; // Leemos la config guardada
+
+    // --- CASO 1: RESET / INICIO ---
+    if (blendTime <= 0.0f || !currentAnimation || !playing)
     {
-        // 2. Si existe, llamamos a tu función original pasándole el UID
-        SetAnimation(it->second);
-        playing = true; // Ponemos playing = true
-        currentTime = 0;
+        if (currentAnimation)
+        {
+            currentAnimation->UnloadFromMemory();
+            currentAnimation->RemoveReference(this);
+        }
+
+        currentAnimationUID = newUID;
+        currentAnimation = (ResourceAnimation*)Engine::GetInstance().moduleResources->RequestResource(newUID);
+
+        if (currentAnimation)
+        {
+            currentAnimation->LoadToMemory();
+            currentAnimation->AddReference(this);
+        }
+
+        // APLICAMOS EL LOOP QUE HEMOS LEÍDO
+        this->loop = shouldLoop;
+
+        playing = true;
+        currentTime = 0.0f;
+        isBlending = false;
+        targetAnimation = nullptr;
+
+        EnsureSkeletonMatches(currentAnimation);
+        UpdateChannelPointers();
     }
+    // --- CASO 2: BLENDING ---
     else
     {
-        LOG("Warning: Animation '%s' not found in library.", name.c_str());
+        if (currentAnimation->GetUID() == newUID) return;
+
+        targetAnimation = (ResourceAnimation*)Engine::GetInstance().moduleResources->RequestResource(newUID);
+
+        if (targetAnimation)
+        {
+            targetAnimation->LoadToMemory();
+            targetAnimation->AddReference(this);
+
+            targetTime = 0.0f;
+            isBlending = true;
+            blendDuration = blendTime;
+            currentBlendTime = 0.0f;
+
+            // APLICAMOS EL LOOP AQUÍ TAMBIÉN
+            this->loop = shouldLoop;
+
+            EnsureSkeletonMatches(targetAnimation);
+            UpdateChannelPointers();
+        }
     }
 }
 
@@ -112,50 +143,99 @@ void Animation::Stop()
 void Animation::Update()
 {
     if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_I) == KEY_DOWN) AddAnimation("Dying", 3007017118);
-    if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_J) == KEY_DOWN) AddAnimation("Running", 3007017118);
+    if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_J) == KEY_DOWN) AddAnimation("Running", 4152947879);
 
-    if (!playing || !resource) return;
-
-    if (invalidatingFlag)
-    {
-        InvalidateBoneMap();
-        BuildAnimCache();
-        invalidatingFlag = false;
-    }
+    // Si no estamos reproduciendo o no hay recurso base, no hacemos nada
+    if (!playing || !currentAnimation) return;
 
     float dt = Time::deltaTime;
-    currentTime += dt * resource->ticksPerSecond * speed;
 
-    if (currentTime >= resource->duration)
+    // =============================================================
+    // 1. AVANZAR ANIMACIÓN ACTUAL (SOURCE / A)
+    // =============================================================
+    currentTime += dt * currentAnimation->ticksPerSecond * speed;
+
+    // Gestión del Loop para A
+    if (currentTime >= currentAnimation->duration)
     {
         if (loop)
         {
-            currentTime = fmod(currentTime, resource->duration);
+            currentTime = std::fmod(currentTime, currentAnimation->duration);
         }
         else
         {
-            currentTime = resource->duration;
-            playing = false;
+            currentTime = currentAnimation->duration;
+
+            // IMPORTANTE: Si estamos mezclando, NO paramos 'playing'.
+            // Queremos que A se congele en el último frame mientras B entra suavemente.
+            if (!isBlending)
+            {
+                playing = false;
+            }
         }
     }
 
-    UpdateTransformations(resource, currentTime);
-}
-
-void Animation::InvalidateBoneMap()
-{
-    boneMap.clear();
-    if (!resource || !owner) return;
-
-    for (const auto& channel : resource->channels)
+    // =============================================================
+    // 2. AVANZAR ANIMACIÓN DESTINO (TARGET / B) - Solo si hay Blend
+    // =============================================================
+    if (isBlending && targetAnimation)
     {
-        GameObject* bone = owner->FindChild(channel.name);
+        // Avanzamos el tiempo de la animación B
+        targetTime += dt * targetAnimation->ticksPerSecond * speed;
 
-        if (bone)
+        // Avanzamos el cronómetro de la mezcla
+        currentBlendTime += dt;
+
+        // Gestión del Loop para B (Target)
+        // Por defecto asumimos loop, o podrías leer una flag de la targetAnimation
+        if (targetTime >= targetAnimation->duration)
         {
-            boneMap[channel.name] = bone;
+            if (this->loop)
+            {
+                targetTime = std::fmod(targetTime, targetAnimation->duration);
+            }
+            else
+            {
+                targetTime = targetAnimation->duration;
+                // No paramos 'playing' aquí, esperamos al swap
+            }
+        }
+
+        // =============================================================
+        // 3. FIN DE LA TRANSICIÓN (SWAP)
+        // =============================================================
+        if (currentBlendTime >= blendDuration)
+        {
+            // ¡El Rey ha muerto, viva el Rey!
+
+            // A. Liberamos la animación vieja (A)
+            // Nota: Si usas contadores de referencia, aquí restas uno.
+            currentAnimation->RemoveReference(this);
+            currentAnimation->UnloadFromMemory();
+
+            // B. Promocionamos la animación nueva (B -> A)
+            currentAnimation = targetAnimation;
+            currentAnimationUID = targetAnimation->GetUID(); // Mantener UID sincronizado
+            currentTime = targetTime; // Sincronizamos el tiempo para que no salte
+
+            // C. Reseteamos variables de blend
+            targetAnimation = nullptr;
+            isBlending = false;
+            currentBlendTime = 0.0f;
+
+            // D. RE-CONECTAR LOS CABLES
+            // Esto es vital: Ahora 'channelA' en el esqueleto debe apuntar 
+            // a los canales de la nueva animación (la que antes era B).
+            // Y 'channelB' pasará a ser nullptr.
+            UpdateChannelPointers();
         }
     }
+
+    // =============================================================
+    // 4. APLICAR TRANSFORMACIONES
+    // =============================================================
+    // Ya no necesitamos pasar argumentos, la función lee 'currentTime', 'targetTime', etc.
+    UpdateTransformations(nullptr, 0);
 }
 
 glm::vec3 Animation::GetPositionValue(const Channel& channel, float currentAnimTime)
@@ -223,145 +303,206 @@ glm::vec3 Animation::GetScaleValue(const Channel& channel, float currentAnimTime
 // UPDATE LIMPIO (Sin Strings, Sin Mapas)
 // =============================================================
 
-void Animation::UpdateTransformations(const ResourceAnimation* animation, float currentAnimTime)
+void Animation::UpdateTransformations(const ResourceAnimation* ignored, float currentAnimTime)
 {
-    // Iteramos sobre la CACHÉ (std::vector), acceso secuencial rapidísimo
-    for (const auto& link : animCache)
+    float factor = 0.0f;
+    if (isBlending)
     {
-        // Usamos los punteros directos que guardamos en BuildAnimCache
-        // Y pasamos los índices por referencia para que se actualicen solos
+        factor = currentBlendTime / blendDuration;
+        if (factor > 1.0f) factor = 1.0f;
+    }
 
-        glm::vec3 position = GetPositionValue(*link.channel, currentAnimTime);
-        glm::quat rotation = GetRotationValue(*link.channel, currentAnimTime);
-        glm::vec3 scale = GetScaleValue(*link.channel, currentAnimTime);
+    for (const auto& link : skeletonCache)
+    {
+        if (!link.transform) continue;
 
-        // Aplicamos la transformación en BATCH (Todo de golpe)
-        // (Asegúrate de haber implementado SetLocalTransform en Transform.cpp como hablamos)
-        link.transform->SetLocalPosition(position);
-        link.transform->SetLocalQuaternionRotation(rotation);
-        link.transform->SetLocalScale(scale);
+        // VALORES DEFAULT
+        glm::vec3 finalPos = link.transform->GetLocalPosition();
+        glm::quat finalRot = link.transform->GetLocalQuaterionRotation();
+        glm::vec3 finalScl = link.transform->GetLocalScale();
+
+        // APORTACIÓN A
+        if (link.channelA)
+        {
+            finalPos = GetPositionValue(*link.channelA, currentTime);
+            finalRot = GetRotationValue(*link.channelA, currentTime);
+            finalScl = GetScaleValue(*link.channelA, currentTime);
+        }
+
+        // BLEND CON B
+        if (isBlending && link.channelB)
+        {
+            glm::vec3 posB = GetPositionValue(*link.channelB, targetTime);
+            glm::quat rotB = GetRotationValue(*link.channelB, targetTime);
+            glm::vec3 sclB = GetScaleValue(*link.channelB, targetTime);
+
+            finalPos = glm::mix(finalPos, posB, factor);
+            finalRot = glm::slerp(finalRot, rotB, factor);
+            finalScl = glm::mix(finalScl, sclB, factor);
+        }
+
+        link.transform->SetLocalPosition(finalPos);
+        link.transform->SetLocalQuaternionRotation(finalRot);
+        link.transform->SetLocalScale(finalScl);
     }
 }
 
-void Animation::BuildAnimCache()
+void Animation::UpdateChannelPointers()
 {
-    animCache.clear();
-    if (!resource || !owner) return;
-
-    // Reservamos memoria para evitar realocaciones
-    animCache.reserve(resource->channels.size());
-
-    for (const auto& channel : resource->channels)
+    // Iteramos sobre NUESTRA caché (todos los huesos que hemos descubierto hasta ahora)
+    for (auto& link : skeletonCache)
     {
-        // 1. Buscamos el GameObject (Lento, pero solo 1 vez)
-        auto it = boneMap.find(channel.name);
+        // 1. Enlazamos Animación A (Current)
+        link.channelA = FindChannel(currentAnimation, link.boneName);
 
-        if (it != boneMap.end())
+        // 2. Enlazamos Animación B (Target)
+        if (isBlending && targetAnimation)
         {
-            GameObject* boneGO = it->second;
-
-            // 2. Buscamos el Transform (Lento, pero solo 1 vez)
-            Transform* t = (Transform*)boneGO->transform;
-
-            if (t)
-            {
-                // 3. ¡ÉXITO! Creamos el Enlace Directo
-                AnimLink link;
-                link.channel = &channel; // Guardamos puntero al canal
-                link.transform = t;      // Guardamos puntero al transform
-
-                link.originalPos = t->GetLocalPosition();
-                link.originalRot = t->GetLocalQuaterionRotation(); // O GetRotation() local
-                link.originalScl = t->GetLocalScale();
-
-                animCache.push_back(link);
-            }
+            link.channelB = FindChannel(targetAnimation, link.boneName);
+        }
+        else
+        {
+            link.channelB = nullptr;
         }
     }
-
-    LOG("AnimCache reconstruida. %d huesos enlazados.", animCache.size());
 }
 
+void Animation::EnsureSkeletonMatches(const ResourceAnimation* anim)
+{
+    if (!anim || !owner) return;
+
+    for (const auto& channel : anim->channels)
+    {
+        if (boneIndexMap.find(channel.name) == boneIndexMap.end())
+        {
+            GameObject* go = owner->FindChild(channel.name);
+            if (go)
+            {
+                BoneLink newLink;
+                newLink.boneName = channel.name;
+                newLink.transform = (Transform*)go->transform;
+                newLink.channelA = nullptr;
+                newLink.channelB = nullptr;
+
+                // --- NUEVO: Capturamos la T-Pose aquí ---
+                Transform* t = newLink.transform;
+                newLink.originalPos = t->GetLocalPosition();
+                newLink.originalRot = t->GetLocalQuaterionRotation();
+                newLink.originalScl = t->GetLocalScale();
+                // ----------------------------------------
+
+                skeletonCache.push_back(newLink);
+                boneIndexMap[channel.name] = skeletonCache.size() - 1;
+            }
+            // ... logs de error ...
+        }
+    }
+}
+
+const Channel* Animation::FindChannel(const ResourceAnimation* anim, const std::string& name)
+{
+    if (!anim) return nullptr;
+    for (const auto& ch : anim->channels)
+    {
+        if (ch.name == name) return &ch;
+    }
+    return nullptr;
+}
 
 void Animation::OnEditor()
 {
     if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        // --- SECCIÓN 1: ESTADO ACTUAL ---
-        if (resource)
-        {
-            ImGui::TextColored(ImVec4(0, 1, 0, 1), "Playing: %s (UID: %u)", resource->GetAssetFile(), resourceUID);
-            // ... tus controles de Play/Stop/Slider ...
-        }
-        else
-        {
-            ImGui::TextColored(ImVec4(1, 0, 0, 1), "No Animation Playing");
-        }
-
         ImGui::Separator();
-
-        // --- SECCIÓN 2: LIBRERÍA (LISTA) ---
         ImGui::Text("Library:");
 
-        // Iteramos el mapa para mostrar lo que tenemos
-        // Usamos un iterador para poder borrar elementos de forma segura si hiciera falta
+        int i = 0;
+        // Iteramos el mapa
         for (auto it = animationsLibrary.begin(); it != animationsLibrary.end(); )
         {
             ImGui::PushID(it->first.c_str());
 
-            // Botón para reproducir esta animación concreta
-            if (ImGui::Button("Play"))
-            {
-                Play(it->first);
-            }
-            ImGui::SameLine();
-            ImGui::Text("Name: %s | UID: %u", it->first.c_str(), it->second);
+            bool deleteRequested = false;
 
-            // Botón para borrar de la lista (opcional)
+            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+            bool isNodeOpen = ImGui::TreeNodeEx(it->first.c_str(), flags);
+
             ImGui::SameLine();
+
+            float buttonWidth = 20.0f;
+            float availableWidth = ImGui::GetContentRegionAvail().x;
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + availableWidth - buttonWidth);
+
             if (ImGui::SmallButton("X"))
             {
-                it = animationsLibrary.erase(it); // Borramos y avanzamos
+                deleteRequested = true;
             }
-            else
+
+            if (isNodeOpen && !deleteRequested)
             {
-                ++it; // Avanzamos normal
+                ImGui::Text("UID: %u", it->second.uid);
+
+                ImGui::Checkbox("Loop", &it->second.loop);
+ 
+                if (ImGui::Button("PLAY", ImVec2(-1, 0)))
+                {
+                    Play(it->first, 0.5f);
+                }
+
+                ImGui::TreePop();
             }
 
             ImGui::PopID();
+
+            if (deleteRequested)
+            {
+                it = animationsLibrary.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+            i++;
+        }
+
+        if (i == 0)
+        {
+            ImGui::SameLine();
+            ImGui::Text("empty");
         }
 
         ImGui::Separator();
 
-        // --- SECCIÓN 3: AÑADIR NUEVA (DRAG & DROP) ---
-        ImGui::Text("Add New Animation:");
-
-        // 1. Campo de texto para el nombre ("Idle", "Run")
-        // Necesitas un buffer estático o variable miembro char[] para ImGui::InputText
         static char nameBuffer[64] = "New Animation";
-        ImGui::InputText(" ", nameBuffer, 64);
+        int availableWidth = ImGui::GetContentRegionAvail().x;
 
-        // 2. Botón/Zona para arrastrar
-        ImGui::Button("<< DRAG ANIMATION HERE >>", ImVec2(200, 30));
-
-        // 3. Lógica del Drag & Drop Target
-        if (ImGui::BeginDragDropTarget())
+        if (addAnimation)
         {
-            // Aceptamos payloads de tipo "RESOURCE" (o como lo tengas etiquetado en tu Project Panel)
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("RESOURCE"))
+            ImGui::InputText(" ", nameBuffer, 64);
+            ImGui::Button("Drop animation", ImVec2(availableWidth, 20));
+            if (ImGui::BeginDragDropTarget())
             {
-                // Asumiendo que el payload contiene el UID (uint32_t)
-                UID droppedUID = *(UID*)payload->Data;
-
-                // Comprobamos que sea una animación (opcional, pidiendo el tipo al Resources)
-                Resource* res = Engine::GetInstance().moduleResources->RequestResource(droppedUID);
-                if (res && res->GetType() == Resource::Type::animation)
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("RESOURCE"))
                 {
-                    AddAnimation(nameBuffer, droppedUID);
-                    res->UnloadFromMemory();
+                    UID droppedUID = *(UID*)payload->Data;
+                    Resource* res = Engine::GetInstance().moduleResources->RequestResource(droppedUID);
+                    if (res && res->GetType() == Resource::Type::animation)
+                    {
+                        AddAnimation(nameBuffer, droppedUID);
+                        res->UnloadFromMemory();
+                        addAnimation = false;
+                    }
                 }
+                ImGui::EndDragDropTarget();
             }
-            ImGui::EndDragDropTarget();
+        }
+        else
+        {
+            if (ImGui::Button("Add animation", ImVec2(availableWidth, 20)))
+            {
+                addAnimation = true;
+            }
         }
     }
 }
@@ -372,21 +513,17 @@ void Animation::OnEvent(const Event& event)
     {
     case Event::Type::GameObjectDestroyed:
     {
-        if (boneMap.empty()) return;
+        if (skeletonCache.empty()) return;
 
         GameObject* deletedGO = event.data.gameObject.gameObject;
 
-        for (auto pair : boneMap)
+        for (auto& link : skeletonCache)
         {
-            if (pair.second == deletedGO)
+            if (link.transform && link.transform->owner == deletedGO)
             {
-                pair.second = nullptr;
-
-                // B. Activamos la bandera para reconstruir en el siguiente Update
-                invalidatingFlag = true;
+                link.transform = nullptr;
             }
         }
-
         break;
     }
 
@@ -397,10 +534,10 @@ void Animation::OnEvent(const Event& event)
 
 void Animation::OnResourceLost(UID lostUID)
 {
-    if (resourceUID == lostUID)
+    if (currentAnimationUID == lostUID)
     {
-        LOG("Animation resource deleted! Removing reference in Component.");
-        resource = nullptr;
-        resourceUID = 0;
+        LOG("Animation currentAnimation deleted! Removing reference in Component.");
+        currentAnimation = nullptr;
+        currentAnimationUID = 0;
     }
 }

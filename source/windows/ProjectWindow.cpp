@@ -458,7 +458,7 @@ unsigned int ProjectWindow::GetIconTextureWithExtension(const std::string& exten
         extension == "tga" ||
         extension == "bmp" ||
         extension == "dds" ||
-        extension == "tiff")
+        extension == "tif")
     {
 
         return imageIconTextureID;

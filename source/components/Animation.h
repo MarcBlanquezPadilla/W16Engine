@@ -4,19 +4,26 @@
 #include "../EventListener.h"
 #include <map>
 #include <string>
-#include <vector> // Importante para std::vector
+#include <vector>
 
 class GameObject;
 class Transform;
 
 // ESTRUCTURA DE CACHÉ OPTIMIZADA
-struct AnimLink {
-    const Channel* channel;
+struct BoneLink {
+    std::string boneName;
     Transform* transform;
+    const Channel* channelA;
+    const Channel* channelB;
 
     glm::vec3 originalPos;
     glm::quat originalRot;
     glm::vec3 originalScl;
+};
+
+struct AnimationData {
+    uint32_t uid = 0;
+    bool loop = true;
 };
 
 class Animation : public Component, public ResourceUser, public EventListener
@@ -33,24 +40,21 @@ public:
 
     void AddAnimation(const std::string& name, uint32_t uid);
 
-
-
-    void Play(const std::string& name);
+    void Play(const std::string& name, float blendTime = 0.2f);
     void ResetPose();
     void Stop();
     void Pause();
 
-    void SetAnimation(UID animUID);
-
     void OnEditor() override;
-
     void OnEvent(const Event& event) override;
     void OnResourceLost(UID resourceUID) override;
 
 
 private:
-    void BuildAnimCache();
-    void InvalidateBoneMap();
+
+    void EnsureSkeletonMatches(const ResourceAnimation* anim);
+    void UpdateChannelPointers();
+    const Channel* FindChannel(const ResourceAnimation* anim, const std::string& name);
 
     glm::vec3 GetPositionValue(const Channel& channel, float currentAnimTime);
     glm::quat GetRotationValue(const Channel& channel, float currentAnimTime);
@@ -60,10 +64,11 @@ private:
 
 
 public:
-    UID resourceUID = 0;
-    ResourceAnimation* resource = nullptr;
+    UID currentAnimationUID = 0;
+    ResourceAnimation* currentAnimation = nullptr;
+    ResourceAnimation* targetAnimation = nullptr;
 
-    std::map<std::string, UID> animationsLibrary;
+    std::map<std::string, AnimationData> animationsLibrary;
 
     bool loop = true;
     bool playing = false;
@@ -72,11 +77,20 @@ public:
     float currentTime = 0.0f;
 
 private:
-    //CACHE
-    std::map<std::string, GameObject*> boneMap;
-    std::vector<AnimLink> animCache;
+
+    // NUEVAS VARIABLES DE BLENDING
+    float targetTime = 0.0f;
+
+    bool isBlending = false;
+    float blendDuration = 0.0f;
+    float currentBlendTime = 0.0f;
+
+    // LA NUEVA CACHÉ
+    std::vector<BoneLink> skeletonCache;
+    std::map<std::string, int> boneIndexMap;
 
 
     bool debugDraw = false;
     bool invalidatingFlag = false;
+    bool addAnimation = false;
 };
