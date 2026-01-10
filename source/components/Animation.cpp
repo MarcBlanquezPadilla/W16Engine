@@ -32,6 +32,13 @@ void Animation::CleanUp()
     }
 }
 
+void Animation::AddAnimation(const std::string& name, uint32_t uid)
+{
+    if (name.empty() || uid == 0) return;
+
+    animationsLibrary[name] = uid;
+}
+
 void Animation::SetAnimation(UID uid)
 {
     if (resource)
@@ -52,7 +59,7 @@ void Animation::SetAnimation(UID uid)
         int numChannels = resource->channels.size();
 
         InvalidateBoneMap();
-        RebuildAnimCache();
+        BuildAnimCache();
     }
     else
     {
@@ -75,9 +82,22 @@ void Animation::ResetPose()
     }
 }
 
-void Animation::Play()
+void Animation::Play(const std::string& name)
 {
-    playing = true;
+    // 1. Buscamos en el mapa
+    auto it = animationsLibrary.find(name);
+
+    if (it != animationsLibrary.end())
+    {
+        // 2. Si existe, llamamos a tu función original pasándole el UID
+        SetAnimation(it->second);
+        playing = true; // Ponemos playing = true
+        currentTime = 0;
+    }
+    else
+    {
+        LOG("Warning: Animation '%s' not found in library.", name.c_str());
+    }
 }
 
 void Animation::Stop()
@@ -91,14 +111,15 @@ void Animation::Stop()
 // EL CORAZÓN DEL SISTEMA
 void Animation::Update()
 {
-    if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_I) == KEY_DOWN) SetAnimation(3007017118);
+    if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_I) == KEY_DOWN) AddAnimation("Dying", 3007017118);
+    if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_J) == KEY_DOWN) AddAnimation("Running", 3007017118);
 
     if (!playing || !resource) return;
 
     if (invalidatingFlag)
     {
         InvalidateBoneMap();
-        RebuildAnimCache();
+        BuildAnimCache();
         invalidatingFlag = false;
     }
 
@@ -133,39 +154,6 @@ void Animation::InvalidateBoneMap()
         if (bone)
         {
             boneMap[channel.name] = bone;
-        }
-    }
-}
-
-void Animation::OnEditor()
-{
-    if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen))
-    {
-        // Mostrar UID o Nombre
-        ImGui::Text("Anim UID: %d", resource);
-
-        // Botones de control
-        if (ImGui::Button("Play")) Play();
-        ImGui::SameLine();
-        if (ImGui::Button("Stop")) Stop();
-
-        // Slider de tiempo (scrubbing)
-        if (resource)
-        {
-            float duration = (float)resource->duration;
-            if (ImGui::SliderFloat("Time", &currentTime, 0.0f, duration))
-            {
-                // Si movemos el slider, actualizamos la pose manualmente
-                // UpdateTransformations();
-            }
-            ImGui::Checkbox("Loop", &loop);
-            ImGui::DragFloat("Speed", &speed, 0.1f, 0.0f, 5.0f);
-
-            ImGui::Text("Bones mapped: %d / %d", boneMap.size(), resource->channels.size());
-        }
-        else
-        {
-            ImGui::Text("No Animation Loaded");
         }
     }
 }
@@ -240,7 +228,7 @@ void Animation::UpdateTransformations(const ResourceAnimation* animation, float 
     // Iteramos sobre la CACHÉ (std::vector), acceso secuencial rapidísimo
     for (const auto& link : animCache)
     {
-        // Usamos los punteros directos que guardamos en RebuildAnimCache
+        // Usamos los punteros directos que guardamos en BuildAnimCache
         // Y pasamos los índices por referencia para que se actualicen solos
 
         glm::vec3 position = GetPositionValue(*link.channel, currentAnimTime);
@@ -255,7 +243,7 @@ void Animation::UpdateTransformations(const ResourceAnimation* animation, float 
     }
 }
 
-void Animation::RebuildAnimCache()
+void Animation::BuildAnimCache()
 {
     animCache.clear();
     if (!resource || !owner) return;
@@ -292,6 +280,90 @@ void Animation::RebuildAnimCache()
     }
 
     LOG("AnimCache reconstruida. %d huesos enlazados.", animCache.size());
+}
+
+
+void Animation::OnEditor()
+{
+    if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        // --- SECCIÓN 1: ESTADO ACTUAL ---
+        if (resource)
+        {
+            ImGui::TextColored(ImVec4(0, 1, 0, 1), "Playing: %s (UID: %u)", resource->GetAssetFile(), resourceUID);
+            // ... tus controles de Play/Stop/Slider ...
+        }
+        else
+        {
+            ImGui::TextColored(ImVec4(1, 0, 0, 1), "No Animation Playing");
+        }
+
+        ImGui::Separator();
+
+        // --- SECCIÓN 2: LIBRERÍA (LISTA) ---
+        ImGui::Text("Library:");
+
+        // Iteramos el mapa para mostrar lo que tenemos
+        // Usamos un iterador para poder borrar elementos de forma segura si hiciera falta
+        for (auto it = animationsLibrary.begin(); it != animationsLibrary.end(); )
+        {
+            ImGui::PushID(it->first.c_str());
+
+            // Botón para reproducir esta animación concreta
+            if (ImGui::Button("Play"))
+            {
+                Play(it->first);
+            }
+            ImGui::SameLine();
+            ImGui::Text("Name: %s | UID: %u", it->first.c_str(), it->second);
+
+            // Botón para borrar de la lista (opcional)
+            ImGui::SameLine();
+            if (ImGui::SmallButton("X"))
+            {
+                it = animationsLibrary.erase(it); // Borramos y avanzamos
+            }
+            else
+            {
+                ++it; // Avanzamos normal
+            }
+
+            ImGui::PopID();
+        }
+
+        ImGui::Separator();
+
+        // --- SECCIÓN 3: AÑADIR NUEVA (DRAG & DROP) ---
+        ImGui::Text("Add New Animation:");
+
+        // 1. Campo de texto para el nombre ("Idle", "Run")
+        // Necesitas un buffer estático o variable miembro char[] para ImGui::InputText
+        static char nameBuffer[64] = "New Animation";
+        ImGui::InputText(" ", nameBuffer, 64);
+
+        // 2. Botón/Zona para arrastrar
+        ImGui::Button("<< DRAG ANIMATION HERE >>", ImVec2(200, 30));
+
+        // 3. Lógica del Drag & Drop Target
+        if (ImGui::BeginDragDropTarget())
+        {
+            // Aceptamos payloads de tipo "RESOURCE" (o como lo tengas etiquetado en tu Project Panel)
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("RESOURCE"))
+            {
+                // Asumiendo que el payload contiene el UID (uint32_t)
+                UID droppedUID = *(UID*)payload->Data;
+
+                // Comprobamos que sea una animación (opcional, pidiendo el tipo al Resources)
+                Resource* res = Engine::GetInstance().moduleResources->RequestResource(droppedUID);
+                if (res && res->GetType() == Resource::Type::animation)
+                {
+                    AddAnimation(nameBuffer, droppedUID);
+                    res->UnloadFromMemory();
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+    }
 }
 
 void Animation::OnEvent(const Event& event)

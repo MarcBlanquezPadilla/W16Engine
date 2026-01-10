@@ -31,11 +31,16 @@ public:
 
     ComponentType GetType() override { return ComponentType::Animation; };
 
-    void SetAnimation(UID animUID);
+    void AddAnimation(const std::string& name, uint32_t uid);
+
+
+
+    void Play(const std::string& name);
     void ResetPose();
-    void Play();
     void Stop();
     void Pause();
+
+    void SetAnimation(UID animUID);
 
     void OnEditor() override;
 
@@ -44,7 +49,7 @@ public:
 
 
 private:
-    void RebuildAnimCache();
+    void BuildAnimCache();
     void InvalidateBoneMap();
 
     glm::vec3 GetPositionValue(const Channel& channel, float currentAnimTime);
@@ -58,6 +63,8 @@ public:
     UID resourceUID = 0;
     ResourceAnimation* resource = nullptr;
 
+    std::map<std::string, UID> animationsLibrary;
+
     bool loop = true;
     bool playing = false;
     float speed = 1.0f;
@@ -65,8 +72,10 @@ public:
     float currentTime = 0.0f;
 
 private:
+    //CACHE
     std::map<std::string, GameObject*> boneMap;
     std::vector<AnimLink> animCache;
+
 
     bool debugDraw = false;
     bool invalidatingFlag = false;
