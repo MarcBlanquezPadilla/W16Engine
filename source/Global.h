@@ -31,9 +31,18 @@ static UID GenerateNewUID()
 #define CUBE 1
 #define PYRAMID 2
 #define SPHERE 3
+#define ICON_FILE 4
+#define ICON_FOLDER 5
+#define ICON_IMAGE 6
+#define ICON_MESH 7
+#define ICON_MODEL 8
+#define ICON_SCENE 9
+#define ICON_SCRIPT 10
+#define ICON_ANIMATION 11
 
 #define GAMEOBJECTS_DRAG "OBJECTS_DRAG"
 #define ASSETS_DRAG "ASSETS_DRAG"
+#define	RESOURCE_DRAG "RESOURCE_DRAG"
 
 #define DEBUG_R 0.0f
 #define DEBUG_G 1.0f

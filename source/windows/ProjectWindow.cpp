@@ -7,7 +7,9 @@
 #include "../Engine.h"
 #include "../Global.h"
 #include "../utils/Log.h"
+#include "../utils/Config.h"
 #include "../utils/FileUtils.h"
+#include "../resources/ResourceTexture.h"
 
 #include "imgui.h"
 
@@ -25,23 +27,14 @@ ProjectWindow::~ProjectWindow()
 
 void ProjectWindow::Awake()
 {
-    int width = 0, height = 0;
-    Engine::GetInstance().moduleLoader->LoadTexture("Resources/folder.png", folderIconTextureID, width, height, true);
-    
-    width = 0, height = 0;
-    Engine::GetInstance().moduleLoader->LoadTexture("Resources/file.png", fileIconTextureID, width, height, true);
-
-    width = 0, height = 0;
-    Engine::GetInstance().moduleLoader->LoadTexture("Resources/model.png", modelIconTextureID, width, height, true);
-
-    width = 0, height = 0;
-    Engine::GetInstance().moduleLoader->LoadTexture("Resources/image.png", imageIconTextureID, width, height, true);
-
-    width = 0, height = 0;
-    Engine::GetInstance().moduleLoader->LoadTexture("Resources/scene.png", sceneIconTextureID, width, height, true);
-
-    width = 0, height = 0;
-    Engine::GetInstance().moduleLoader->LoadTexture("Resources/script.png", scriptIconTextureID, width, height, true);
+    fileIcon = (ResourceTexture*)Engine::GetInstance().moduleResources->RequestResource(ICON_FILE);
+    folderIcon = (ResourceTexture*)Engine::GetInstance().moduleResources->RequestResource(ICON_FOLDER);
+    modelIcon = (ResourceTexture*)Engine::GetInstance().moduleResources->RequestResource(ICON_MODEL);
+    meshIcon = (ResourceTexture*)Engine::GetInstance().moduleResources->RequestResource(ICON_MESH);
+    animIcon = (ResourceTexture*)Engine::GetInstance().moduleResources->RequestResource(ICON_ANIMATION);
+    imageIcon = (ResourceTexture*)Engine::GetInstance().moduleResources->RequestResource(ICON_IMAGE);
+    scriptIcon = (ResourceTexture*)Engine::GetInstance().moduleResources->RequestResource(ICON_SCRIPT);
+    sceneIcon = (ResourceTexture*)Engine::GetInstance().moduleResources->RequestResource(ICON_SCENE);
 
     rootPath = "Assets";
     RefreshTree();
@@ -82,28 +75,38 @@ void ProjectWindow::Draw()
 
     isFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
 
-
-    ImGui::Columns(2, "ProjectColumns", true);
-
-    //FOLDERS
-    ImGui::BeginChild("FolderTree", ImVec2(0, 0), true);
-    DrawFolderTree();
-    ImGui::EndChild();
-
-    //FOLDER CONTENT
-    ImGui::NextColumn();
-    ImGui::BeginChild("FolderContent", ImVec2(0, 0), true);
-    if (ImGui::Button("Back") && currentNode->parent)
+    if (currentAsset)
     {
-        currentNode = currentNode->parent;
+        ImGui::BeginChild("Subresources", ImVec2(0, 0), true);
+        DrawSubresources();
+        ImGui::EndChild();
     }
-    ImGui::SameLine();
-    ImGui::Text("| Current: %s", currentNode->path.c_str());
+    else
+    {
+        ImGui::Columns(2, "ProjectColumns", true);
 
-    DrawFolderContent();
-    ImGui::EndChild();
+        //FOLDERS
+        ImGui::BeginChild("FolderTree", ImVec2(0, 0), true);
+        DrawFolderTree();
+        ImGui::EndChild();
 
-    ImGui::Columns(1);
+        //FOLDER CONTENT
+        ImGui::NextColumn();
+        ImGui::BeginChild("FolderContent", ImVec2(0, 0), true);
+        if (ImGui::Button("Back") && currentNode->parent)
+        {
+            currentNode = currentNode->parent;
+        }
+        ImGui::SameLine();
+        ImGui::Text("| Current: %s", currentNode->path.c_str());
+
+        DrawFolderContent();
+        ImGui::EndChild();
+
+        ImGui::Columns(1);
+    }
+
+    
 
     //DELETE
     if (!ImGui::IsMouseDragging(0) && ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && selectedNodes.size() > 0 && Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_DELETE) == KEY_DOWN)
@@ -130,12 +133,12 @@ void ProjectWindow::Draw()
         nodesToDelete.clear();
     }
 
+    ImGui::End();
+
     if (windowChanged)
     {
         Engine::GetInstance().moduleResources->PublishAssetChangedEvent();
     }
-
-    ImGui::End();
 }
 
 
@@ -193,14 +196,22 @@ void ProjectWindow::DrawTreeNodeRecursive(DirectoryNode* node)
                 std::string path = dataPtr;
                 if (path.empty()) break;
 
-                if (path != node->path && path.find(node->path) == std::string::npos)
+                if (path != node->path)
                 {
-                    MoveAssetToFolder(path, node->path);
-                    std::string metaPath = path + ".meta";
-                    if (DoesFileExist(metaPath)) MoveAssetToFolder(metaPath, node->path);
-                    LOG("Movido %s a %s (Tree View)", path.c_str(), node->path.c_str());
-                }
+                    bool isMovingParentIntoChild = (node->path.find(path) != std::string::npos);
 
+                    if (!isMovingParentIntoChild)
+                    {
+                        MoveAssetToFolder(path, node->path);
+                        std::string metaPath = path + ".meta";
+                        if (DoesFileExist(metaPath))
+                            MoveAssetToFolder(metaPath, node->path);
+   
+                        
+
+                        LOG("Movido %s a %s (Tree View)", path.c_str(), node->path.c_str());
+                    }
+                }
                 dataPtr += path.length() + 1;
             }
             windowChanged = true;
@@ -247,12 +258,12 @@ void ProjectWindow::DrawFolderContent()
         ImGui::PushID(i++);
         
         ImGui::BeginGroup();
-        ImTextureID iconTexture = GetIconTextureWithExtension(child->extension);
+        ImTextureID iconTexture = GetIconTextureWithResource(child->recourse);
 
         bool isSelected = std::find(selectedNodes.begin(), selectedNodes.end(), child) != selectedNodes.end();
 
         if (isSelected) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
-        ImGui::ImageButton("##icon", iconTexture, ImVec2(thumbnailSize, thumbnailSize));
+        ImGui::ImageButton("##icon", iconTexture, ImVec2(thumbnailSize, thumbnailSize), ImVec2(0, 1), ImVec2(1, 0));
         if (isSelected) ImGui::PopStyleColor();
 
         if (ImGui::BeginDragDropSource())
@@ -335,9 +346,8 @@ void ProjectWindow::DrawFolderContent()
         {
             if (child->isDirectory) { selectedNodes.clear(); ChangeCurrentNode(child); }
             else {
-                Resource::Type type = Engine::GetInstance().moduleResources->GetTypeFromExtension(child->path);
-                if (type == Resource::model) Engine::GetInstance().moduleLoader->LoadModel(child->path);
-                else if (type == Resource::scene) Engine::GetInstance().moduleLoader->CleanAndLoadScene(child->path);
+                if (!child->subRecourses.empty())
+                    currentAsset = child;
             }
         }
 
@@ -432,57 +442,97 @@ void ProjectWindow::DrawFolderContent()
     }
 }
 
+void ProjectWindow::DrawSubresources()
+{
+    if (ImGui::Button("Back"))
+    {
+        currentAsset = nullptr;
+    }
+
+    if (currentAsset == nullptr)
+    {
+        return;
+    }
+
+    ImGui::SameLine();
+    ImGui::Text("| Current file: %s", currentAsset->name.c_str());
+    ImGui::Separator();
+
+    float padding = 16.0f;
+    float thumbnailSize = 64.0f;
+    float cellSize = thumbnailSize + padding;
+
+    float panelWidth = ImGui::GetContentRegionAvail().x;
+    int columnCount = (int)(panelWidth / cellSize);
+    if (columnCount < 1) columnCount = 1;
+
+    ImGui::Columns(columnCount, 0, false);
+
+    int i = 0;
+    for (const Resource* resource : currentAsset->subRecourses)
+    {
+        ImGui::PushID(i++);
+
+        ImGui::BeginGroup();
+        ImTextureID iconTexture = GetIconTextureWithResource(resource);
+        ImGui::ImageButton("##icon", iconTexture, ImVec2(thumbnailSize, thumbnailSize), ImVec2(0, 1), ImVec2(1, 0));
+
+        if (ImGui::BeginDragDropSource())
+        {
+            UID resourceUID = resource->GetUID();
+            ImGui::SetDragDropPayload(RESOURCE_DRAG, &resourceUID, sizeof(UID));
+            ImGui::Text("Moviendo %s", resource->GetName());
+
+            ImGui::EndDragDropSource();
+        }
+
+        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + thumbnailSize);
+        const char* name = resource->GetName();
+        ImGui::Text(name);
+        ImGui::PopTextWrapPos();
+
+        ImGui::EndGroup();
+
+        ImGui::PopID();
+
+        ImGui::NextColumn();
+    }
+}
+
 void ProjectWindow::ChangeCurrentNode(DirectoryNode* directoryNode)
 {
     currentNode = directoryNode;
     expandTreeToSelection = true;
 }
 
-unsigned int ProjectWindow::GetIconTextureWithExtension(const std::string& extension)
+unsigned int ProjectWindow::GetIconTextureWithResource(const Resource* resource)
 {
-    if (extension.empty()) return folderIconTextureID;
-
-    if (extension == "fbx" ||
-        extension == "obj" ||
-        extension == "gltf" ||
-        extension == "glb" ||
-        extension == "dae" ||
-        extension == "blend")
+    if (resource)
     {
-        return modelIconTextureID;
+        switch (resource->GetType())
+        {
+        case Resource::Type::texture:
+            return imageIcon->gpuID;
+            break;
+        case Resource::Type::model:
+            return modelIcon->gpuID;
+            break;
+        case Resource::Type::scene:
+            return sceneIcon->gpuID;
+            break;
+        case Resource::Type::mesh:
+            return meshIcon->gpuID;
+            break;
+        case Resource::Type::animation:
+            return animIcon->gpuID;
+            break;
+        default:
+            return fileIcon->gpuID;
+            break;
+        }
     }
+    else return folderIcon->gpuID;
 
-    if (extension == "png" ||
-        extension == "jpg" ||
-        extension == "jpeg" ||
-        extension == "tga" ||
-        extension == "bmp" ||
-        extension == "dds" ||
-        extension == "tif")
-    {
-
-        return imageIconTextureID;
-    }
-
-    if (extension == "cpp" ||
-        extension == "h" ||
-        extension == "hpp" ||
-        extension == "cs" ||
-        extension == "lua" ||
-        extension == "py" ||
-        extension == "json" ||
-        extension == "xml")
-    {
-        return scriptIconTextureID;
-    }
-
-    if (extension == "wscene")
-    {
-        return sceneIconTextureID;
-    }
-
-
-    return fileIconTextureID;
 }
 
 void ProjectWindow::RefreshTree()
@@ -500,6 +550,8 @@ void ProjectWindow::RefreshTree()
     }
 
     rootNode = new DirectoryNode(rootPath, rootPath, true);
+    rootNode->recourse = nullptr;
+    rootNode->subRecourses = {};
     BuildTreeRecursive(rootPath, rootNode);
 
     DirectoryNode* nodeToRestore = FindNodeByPath(rootNode, previousPath);
@@ -525,16 +577,63 @@ void ProjectWindow::BuildTreeRecursive(const std::string& path, DirectoryNode* p
         std::string extension = GetFileExtension(entry);
         bool isDir = IsFileDirectory(entry);
 
-        if (!IsFileDirectory(entry) && Engine::GetInstance().moduleResources->GetTypeFromExtension(entry) == Resource::Type::unknown) continue;
-
         DirectoryNode* newNode = new DirectoryNode(entryName, entryPath, isDir);
         newNode->parent = parentNode;
         newNode->extension = extension;
-        parentNode->children.push_back(newNode);
+        newNode->recourse = nullptr;
+        newNode->subRecourses = {};
 
-        if (isDir)
+        bool succes = true;
+
+        if (!isDir)
         {
-            BuildTreeRecursive(entryPath, newNode);
+            if (DoesFileHasMeta(entry)) 
+            {
+                Config meta;
+                std::string metaPath = GetMetaPath(entry);
+                if (meta.Load(metaPath.c_str()))
+                {
+                    UID resourceUID = meta.GetUInt("UID");
+                    if (resourceUID != 0 && Engine::GetInstance().moduleResources->PeekResource(resourceUID))
+                    {
+                        newNode->recourse = Engine::GetInstance().moduleResources->PeekResource(resourceUID);
+                        unsigned int subResourceNum = meta.GetUInt("ReferedObjects");
+
+                        if (subResourceNum > 0)
+                        {
+
+                            Config refNode = meta.GetChild("ReferedObject");
+
+                            while (refNode.IsValid())
+                            {
+                                UID childUID = (UID)refNode.GetUInt("UID");
+                                if (childUID != 0 && Engine::GetInstance().moduleResources->PeekResource(childUID))
+                                {
+                                    newNode->subRecourses.push_back(Engine::GetInstance().moduleResources->PeekResource(childUID));
+                                }
+                                refNode = refNode.GetNextSibling("ReferedObject");
+                            }
+                        }
+                    }
+                    else succes = false;
+                }
+            }
+            else succes = false;
+        }
+
+        if (succes)
+        {
+            parentNode->children.push_back(newNode);
+
+            if (isDir)
+            {
+                BuildTreeRecursive(entryPath, newNode);
+            }
+        }
+        else
+        {
+            delete newNode;
+            newNode = nullptr;
         }
     }
 }
@@ -620,7 +719,7 @@ void ProjectWindow::OnEvent(const Event& event)
     {
         {
             std::string endPath = DoesFileExist(currentNode->path) ? currentNode->path : rootPath;
-            MoveAssetToFolder(event.data.string.filePath, currentNode->path);
+            MoveAssetToFolder(event.data.string.string, currentNode->path);
         }
         break;
     }

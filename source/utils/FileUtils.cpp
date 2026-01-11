@@ -1,4 +1,6 @@
 #include "FileUtils.h"
+#include "../Engine.h"
+#include "../ModuleEvents.h"
 #include "Log.h"
 
 #include <fstream>
@@ -210,6 +212,8 @@ bool MoveAssetToFolder(const std::string& oldPath, const std::string& destinatio
         return false;
     }
 
+    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetMoved, source.generic_string().c_str(), finalDestination.generic_string().c_str()));
+
     return true;
 }
 
@@ -233,6 +237,8 @@ bool DeletePath(const std::string& path)
 
     LOG("Deleted asset successfully: %s", path.c_str());
     return true;
+
+    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetMoved, path.c_str()));
 }
 
 bool DeleteAsset(const std::string& path)
@@ -270,6 +276,8 @@ bool DeleteAsset(const std::string& path)
 
     LOG("Deleted asset successfully: %s", path.c_str());
     return true;
+
+    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetMoved, path.c_str()));
 }
 
 std::string GetFileNameNoExtension(const std::string& filePath)

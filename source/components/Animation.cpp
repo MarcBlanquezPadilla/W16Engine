@@ -41,12 +41,13 @@ void Animation::CleanUp()
     }
 }
 
-void Animation::AddAnimation(const std::string& name, uint32_t uid)
+void Animation::AddAnimation(const std::string& name, uint32_t uid, std::string resourceName)
 {
     if (name.empty() || uid == 0) return;
 
     AnimationData data;
     data.uid = uid;
+    data.resourceName = resourceName;
     data.loop = true;
 
     animationsLibrary[name] = data;
@@ -142,9 +143,6 @@ void Animation::Stop()
 // EL CORAZÓN DEL SISTEMA
 void Animation::Update()
 {
-    if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_I) == KEY_DOWN) AddAnimation("Dying", 3007017118);
-    if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_J) == KEY_DOWN) AddAnimation("Running", 4152947879);
-
     // Si no estamos reproduciendo o no hay recurso base, no hacemos nada
     if (!playing || !currentAnimation) return;
 
@@ -441,7 +439,7 @@ void Animation::OnEditor()
 
             if (isNodeOpen && !deleteRequested)
             {
-                ImGui::Text("UID: %u", it->second.uid);
+                ImGui::Text("Name: %s", it->second.resourceName.c_str());
 
                 ImGui::Checkbox("Loop", &it->second.loop);
  
@@ -483,14 +481,14 @@ void Animation::OnEditor()
             ImGui::Button("Drop animation", ImVec2(availableWidth, 20));
             if (ImGui::BeginDragDropTarget())
             {
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("RESOURCE"))
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(RESOURCE_DRAG))
                 {
                     UID droppedUID = *(UID*)payload->Data;
-                    Resource* res = Engine::GetInstance().moduleResources->RequestResource(droppedUID);
+
+                    const Resource* res = Engine::GetInstance().moduleResources->PeekResource(droppedUID);
                     if (res && res->GetType() == Resource::Type::animation)
                     {
-                        AddAnimation(nameBuffer, droppedUID);
-                        res->UnloadFromMemory();
+                        AddAnimation(nameBuffer, droppedUID, res->GetName());
                         addAnimation = false;
                     }
                 }

@@ -51,6 +51,8 @@ struct Event
 
         //ASSETS
         AssetsChanged,
+        AssetMoved,
+        AssetDeleted,
 
         //RESOURCES
         ResourceDestroyed,
@@ -76,7 +78,12 @@ struct Event
     };
 
     struct StringData {
-        char filePath[260];
+        char string[260];
+    };
+
+    struct TwoStringData {
+        char string1[260];
+        char string2[260];
     };
 
     struct GameObjectData {
@@ -98,6 +105,7 @@ struct Event
         UnsignedIntData unsignedInt;
         Point2dData point;
         StringData string;
+        TwoStringData strings;
         GameObjectData gameObject;
         RayData ray;
         SDLEvent event;
@@ -115,8 +123,13 @@ struct Event
         data.point.y = h;
     }
 
-    Event(Type t, const char* path) : type(t) {
-        strncpy_s(data.string.filePath, path, 260);
+    Event(Type t, const char* string) : type(t) {
+        strncpy_s(data.string.string, string, 260);
+    }
+
+    Event(Type t, const char* string1, const char* string2) : type(t) {
+        strncpy_s(data.strings.string1, string1, 260);
+        strncpy_s(data.strings.string2, string2, 260);
     }
 
     Event(Type t, GameObject* gameObject) : type(t) {

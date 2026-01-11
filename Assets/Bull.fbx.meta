@@ -1,35 +1,35 @@
 <?xml version="1.0"?>
-<Data UID="602432291" Type="1" FileHash="219882758" ReferedObjects="32">
-	<ReferedObject UID="347178768" Name="Death" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="376448230" Name="AnimalArmature|Walk" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="476506628" Name="Idle_HitReact_Right" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="535970205" Name="Idle_Headlow" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="658067447" Name="AnimalArmature|Idle_Headlow" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="809011028" Name="AnimalArmature|Idle_2" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="1262047133" Name="Cube" Path="Assets/Bull.fbx" Type="2" />
-	<ReferedObject UID="1650476121" Name="Cube" Path="Assets/Bull.fbx" Type="2" />
-	<ReferedObject UID="1654198611" Name="AnimalArmature|Attack_Headbutt" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="1744374181" Name="Gallop" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="1812556364" Name="Cube" Path="Assets/Bull.fbx" Type="2" />
-	<ReferedObject UID="1912550208" Name="Cube" Path="Assets/Bull.fbx" Type="2" />
-	<ReferedObject UID="2135753387" Name="AnimalArmature|Gallop" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="2277389107" Name="Cube" Path="Assets/Bull.fbx" Type="2" />
-	<ReferedObject UID="2499872590" Name="Idle_HitReact_Left" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="2707325275" Name="AnimalArmature|Attack_Kick" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="2727161515" Name="Eating" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="2913039479" Name="AnimalArmature|Gallop_Jump" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="2944275099" Name="AnimalArmature|Eating" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="2948626042" Name="Idle" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="3180034997" Name="Idle_2" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="3325690883" Name="Attack_Kick" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="3372183064" Name="AnimalArmature|Idle" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="3444974879" Name="Jump_toIdle" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="3582691131" Name="AnimalArmature|Jump_toIdle" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="3688277376" Name="Cube" Path="Assets/Bull.fbx" Type="2" />
-	<ReferedObject UID="3803709144" Name="Attack_Headbutt" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="3813929425" Name="AnimalArmature|Death" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="3856383630" Name="Walk" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="3891101663" Name="AnimalArmature|Idle_HitReact_Left" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="3950422504" Name="Gallop_Jump" Path="Assets/Bull.fbx" Type="4" />
-	<ReferedObject UID="4262197123" Name="Cube" Path="Assets/Bull.fbx" Type="2" />
+<Data UID="514215398" Type="1" FileHash="219882758" ReferedObjects="32">
+	<ReferedObject UID="393450491" Name="Cube" Type="2" />
+	<ReferedObject UID="450004001" Name="Gallop" Type="4" />
+	<ReferedObject UID="521084233" Name="Cube" Type="2" />
+	<ReferedObject UID="603605356" Name="Idle" Type="4" />
+	<ReferedObject UID="653835797" Name="AnimalArmature|Attack_Kick" Type="4" />
+	<ReferedObject UID="654719298" Name="Death" Type="4" />
+	<ReferedObject UID="716749677" Name="Idle_Headlow" Type="4" />
+	<ReferedObject UID="740971812" Name="AnimalArmature|Jump_toIdle" Type="4" />
+	<ReferedObject UID="1060602766" Name="Idle_2" Type="4" />
+	<ReferedObject UID="1155145383" Name="Idle_HitReact_Left" Type="4" />
+	<ReferedObject UID="1251782226" Name="AnimalArmature|Death" Type="4" />
+	<ReferedObject UID="1390781107" Name="Cube" Type="2" />
+	<ReferedObject UID="1553647389" Name="AnimalArmature|Gallop_Jump" Type="4" />
+	<ReferedObject UID="1618592899" Name="AnimalArmature|Gallop" Type="4" />
+	<ReferedObject UID="1656658436" Name="AnimalArmature|Idle_Headlow" Type="4" />
+	<ReferedObject UID="1714491889" Name="AnimalArmature|Idle" Type="4" />
+	<ReferedObject UID="1752339564" Name="Idle_HitReact_Right" Type="4" />
+	<ReferedObject UID="2143619907" Name="Cube" Type="2" />
+	<ReferedObject UID="2527664783" Name="Walk" Type="4" />
+	<ReferedObject UID="2580290184" Name="AnimalArmature|Attack_Headbutt" Type="4" />
+	<ReferedObject UID="2642190102" Name="Attack_Headbutt" Type="4" />
+	<ReferedObject UID="2671407250" Name="AnimalArmature|Eating" Type="4" />
+	<ReferedObject UID="2751102134" Name="Cube" Type="2" />
+	<ReferedObject UID="2761466336" Name="Cube" Type="2" />
+	<ReferedObject UID="2790744088" Name="Cube" Type="2" />
+	<ReferedObject UID="3191992405" Name="Gallop_Jump" Type="4" />
+	<ReferedObject UID="3540166485" Name="AnimalArmature|Walk" Type="4" />
+	<ReferedObject UID="3631154619" Name="Eating" Type="4" />
+	<ReferedObject UID="3709814975" Name="Jump_toIdle" Type="4" />
+	<ReferedObject UID="3749864942" Name="Attack_Kick" Type="4" />
+	<ReferedObject UID="4024044156" Name="AnimalArmature|Idle_2" Type="4" />
+	<ReferedObject UID="4238201952" Name="AnimalArmature|Idle_HitReact_Left" Type="4" />
 </Data>

@@ -3,6 +3,7 @@
 #include "Global.h"
 
 #include "Module.h"
+#include "EventListener.h"
 
 #include "resources/Resource.h"
 
@@ -10,7 +11,7 @@
 
 #include <map>
 
-class ModuleResources : public Module
+class ModuleResources : public Module, public EventListener
 {
 public:
 	ModuleResources(bool startEnabled);
@@ -29,7 +30,7 @@ public:
 
 	//RESURCES
 	UID Find(const std::string& assetPath);
-	const Resource* RequestResource(UID uid) const;
+	const Resource* PeekResource(UID uid);
 	Resource* RequestResource(UID uid);
 	void ReleaseResource(UID uid);
 	void RemoveResource(UID uid);
@@ -38,6 +39,7 @@ public:
 	Resource::Type GetTypeFromExtension(const std::string& path);
 
 	//EVENTS
+	void OnEvent(const Event& event) override;
 	void PublishAssetChangedEvent();
 
 private:
@@ -56,7 +58,7 @@ private:
 	
 	//CREATE RESOURCES
 	bool CreateResourceWithSubResources(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type);
-	bool CreateResource(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type);
+	bool CreateResource(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type, const std::string& name = "", const bool internal = false);
 	bool CreateInternalResources();
 	bool TypeCanHaveSubResources(const Resource::Type type);
 		

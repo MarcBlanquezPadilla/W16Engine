@@ -46,6 +46,8 @@ bool ModuleResources::Awake()
 	checkAssetsModifications = false;
 	checkChangesTimer.Start();
 
+	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::AssetMoved, this);
+
 	return true;
 }
 
@@ -79,6 +81,8 @@ bool ModuleResources::CleanUp()
 {
 	bool ret = true;
 	
+	Engine::GetInstance().moduleEvents->Unsubscribe(Event::Type::AssetMoved, this);
+
 	LOG("Deleting all resources");
 
 	for (auto& item : resources)
@@ -287,16 +291,10 @@ void ModuleResources::CheckForSubResources(const std::string& assetPath, UID par
 
 				std::string childLib = GetLibraryPath(childUID);
 				int childType = refNode.GetInt("Type");
-				std::string childAssetPath = refNode.GetString("Path");
+				std::string childAssetPath = assetPath;
+				std::string childName = refNode.GetString("Name");
 
-				if (resources.find(childUID) == resources.end())
-				{
-					CreateResource(childAssetPath, childLib, childUID, (Resource::Type)childType);
-				}
-				else
-				{
-					CreateResource(childAssetPath, childLib, childUID, (Resource::Type)childType);
-				}
+				CreateResource(childAssetPath, childLib, childUID, (Resource::Type)childType, childName);
 
 				refNode = refNode.GetNextSibling("ReferedObject");
 			}
@@ -343,9 +341,8 @@ bool ModuleResources::ImportFile(const std::string& assetPath, const std::string
 	return false;
 }
 
-bool ModuleResources::CreateResource(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type)
+bool ModuleResources::CreateResource(const std::string& assetPath, const std::string& libraryPath, const UID uid, const Resource::Type type, const std::string& name, const bool internal)
 {
-	// CASO: RECARGA (El recurso ya existe)
 	if (resources.find(uid) != resources.end())
 	{
 		Resource* res = resources[uid];
@@ -375,8 +372,10 @@ bool ModuleResources::CreateResource(const std::string& assetPath, const std::st
 	if (ret != nullptr)
 	{
 		resources[uid] = ret;
+		ret->name = name == "" ? assetPath : name;
 		ret->assetPath = assetPath;
 		ret->libraryPath = libraryPath;
+		ret->internalResource = internal;
 		LOG("Created resource for %s", assetPath.c_str());
 	}
 	else
@@ -390,6 +389,7 @@ bool ModuleResources::CreateResource(const std::string& assetPath, const std::st
 
 bool ModuleResources::CreateInternalResources()
 {
+	#pragma region Basics
 	std::string cubePath = GetLibraryPath(CUBE);
 	std::string pyramidPath = GetLibraryPath(PYRAMID);
 	std::string spherePath = GetLibraryPath(SPHERE);
@@ -448,7 +448,7 @@ bool ModuleResources::CreateInternalResources()
 
 		delete importer;	
 	}
-	CreateResource("Internal resource", cubePath, CUBE, Resource::Type::mesh);
+	CreateResource("Internal resource", cubePath, CUBE, Resource::Type::mesh, "Cube mesh", true);
 	
 
 	// PYRAMID
@@ -494,7 +494,7 @@ bool ModuleResources::CreateInternalResources()
 		importer->Import(pyramidPath, PYRAMID, Resource::Type::mesh, vertices, indices, noBones);
 		delete importer;
 	}
-	CreateResource("Internal resource", pyramidPath, PYRAMID, Resource::Type::mesh);
+	CreateResource("Internal resource", pyramidPath, PYRAMID, Resource::Type::mesh, "Pyramid mesh", true);
 	
 
 	//SPHERE
@@ -552,16 +552,86 @@ bool ModuleResources::CreateInternalResources()
 
 		delete importer;
 	}
-	CreateResource("Internal resource", spherePath, SPHERE, Resource::Type::mesh);
+	CreateResource("Internal resource", spherePath, SPHERE, Resource::Type::mesh, "Sphere mesh", true);
 
-	Resource* cube = RequestResource(CUBE);
-	Resource* sphere = RequestResource(SPHERE);
-	Resource* pyramid = RequestResource(PYRAMID);
+	#pragma endregion
 
-	if (cube) cube->internalResource = true;
-	if (sphere) sphere->internalResource = true;
-	if (pyramid) pyramid->internalResource = true;
+	#pragma Icons
+	std::string fileIconPath = GetLibraryPath(ICON_FILE);
+	std::string folderIconPath = GetLibraryPath(ICON_FOLDER);
+	std::string imageIconPath = GetLibraryPath(ICON_IMAGE);
+	std::string meshIconPath = GetLibraryPath(ICON_MESH);
+	std::string modelIconPath = GetLibraryPath(ICON_MODEL);
+	std::string sceneIconPath = GetLibraryPath(ICON_SCENE);
+	std::string scriptIconPath = GetLibraryPath(ICON_SCRIPT);
+	std::string animationIconPath = GetLibraryPath(ICON_ANIMATION);
 
+	if (!DoesFileExist(fileIconPath))
+	{
+		ImporterTexture* importer = new ImporterTexture();
+		importer->Import("Resources/file.png", fileIconPath, ICON_FILE, Resource::Type::texture);
+		delete importer;
+	}
+	
+	if (!DoesFileExist(folderIconPath))
+	{
+		ImporterTexture* importer = new ImporterTexture();
+		importer->Import("Resources/folder.png", folderIconPath, ICON_FOLDER, Resource::Type::texture);
+		delete importer;
+	}
+
+	if (!DoesFileExist(imageIconPath))
+	{
+		ImporterTexture* importer = new ImporterTexture();
+		importer->Import("Resources/image.png", imageIconPath, ICON_IMAGE, Resource::Type::texture);
+		delete importer;
+	}
+
+	if (!DoesFileExist(meshIconPath))
+	{
+		ImporterTexture* importer = new ImporterTexture();
+		importer->Import("Resources/mesh.png", meshIconPath, ICON_MESH, Resource::Type::texture);
+		delete importer;
+	}
+
+	if (!DoesFileExist(modelIconPath))
+	{
+		ImporterTexture* importer = new ImporterTexture();
+		importer->Import("Resources/model.png", modelIconPath, ICON_MODEL, Resource::Type::texture);
+		delete importer;
+	}
+
+	if (!DoesFileExist(sceneIconPath))
+	{
+		ImporterTexture* importer = new ImporterTexture();
+		importer->Import("Resources/scene.png", sceneIconPath, ICON_SCENE, Resource::Type::texture);
+		delete importer;
+	}
+
+	if (!DoesFileExist(scriptIconPath))
+	{
+		ImporterTexture* importer = new ImporterTexture();
+		importer->Import("Resources/script.png", scriptIconPath, ICON_SCRIPT, Resource::Type::texture);
+		delete importer;
+	}
+
+	if (!DoesFileExist(animationIconPath))
+	{
+		ImporterTexture* importer = new ImporterTexture();
+		importer->Import("Resources/animation.png", animationIconPath, ICON_ANIMATION, Resource::Type::texture);
+		delete importer;
+	}
+
+	CreateResource("Internal resource", fileIconPath, ICON_FILE, Resource::Type::texture, "File icon", true);
+	CreateResource("Internal resource", folderIconPath, ICON_FOLDER, Resource::Type::texture, "Folder icon", true);
+	CreateResource("Internal resource", imageIconPath, ICON_IMAGE, Resource::Type::texture, "Image icon", true);
+	CreateResource("Internal resource", meshIconPath, ICON_MESH, Resource::Type::texture, "Mesh icon", true);
+	CreateResource("Internal resource", modelIconPath, ICON_MODEL, Resource::Type::texture, "Model icon", true);
+	CreateResource("Internal resource", sceneIconPath, ICON_SCENE, Resource::Type::texture, "Scene icon", true);
+	CreateResource("Internal resource", scriptIconPath, ICON_SCRIPT, Resource::Type::texture, "Script icon", true);
+	CreateResource("Internal resource", animationIconPath, ICON_ANIMATION, Resource::Type::texture, "Animation icon", true);
+
+	#pragma endregion
 	return true;
 }
 
@@ -642,15 +712,13 @@ Resource* ModuleResources::RequestResource(UID uid)
 	return nullptr;
 }
 
-const Resource* ModuleResources::RequestResource(UID uid) const
+const Resource* ModuleResources::PeekResource(UID uid)
 {
-	std::map<UID, Resource*>::const_iterator it = resources.find(uid);
-
+	auto it = resources.find(uid);
 	if (it != resources.end())
 	{
 		return it->second;
 	}
-
 	return nullptr;
 }
 
@@ -682,10 +750,6 @@ void ModuleResources::MoveResource(const std::string& oldPath, const std::string
 	if (anyUpdated)
 	{
 		LOG("Resources moved successfully in memory from %s to %s", oldPath.c_str(), newPath.c_str());
-	}
-	else
-	{
-		LOG("Warning: Moved file %s but found no resources in memory to update.", oldPath.c_str());
 	}
 }
 
@@ -762,4 +826,24 @@ void ModuleResources::RemoveResource(UID uid)
 void ModuleResources::PublishAssetChangedEvent()
 {
 	Engine::GetInstance().moduleEvents->PublishImmediate(Event::Type::AssetsChanged);
+}
+
+void ModuleResources::OnEvent(const Event& event)
+{
+	switch (event.type)
+	{
+	case Event::Type::AssetMoved:
+	{
+		{
+			std::string oldPath = event.data.strings.string1;
+			std::string newPath = event.data.strings.string2;
+			if (IsFileDirectory(oldPath)) MoveFolder(oldPath, newPath);
+			else MoveResource(oldPath, newPath);
+		}
+		break;
+	}
+
+	default:
+		break;
+	}
 }

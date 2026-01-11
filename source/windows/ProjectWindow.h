@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 
+class Resource;
+class ResourceTexture;
+
 struct DirectoryNode
 {
     std::string name;
@@ -12,6 +15,8 @@ struct DirectoryNode
     std::string extension;
     bool isDirectory;
 
+    const Resource* recourse;
+    std::vector<const Resource*> subRecourses;
     std::vector<DirectoryNode*> children;
     DirectoryNode* parent = nullptr;
 
@@ -38,6 +43,7 @@ public:
     void DrawFolderTree();
     void DrawTreeNodeRecursive(DirectoryNode* node);
     void DrawFolderContent();
+    void DrawSubresources();
 
 private:
     void RefreshTree();
@@ -50,6 +56,7 @@ private:
     void AddAssetToScene(DirectoryNode* direcoryNode);
 
     unsigned int GetIconTextureWithExtension(const std::string& extension);
+    unsigned int GetIconTextureWithResource(const Resource* resource);
    
     bool ExecuteRename(DirectoryNode* node, const std::string& newName);
 
@@ -61,15 +68,18 @@ private:
 
     DirectoryNode* rootNode = nullptr;
     DirectoryNode* currentNode = nullptr;
+    DirectoryNode* currentAsset = nullptr;
     std::vector<DirectoryNode*> selectedNodes = {};
     std::vector<DirectoryNode*> nodesToDelete = {};
 
-    unsigned int folderIconTextureID = 0;
-    unsigned int fileIconTextureID = 0;
-    unsigned int modelIconTextureID = 0;
-    unsigned int imageIconTextureID = 0;
-    unsigned int scriptIconTextureID = 0;
-    unsigned int sceneIconTextureID = 0;
+    ResourceTexture* folderIcon = 0;
+    ResourceTexture* fileIcon = 0;
+    ResourceTexture* modelIcon = 0;
+    ResourceTexture* meshIcon = 0;
+    ResourceTexture* animIcon = 0;
+    ResourceTexture* imageIcon = 0;
+    ResourceTexture* scriptIcon = 0;
+    ResourceTexture* sceneIcon = 0;
 
     bool expandTreeToSelection = false;
     bool isFocused = false;

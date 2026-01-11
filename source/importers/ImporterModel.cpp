@@ -98,10 +98,9 @@ bool ImporterModel::Import_Internal()
 			if (success)
 			{
 				// 3. Añadir a la lista de referencias para que salga en el .meta
-				ImportMeshData importData;
+				ReferedsData importData;
 				importData.name = animName;
 				importData.type = Resource::Type::animation; // Asegúrate de tener este enum
-				importData.path = assetPath; // Pertenece a este archivo FBX 
 
 				referedUIDs.emplace(animUID, importData);
 
@@ -234,7 +233,7 @@ bool ImporterModel::AddMeshAndTexture(aiMesh* assimpMesh, const aiScene* scene, 
 		if (scene->HasMaterials())
 		{
 			aiMaterial* material = scene->mMaterials[assimpMesh->mMaterialIndex];
-			LoadTexture(material, target);
+			LoadTexture(material, scene, target);
 		}
 		return true;
 	}
@@ -263,9 +262,8 @@ bool ImporterModel::LoadMesh(aiMesh* assimpMesh, GameObject* target)
 	if (success)
 	{
 		meshComp->SetResource(meshUID);
-		ImportMeshData importMeshData;
+		ReferedsData importMeshData;
 		importMeshData.name = target->name;
-		importMeshData.path = assetPath;
 		importMeshData.type = Resource::Type::mesh;
 		referedUIDs.emplace(meshUID,importMeshData);
 		return true;
@@ -277,81 +275,120 @@ bool ImporterModel::LoadMesh(aiMesh* assimpMesh, GameObject* target)
 	}
 }
 
-bool ImporterModel::LoadTexture(aiMaterial* material, GameObject* obj)
+bool ImporterModel::LoadTexture(aiMaterial* material, const aiScene* scene, GameObject* obj)
 {
 	if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
 	{
 		aiString aiPath;
 		material->GetTexture(aiTextureType_DIFFUSE, 0, &aiPath);
 
-		std::string fileName = GetFileName(aiPath.C_Str());
-
-		//SEARCH FILE
+		std::string texPath = "";
+		std::string fileName = "";
 		bool foundFile = false;
-		std::string modelDirectory = GetDirectoryFromPath(assetPath);
 
-		std::string texPath = modelDirectory + aiPath.C_Str();
-		if (DoesFileExist(texPath))
+		// 1. INTENTAR CARGAR COMO TEXTURA EMBEBIDA (EMBEDDED)
+		// Esta función comprueba si el path apunta a una textura dentro de la escena
+		// Funciona tanto para "*0" como para "nombre_archivo.png"
+		const aiTexture* aiTex = scene->GetEmbeddedTexture(aiPath.C_Str());
+
+		if (aiTex != nullptr)
 		{
-			foundFile = true;
+			LOG("Texture found embedded in the model: %s", aiPath.C_Str());
+
+			// Procesar textura embebida
+			if (aiTex->mHeight == 0) // Comprimida (jpg/png)
+			{
+				// Decidir extensión
+				std::string extension = "";
+				if (aiTex->achFormatHint[0])
+					extension = std::string(aiTex->achFormatHint);
+				if (extension.empty())
+					extension = "png"; // Fallback seguro
+
+				// Crear nombre único. Usamos el aiPath para generar un nombre o un índice si es posible.
+				// Nota: GetFileName limpia la ruta y deja solo el nombre
+				std::string rawName = GetFileNameNoExtension(aiPath.C_Str());
+				if (rawName.empty() || rawName == "*") rawName = "embedded_tex";
+
+				// Sugerencia: Añadir el nombre del modelo para evitar colisiones
+				std::string modelName = GetFileNameNoExtension(assetPath);
+				fileName = modelName + "_" + rawName + "." + extension;
+
+				std::string modelDir = GetDirectoryFromPath(assetPath);
+				texPath = modelDir + fileName;
+
+				// Escribir a disco si no existe
+				if (!DoesFileExist(texPath))
+				{
+					std::ofstream file(texPath, std::ios::binary);
+					if (file.is_open())
+					{
+						file.write((char*)aiTex->pcData, aiTex->mWidth);
+						file.close();
+						LOG("Extracted embedded texture to: %s", texPath.c_str());
+					}
+				}
+				foundFile = true;
+			}
+			else
+			{
+				LOG("Warning: Embedded texture is raw ARGB (not supported yet).");
+			}
+		}
+		// 2. SI NO ES EMBEBIDA, BUSCAR EN DISCO (Lógica original)
+		else
+		{
+			LOG("Texture not embedded, searching in disk: %s", aiPath.C_Str());
+
+			std::string modelDirectory = GetDirectoryFromPath(assetPath);
+			fileName = GetFileName(aiPath.C_Str());
+
+			// Opción A: Ruta tal cual viene
+			texPath = modelDirectory + aiPath.C_Str();
+			if (DoesFileExist(texPath)) foundFile = true;
+
+			// Opción B: En la misma carpeta del modelo
+			if (!foundFile) {
+				texPath = modelDirectory + fileName;
+				if (DoesFileExist(texPath)) foundFile = true;
+			}
+
+			// Opción C: Búsqueda recursiva (costosa, úsala con cuidado)
+			if (!foundFile) {
+				texPath = FindFileInDirectory(modelDirectory, fileName);
+				if (DoesFileExist(texPath)) foundFile = true;
+			}
 		}
 
-		texPath = modelDirectory + fileName;
-		if (!foundFile && DoesFileExist(texPath))
-		{
-			foundFile = true;
-		}
-
-		texPath = FindFileInDirectory(modelDirectory, fileName);
-		if (!foundFile && DoesFileExist(texPath))
-		{
-			foundFile = true;
-		}
-
-
+		// 3. CARGAR EN EL MOTOR
 		if (foundFile)
 		{
-			//LOAD
 			Texture* texture = (Texture*)obj->AddComponent(ComponentType::Texture);
 			if (texture)
 			{
-				//BE SURE IMPORTED
+				// Asegurar importación (meta data, etc)
 				Engine::GetInstance().moduleResources->CheckFileLoaded(texPath);
 				Engine::GetInstance().moduleResources->PublishAssetChangedEvent();
 
-				//LOAD TO COMPONENT
 				UID textureUID = Engine::GetInstance().moduleResources->Find(texPath);
 				if (textureUID != 0)
 				{
 					texture->SetResource(textureUID);
-					ImportMeshData importMeshData;
-					importMeshData.name = fileName;
-					importMeshData.type = Resource::Type::texture;
-					importMeshData.path = texPath;
-					referedUIDs.emplace(textureUID, importMeshData);
+					return true; // Éxito
 				}
 				else
 				{
-					LOG("Error: Failed loading and attaching texture %s to component.", aiPath.C_Str());
+					LOG("Error: Failed loading texture resource %s", texPath.c_str());
 				}
-			}
-			else
-			{
-				LOG("Error: Creation of texture component failed on %s gameObject.", obj->name);
-				return false;
 			}
 		}
 		else
 		{
-			LOG("Error: Could not find texture '%s' in any location", fileName.c_str());
-			return false;
+			LOG("Error: Could not find texture '%s' (Embedded check failed & Disk check failed)", aiPath.C_Str());
 		}
 	}
-	else
-	{
-		LOG("The material does not have a diffuse texture.");
-		return false;
-	}
+
+	return false;
 }
 
 bool ImporterModel::SaveMeta()
@@ -366,7 +403,6 @@ bool ImporterModel::SaveMeta()
 		Config refered = meta.AddChild("ReferedObject");
 		refered.SetUInt("UID", pair.first);
 		refered.SetString("Name", pair.second.name.c_str());
-		refered.SetString("Path", pair.second.path.c_str());
 		refered.SetInt("Type", pair.second.type);
 	}
 

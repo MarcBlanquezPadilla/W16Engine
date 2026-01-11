@@ -23,6 +23,7 @@ struct BoneLink {
 
 struct AnimationData {
     uint32_t uid = 0;
+    std::string resourceName = " ";
     bool loop = true;
 };
 
@@ -38,7 +39,7 @@ public:
 
     ComponentType GetType() override { return ComponentType::Animation; };
 
-    void AddAnimation(const std::string& name, uint32_t uid);
+    void AddAnimation(const std::string& name, uint32_t uid, std::string resourceName);
 
     void Play(const std::string& name, float blendTime = 0.2f);
     void ResetPose();
