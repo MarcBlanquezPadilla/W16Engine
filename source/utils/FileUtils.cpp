@@ -55,7 +55,7 @@ std::string FindFileInDirectory(const std::string& directoryPath, const std::str
     }
     catch (const std::filesystem::filesystem_error& e)
     {
-        LOG("Error searching in directory: %s", e.what());
+        LOG(LogType::LOG_ERROR, "Failed searching in directory: %s", e.what());
     }
 
     return "";
@@ -74,7 +74,7 @@ std::vector<std::string> GetListDirectoryContents(const std::string& directoryPa
         for (const auto& entry : std::filesystem::recursive_directory_iterator(directoryPath, options, ec))
         {
             if (ec) {
-                LOG("Warning: Error accessing a file during recursive scan inside %s", directoryPath.c_str());
+                LOG(LogType::LOG_WARNING, "Failed accessing a file during recursive scan inside %s", directoryPath.c_str());
                 ec.clear();
                 continue;
             }
@@ -102,7 +102,7 @@ std::vector<std::string> GetListDirectoryContents(const std::string& directoryPa
     }
 
     if (ec) {
-        LOG("Error: Could not open directory %s", directoryPath.c_str());
+        LOG(LogType::LOG_ERROR, "Could not open directory %s", directoryPath.c_str());
     }
 
     return allContent;
@@ -196,19 +196,19 @@ bool MoveAssetToFolder(const std::string& oldPath, const std::string& destinatio
     std::filesystem::path finalDestination = destDir / source.filename();
 
     if (!std::filesystem::exists(source)) {
-        LOG("Error: Source file does not exist: %s", oldPath.c_str());
+        LOG(LogType::LOG_ERROR, "Source file does not exist. Move cancelled: %s", oldPath.c_str());
         return false;
     }
 
     if (std::filesystem::exists(finalDestination)) {
-        LOG("Error: Destination file already exists. Move cancelled: %s", finalDestination.string().c_str());
+        LOG(LogType::LOG_ERROR, "Destination file already exists. Move cancelled: %s", finalDestination.string().c_str());
         return false;
     }
 
     std::filesystem::rename(source, finalDestination, ec);
 
     if (ec) {
-        LOG("Error moving asset: %s", ec.message().c_str());
+        LOG(LogType::LOG_ERROR, "Failed moving asset: %s", ec.message().c_str());
         return false;
     }
 
@@ -223,7 +223,7 @@ bool DeletePath(const std::string& path)
 
     if (!std::filesystem::exists(path))
     {
-        LOG("Error: File to delete not found: %s", path.c_str());
+        LOG(LogType::LOG_ERROR, "File to delete not found: %s", path.c_str());
         return false;
     }
 
@@ -231,11 +231,11 @@ bool DeletePath(const std::string& path)
 
     if (ec)
     {
-        LOG("Error deleting asset: %s. Message: %s", path.c_str(), ec.message().c_str());
+        LOG(LogType::LOG_ERROR, "Failed deleting asset: %s. Message: %s", path.c_str(), ec.message().c_str());
         return false;
     }
 
-    LOG("Deleted asset successfully: %s", path.c_str());
+    LOG(LogType::LOG_INFO, "Deleted asset successfully: %s", path.c_str());
     return true;
 
     Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetMoved, path.c_str()));
@@ -247,7 +247,7 @@ bool DeleteAsset(const std::string& path)
 
     if (!std::filesystem::exists(path))
     {
-        LOG("Error: File to delete not found: %s", path.c_str());
+        LOG(LogType::LOG_ERROR, "File to delete not found: %s", path.c_str());
         return false;
     }
 
@@ -255,7 +255,7 @@ bool DeleteAsset(const std::string& path)
 
     if (ec)
     {
-        LOG("Error deleting asset: %s. Message: %s", path.c_str(), ec.message().c_str());
+        LOG(LogType::LOG_ERROR, "Failed deleting asset: %s. Message: %s", path.c_str(), ec.message().c_str());
         return false;
     }
 
@@ -269,12 +269,12 @@ bool DeleteAsset(const std::string& path)
 
             if (ec)
             {
-                LOG("Warning: Asset deleted, but failed to delete meta file: %s", metaPath.c_str());
+                LOG(LogType::LOG_WARNING, "Asset deleted, but failed to delete meta file: %s", metaPath.c_str());
             }
         }
     }
 
-    LOG("Deleted asset successfully: %s", path.c_str());
+    LOG(LogType::LOG_INFO, "Deleted asset successfully: %s", path.c_str());
     return true;
 
     Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetMoved, path.c_str()));

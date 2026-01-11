@@ -26,15 +26,23 @@ void ConsoleWindow::Draw()
     {
         if (ImGui::MenuItem("Clear"))
         {
-            LogBuffer::GetInstance().EraseMessages();
+            LogBuffer::GetInstance().Clear();
         }
 
         ImGui::EndMenuBar();
     }
 
-    for (std::string message : LogBuffer::GetInstance().GetMessages())
+    if (ImGui::Button("Info")) info = !info;
+    if (ImGui::Button("Waring")) warning = !warning;
+    if (ImGui::Button("Error")) error = !error;
+
+    for (LogInfo Log : LogBuffer::GetInstance().GetLogs())
     {
-        ImGui::Text("%s", message.c_str());
+        if (Log.type == LOG_INFO && !info) continue;
+        if (Log.type == LOG_WARNING && !warning) continue;
+        if (Log.type == LOG_ERROR && !error) continue;
+
+        ImGui::Text("%d | %s", Log.count, Log.message.c_str());
     }
 
     if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())

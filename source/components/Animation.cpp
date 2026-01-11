@@ -534,7 +534,7 @@ void Animation::OnResourceLost(UID lostUID)
 {
     if (currentAnimationUID == lostUID)
     {
-        LOG("Animation currentAnimation deleted! Removing reference in Component.");
+        LOG(LogType::LOG_INFO, "Animation currentAnimation deleted! Removing reference in Component.");
         currentAnimation = nullptr;
         currentAnimationUID = 0;
     }

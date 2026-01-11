@@ -36,7 +36,7 @@ bool ImporterModel::Import_Internal()
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
-		LOG("Error loading model with Assimp: %s", importer.GetErrorString());
+		LOG(LogType::LOG_ERROR, "Failed loading model with Assimp: %s", importer.GetErrorString());
 		return false;
 	}
 	
@@ -104,11 +104,11 @@ bool ImporterModel::Import_Internal()
 
 				referedUIDs.emplace(animUID, importData);
 
-				LOG("Animation '%s' imported successfully.", animName.c_str());
+				LOG(LogType::LOG_INFO, "Animation '%s' imported successfully.", animName.c_str());
 			}
 			else
 			{
-				LOG("Failed to import animation '%s'.", animName.c_str());
+				LOG(LogType::LOG_ERROR, "Failed to import animation '%s'.", animName.c_str());
 			}
 			delete animImporter;
 		}
@@ -120,7 +120,7 @@ bool ImporterModel::Import_Internal()
 
 	if (!modelGameObject || !ProcessNode(scene->mRootNode, scene, modelGameObject))
 	{
-		LOG("Failed to process root node for model: %s", assetPath.c_str());
+		LOG(LogType::LOG_ERROR, "Failed to process root node for model: %s", assetPath.c_str());
 		return false;
 	}
 
@@ -142,7 +142,7 @@ bool ImporterModel::Import_Internal()
 		file.write((const char*)&size, sizeof(uint32_t));
 		file.write(xmlBuffer.c_str(), size);
 		file.close();
-		LOG("Model %s imported to Library: %s", GetFileName(assetPath).c_str(), libraryPath.c_str());
+		LOG(LogType::LOG_INFO, "Model %s imported to Library: %s", GetFileName(assetPath).c_str(), libraryPath.c_str());
 	}
 
 
@@ -180,7 +180,7 @@ bool ImporterModel::ProcessNode(aiNode* node, const aiScene* scene, GameObject* 
 
 		if (!AddMeshAndTexture(assimpMesh, scene, targetGameObject))
 		{
-			LOG("Error processing mesh for node %s. Node will be empty.", node->mName.C_Str());
+			LOG(LogType::LOG_ERROR, "Failed processing mesh for node %s. Node will be empty.", node->mName.C_Str());
 		}
 	}
 	else if (node->mNumMeshes > 0)
@@ -196,7 +196,7 @@ bool ImporterModel::ProcessNode(aiNode* node, const aiScene* scene, GameObject* 
 			}
 			else
 			{
-				LOG("Error processing mesh %s, skipping.", assimpMesh->mName.C_Str());
+				LOG(LogType::LOG_ERROR, "Failed processing mesh %s, skipping.", assimpMesh->mName.C_Str());
 				meshGameObject->CleanUpRecursive();
 				delete meshGameObject;
 			}
@@ -270,7 +270,7 @@ bool ImporterModel::LoadMesh(aiMesh* assimpMesh, GameObject* target)
 	}
 	else
 	{
-		LOG("Error loading mesh data for %s.", target->name.c_str());
+		LOG(LogType::LOG_ERROR, "Failed loading mesh data for %s.", target->name.c_str());
 		return false;
 	}
 }
@@ -293,7 +293,7 @@ bool ImporterModel::LoadTexture(aiMaterial* material, const aiScene* scene, Game
 
 		if (aiTex != nullptr)
 		{
-			LOG("Texture found embedded in the model: %s", aiPath.C_Str());
+			LOG(LogType::LOG_INFO, "Texture found embedded in the model: %s", aiPath.C_Str());
 
 			// Procesar textura embebida
 			if (aiTex->mHeight == 0) // Comprimida (jpg/png)
@@ -325,20 +325,20 @@ bool ImporterModel::LoadTexture(aiMaterial* material, const aiScene* scene, Game
 					{
 						file.write((char*)aiTex->pcData, aiTex->mWidth);
 						file.close();
-						LOG("Extracted embedded texture to: %s", texPath.c_str());
+						LOG(LogType::LOG_INFO, "Extracted embedded texture to: %s", texPath.c_str());
 					}
 				}
 				foundFile = true;
 			}
 			else
 			{
-				LOG("Warning: Embedded texture is raw ARGB (not supported yet).");
+				LOG(LogType::LOG_WARNING, "Embedded texture is raw ARGB(not supported yet).");
 			}
 		}
 		// 2. SI NO ES EMBEBIDA, BUSCAR EN DISCO (Lógica original)
 		else
 		{
-			LOG("Texture not embedded, searching in disk: %s", aiPath.C_Str());
+			LOG(LogType::LOG_INFO, "Texture not embedded, searching in disk: %s", aiPath.C_Str());
 
 			std::string modelDirectory = GetDirectoryFromPath(assetPath);
 			fileName = GetFileName(aiPath.C_Str());
@@ -378,13 +378,13 @@ bool ImporterModel::LoadTexture(aiMaterial* material, const aiScene* scene, Game
 				}
 				else
 				{
-					LOG("Error: Failed loading texture resource %s", texPath.c_str());
+					LOG(LogType::LOG_ERROR, "Failed loading texture resource % s", texPath.c_str());
 				}
 			}
 		}
 		else
 		{
-			LOG("Error: Could not find texture '%s' (Embedded check failed & Disk check failed)", aiPath.C_Str());
+			LOG(LogType::LOG_ERROR, "Could not find texture '%s' (Embedded check failed & Disk check failed)", aiPath.C_Str());
 		}
 	}
 

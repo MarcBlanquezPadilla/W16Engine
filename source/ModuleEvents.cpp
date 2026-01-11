@@ -89,7 +89,7 @@ void ModuleEvents::ProcessEvents()
 {
     if (processingEvents)
     {
-        LOG("WARNING: Already processing events, skipping nested call");
+        LOG(LogType::LOG_WARNING, "Already processing events, skipping nested call.");
         return;
     }
 

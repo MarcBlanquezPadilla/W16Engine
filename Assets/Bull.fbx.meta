@@ -1,8 +1,7 @@
 <?xml version="1.0"?>
-<Data UID="514215398" Type="1" FileHash="219882758" ReferedObjects="32">
+<Data UID="514215398" Type="1" FileHash="219882758" ReferedObjects="26">
 	<ReferedObject UID="393450491" Name="Cube" Type="2" />
 	<ReferedObject UID="450004001" Name="Gallop" Type="4" />
-	<ReferedObject UID="521084233" Name="Cube" Type="2" />
 	<ReferedObject UID="603605356" Name="Idle" Type="4" />
 	<ReferedObject UID="653835797" Name="AnimalArmature|Attack_Kick" Type="4" />
 	<ReferedObject UID="654719298" Name="Death" Type="4" />
@@ -11,20 +10,15 @@
 	<ReferedObject UID="1060602766" Name="Idle_2" Type="4" />
 	<ReferedObject UID="1155145383" Name="Idle_HitReact_Left" Type="4" />
 	<ReferedObject UID="1251782226" Name="AnimalArmature|Death" Type="4" />
-	<ReferedObject UID="1390781107" Name="Cube" Type="2" />
 	<ReferedObject UID="1553647389" Name="AnimalArmature|Gallop_Jump" Type="4" />
 	<ReferedObject UID="1618592899" Name="AnimalArmature|Gallop" Type="4" />
 	<ReferedObject UID="1656658436" Name="AnimalArmature|Idle_Headlow" Type="4" />
 	<ReferedObject UID="1714491889" Name="AnimalArmature|Idle" Type="4" />
 	<ReferedObject UID="1752339564" Name="Idle_HitReact_Right" Type="4" />
-	<ReferedObject UID="2143619907" Name="Cube" Type="2" />
 	<ReferedObject UID="2527664783" Name="Walk" Type="4" />
 	<ReferedObject UID="2580290184" Name="AnimalArmature|Attack_Headbutt" Type="4" />
 	<ReferedObject UID="2642190102" Name="Attack_Headbutt" Type="4" />
 	<ReferedObject UID="2671407250" Name="AnimalArmature|Eating" Type="4" />
-	<ReferedObject UID="2751102134" Name="Cube" Type="2" />
-	<ReferedObject UID="2761466336" Name="Cube" Type="2" />
-	<ReferedObject UID="2790744088" Name="Cube" Type="2" />
 	<ReferedObject UID="3191992405" Name="Gallop_Jump" Type="4" />
 	<ReferedObject UID="3540166485" Name="AnimalArmature|Walk" Type="4" />
 	<ReferedObject UID="3631154619" Name="Eating" Type="4" />

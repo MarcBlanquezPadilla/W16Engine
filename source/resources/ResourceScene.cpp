@@ -18,7 +18,7 @@ bool ResourceScene::LoadToMemory_Internal()
     std::ifstream file(libraryPath, std::ios::in | std::ios::binary);
     if (!file.is_open())
     {
-        LOG("Error: Could not open scene library file: %s", libraryPath.c_str());
+        LOG(LogType::LOG_ERROR, "Could not open scene library file: %s", libraryPath.c_str());
         return false;
     }
 
@@ -30,14 +30,14 @@ bool ResourceScene::LoadToMemory_Internal()
 
     if (fileUID != this->uid)
     {
-        LOG("Error: UID Mismatch in file %s. Expected %u, got %u", libraryPath.c_str(), this->uid, fileUID);
+        LOG(LogType::LOG_ERROR, "UID Mismatch in file %s. Expected %u, got %u", libraryPath.c_str(), this->uid, fileUID);
         file.close();
         return false;
     }
 
     if (fileType != Resource::Type::scene)
     {
-        LOG("Error: Resource Type Mismatch! %s is not a SCENE", libraryPath.c_str());
+        LOG(LogType::LOG_ERROR, "Resource Type Mismatch! %s is not a SCENE", libraryPath.c_str());
         file.close();
         return false;
     }
@@ -59,7 +59,7 @@ bool ResourceScene::LoadToMemory_Internal()
 
         if (parsed)
         {
-            LOG("Scene structure loaded in memory.");
+            LOG(LogType::LOG_INFO, "Scene structure loaded in memory.");
             return true;
         }
     }

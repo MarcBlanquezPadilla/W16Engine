@@ -45,7 +45,7 @@ bool Config::Load(const char* path)
     }
     else
     {
-        LOG("Could not load config xml: %s. Error: %s", path, result.description());
+        LOG(LogType::LOG_ERROR, "Could not load config xml: %s. Error: %s", path, result.description());
         return false;
     }
 }
@@ -69,7 +69,7 @@ bool Config::LoadFromBuffer(const char* buffer, size_t size)
     }
     else
     {
-        LOG("XML Error: %s", result.description());
+        LOG(LogType::LOG_ERROR, "XML Error: %s", result.description());
         return false;
     }
 }

@@ -26,7 +26,7 @@ bool ModuleInput::Awake()
 
 	if (SDL_InitSubSystem(SDL_INIT_EVENTS | SDL_INIT_GAMEPAD) < 0)
 	{
-		LOG("SDL_EVENTS could not initialize! SDL_Error: %s\n", SDL_GetError());
+		LOG(LogType::LOG_ERROR, "SDL_EVENTS could not initialize! SDL_Error: %s\n", SDL_GetError());
 		return false;
 	}
 
@@ -44,7 +44,7 @@ bool ModuleInput::Awake()
 				controller = SDL_OpenGamepad(joystick_id);
 				if (controller) {
 					const char* name = SDL_GetGamepadName(controller);
-					LOG("Gamepad connected: %s", name ? name : "Unknown");
+					LOG(LogType::LOG_INFO, "Gamepad connected: %s", name ? name : "Unknown");
 					break; 
 				}
 			}
@@ -151,7 +151,7 @@ bool ModuleInput::PreUpdate()
 
 			const char* filePath = event.drop.data;
 
-			LOG("File dropped in window: %s", filePath);
+			LOG(LogType::LOG_INFO, "File dropped in window: %s", filePath);
 
 			std::string filePathStr(filePath);
 			std::string extension = filePathStr.substr(filePathStr.find_last_of(".") + 1);
@@ -199,7 +199,7 @@ bool ModuleInput::PreUpdate()
 
 bool ModuleInput::CleanUp()
 {
-	LOG("Quitting SDL event subsystem");
+	LOG(LogType::LOG_INFO, "Quitting SDL event subsystem");
 	SDL_QuitSubSystem(SDL_INIT_EVENTS);
 	delete [] keyboard;
 

@@ -83,7 +83,7 @@ bool ModuleResources::CleanUp()
 	
 	Engine::GetInstance().moduleEvents->Unsubscribe(Event::Type::AssetMoved, this);
 
-	LOG("Deleting all resources");
+	LOG(LogType::LOG_INFO, "Deleting all resources.");
 
 	for (auto& item : resources)
 	{
@@ -137,7 +137,7 @@ bool ModuleResources::CheckChangesInAssetsFolder()
 		for (UID uid : uidsToRemove)
 		{
 			RemoveResource(uid);
-			LOG("Asset deleted: UID %u", uid);
+			LOG(LogType::LOG_INFO, "Asset deleted: UID %u.", uid);
 		}
 		dirtyAssets = true;
 	}
@@ -196,7 +196,7 @@ bool ModuleResources::CheckFileLoaded(const std::string& assetPath)
 
 bool ModuleResources::CheckForFilesModifications()
 {
-	LOG("SEARCHING FOR EXTERNAL MODIFICATIONS IN ASSETS...");
+	LOG(LogType::LOG_INFO, "Seraching external modifications in assets...");
 
 	std::vector<std::string> allPaths = GetListDirectoryContents("Assets", true);
 	std::vector<std::string> assetsPaths;
@@ -235,11 +235,11 @@ bool ModuleResources::CheckForFilesModifications()
 
 	if (somethingModified) 
 	{
-		LOG("SOME FILES HAD CHANGES AND REIMPORTED.");
+		LOG(LogType::LOG_INFO, "Some files had changes and reimported.");
 		return true;
 	}
 
-	LOG("NO CHANGES FOUND.");
+	LOG(LogType::LOG_INFO, "No changes found.");
 	return false;
 }
 
@@ -323,7 +323,7 @@ bool ModuleResources::ImportFile(const std::string& assetPath, const std::string
 		break;
 
 	case Resource::unknown:
-		LOG("Trying to import file but not supported: %s", assetPath.c_str());
+		LOG(LogType::LOG_ERROR, "Trying to import file but not supported: %s", assetPath.c_str());
 		break;
 	}
 
@@ -356,7 +356,7 @@ bool ModuleResources::CreateResource(const std::string& assetPath, const std::st
 
 		res->LoadToMemory_Internal();
 
-		LOG("Reloaded resource %s", assetPath.c_str());
+		LOG(LogType::LOG_INFO, "Reloaded resource %s", assetPath.c_str());
 		return true;
 	}
 
@@ -376,11 +376,11 @@ bool ModuleResources::CreateResource(const std::string& assetPath, const std::st
 		ret->assetPath = assetPath;
 		ret->libraryPath = libraryPath;
 		ret->internalResource = internal;
-		LOG("Created resource for %s", assetPath.c_str());
+		LOG(LogType::LOG_INFO, "Created resource for %s", assetPath.c_str());
 	}
 	else
 	{
-		LOG("Failed in resource creation from %s", assetPath.c_str());
+		LOG(LogType::LOG_ERROR, "Failed in resource creation from %s", assetPath.c_str());
 		return false;
 	}
 
@@ -749,7 +749,7 @@ void ModuleResources::MoveResource(const std::string& oldPath, const std::string
 
 	if (anyUpdated)
 	{
-		LOG("Resources moved successfully in memory from %s to %s", oldPath.c_str(), newPath.c_str());
+		LOG(LogType::LOG_INFO, "Resources moved successfully in memory from %s to %s", oldPath.c_str(), newPath.c_str());
 	}
 }
 
@@ -767,7 +767,7 @@ void ModuleResources::MoveFolder(const std::string& oldPath, const std::string& 
 
 				resource->assetPath = newResPath;
 
-				LOG("Resource updated in memory: %s -> %s (UID: %u)", resourceStartPath.c_str(), newResPath.c_str(), uid);
+				LOG(LogType::LOG_INFO, "Resource updated in memory: %s -> %s (UID: %u)", resourceStartPath.c_str(), newResPath.c_str(), uid);
 			}
 		}
 	}
@@ -807,11 +807,11 @@ void ModuleResources::RemoveResource(UID uid)
 
 			if (std::remove(libPath.c_str()) == 0)
 			{
-				LOG("Deleted Library file: %s", libPath.c_str());
+				LOG(LogType::LOG_INFO, "Deleted Library file: %s", libPath.c_str());
 			}
 			else
 			{
-				LOG("Warning: Could not delete Library file (or didn't exist): %s", libPath.c_str());
+				LOG(LogType::LOG_WARNING, "Warning: Could not delete Library file (or didn't exist): %s", libPath.c_str());
 			}
 		}
 
@@ -819,7 +819,7 @@ void ModuleResources::RemoveResource(UID uid)
 		delete resource;
 		resources.erase(it);
 
-		LOG("Resource removed/destroyed: UID %u", uid);
+		LOG(LogType::LOG_INFO, "Resource removed/destroyed: UID %u", uid);
 	}
 }
 

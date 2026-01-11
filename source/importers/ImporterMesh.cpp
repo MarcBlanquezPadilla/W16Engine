@@ -139,7 +139,7 @@ bool ImporterMesh::Import(const std::string libraryPath, const UID uid, const in
         }
 
         file.close();
-        LOG("Mesh imported with skinning data: %s (Bones: %d)", libraryPath.c_str(), num_bones);
+        LOG(LogType::LOG_INFO, "Mesh imported with skinning data: %s (Bones: %d)", libraryPath.c_str(), num_bones);
         return true;
     }
     return false;

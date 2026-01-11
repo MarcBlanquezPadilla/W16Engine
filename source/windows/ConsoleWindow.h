@@ -13,5 +13,7 @@ public:
     void Draw() override;
 
 private:
-
+    bool info = true;
+    bool warning = true;
+    bool error = true;
 };

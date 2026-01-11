@@ -140,7 +140,7 @@ void Texture::OnResourceLost(UID lostUID)
 {
     if (resourceUID == lostUID)
     {
-        LOG("Texture Resource deleted! Removing reference in Component.");
+        LOG(LogType::LOG_INFO, "Texture Resource deleted! Removing reference in Component.");
         this->resource = nullptr;
     }
 }

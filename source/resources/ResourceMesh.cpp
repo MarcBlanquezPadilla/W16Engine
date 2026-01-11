@@ -30,7 +30,7 @@ bool ResourceMesh::LoadToMemory_Internal()
 	std::ifstream file(libraryPath, std::ios::in | std::ios::binary);
 	if (!file.is_open())
 	{
-		LOG("Error: Could not open mesh library file: %s", libraryPath.c_str());
+		LOG(LogType::LOG_ERROR, "Could not open mesh library file: %s", libraryPath.c_str());
 		return false;
 	}
 
@@ -43,7 +43,7 @@ bool ResourceMesh::LoadToMemory_Internal()
 
 	if (fileUID != this->uid)
 	{
-		LOG("Error: UID Mismatch in mesh. Expected %u, got %u", this->uid, fileUID);
+		LOG(LogType::LOG_ERROR, "UID Mismatch in mesh. Expected %u, got %u", this->uid, fileUID);
 		file.close(); return false;
 	}
 
@@ -57,7 +57,7 @@ bool ResourceMesh::LoadToMemory_Internal()
 
 	if (numVertices == 0)
 	{
-		LOG("Error: Mesh has 0 vertices.");
+		LOG(LogType::LOG_ERROR, "Error: Mesh has 0 vertices.");
 		file.close(); return false;
 	}
 
@@ -106,7 +106,7 @@ bool ResourceMesh::LoadToMemory_Internal()
 	// Si usas Stencil o algo extra
 	GenerateStencilBuffers();
 
-	LOG("Mesh loaded: %s (Bones: %d)", libraryPath.c_str(), numBones);
+	LOG(LogType::LOG_INFO, "Mesh loaded: %s (Bones: %d)", libraryPath.c_str(), numBones);
 	return true;
 }
 

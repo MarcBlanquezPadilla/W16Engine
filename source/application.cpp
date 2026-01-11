@@ -31,15 +31,12 @@ int main()
 			
 			if (Engine::GetInstance().Awake() == true)
 			{
+				LOG(LogType::LOG_INFO, "Awaked without errors.");
 				state = EngineState::START;
-				LOG("\n");
-				LOG("------------------------------");
-				LOG("--- STARTED WITHOUT ERRORS ---");
-				LOG("------------------------------\n\n");
 			}
 			else
 			{
-				LOG("ERROR: Awake failed");
+				LOG(LogType::LOG_ERROR, "Awake failed.");
 				state = EngineState::FAIL;
 			}
 
@@ -50,13 +47,13 @@ int main()
 			
 			if (Engine::GetInstance().Start() == true)
 			{
+				LOG(LogType::LOG_INFO, "Started without errors.");
 				state = EngineState::LOOP;
-
 			}
 			else
 			{
+				LOG(LogType::LOG_ERROR, "Start failed.");
 				state = EngineState::FAIL;
-				LOG("ERROR: Start failed");
 			}
 			break;
 
@@ -66,17 +63,20 @@ int main()
 			if (Engine::GetInstance().PreUpdate() == false)
 			{
 				state = EngineState::FAIL;
-				LOG("ERROR: Preupdate failed");
+				LOG(LogType::LOG_ERROR, "Preupdate failed.");
 			}
 				
 
 			if (Engine::GetInstance().Update() == false)
+			{
 				state = EngineState::CLEAN;
+			}
+				
 
 			if (Engine::GetInstance().PostUpdate() == false)
 			{
 				state = EngineState::FAIL;
-				LOG("ERROR: Postupdate failed");
+				LOG(LogType::LOG_ERROR, "ERROR: Postupdate failed.");
 			}
 
 			break;
@@ -96,7 +96,7 @@ int main()
 
 			
 		case EngineState::FAIL:
-			LOG("Exiting with errors");
+			LOG(LogType::LOG_ERROR, "Exiting with errors.");
 			result = EXIT_FAILURE;
 			state = EngineState::EXIT;
 			break;

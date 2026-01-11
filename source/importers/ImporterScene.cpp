@@ -9,7 +9,7 @@ bool ImporterScene::Import_Internal()
     std::ifstream importFile(assetPath);
     if (!importFile.is_open())
     {
-        LOG("Error loading scene: %s", assetPath.c_str());
+        LOG(LogType::LOG_ERROR, "Failed loading scene: %s", assetPath.c_str());
         return false;
     }
 
@@ -30,11 +30,11 @@ bool ImporterScene::Import_Internal()
         file.write(xmlContent.c_str(), size);
 
         file.close();
-        LOG("Scene imported to Library: %s", libraryPath.c_str());
+        LOG(LogType::LOG_INFO, "Scene imported to Library: %s", libraryPath.c_str());
     }
     else
     {
-        LOG("Error importing scene binary: %s", libraryPath.c_str());
+        LOG(LogType::LOG_ERROR, "Failed importing scene binary: %s", libraryPath.c_str());
         return false;
     }
 

@@ -130,10 +130,10 @@ void Mesh::LinkBones()
         {
             // Si no lo encuentra, null (y luego pondremos matriz identidad)
             boneGameObjects[i] = nullptr;
-            LOG("Warning: Bone '%s' not found for mesh '%s'", boneName.c_str(), owner->name.c_str());
+            LOG(LogType::LOG_WARNING, "Bone '%s' not found for mesh '%s'", boneName.c_str(), owner->name.c_str());
         }
     }
-    LOG("Skinning: Linked %d bones for mesh %s", boneGameObjects.size(), owner->name.c_str());
+    LOG(LogType::LOG_INFO, "Skinning: Linked %d bones for mesh %s", boneGameObjects.size(), owner->name.c_str());
 }
 
 ResourceMesh* Mesh::GetResource() const
@@ -197,7 +197,7 @@ void Mesh::OnResourceLost(UID lostUID)
 {
     if (resourceUID == lostUID)
     {
-        LOG("Texture Resource deleted! Removing reference in Component.");
+        LOG(LogType::LOG_INFO, "Texture Resource deleted! Removing reference in Component.");
         resource = nullptr;
         resourceUID = 0;
     }

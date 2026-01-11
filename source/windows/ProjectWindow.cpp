@@ -209,7 +209,7 @@ void ProjectWindow::DrawTreeNodeRecursive(DirectoryNode* node)
    
                         
 
-                        LOG("Movido %s a %s (Tree View)", path.c_str(), node->path.c_str());
+                        LOG(LogType::LOG_INFO, "Movido %s a %s (Tree View)", path.c_str(), node->path.c_str());
                     }
                 }
                 dataPtr += path.length() + 1;
@@ -311,7 +311,7 @@ void ProjectWindow::DrawFolderContent()
                         std::string metaPath = path + ".meta";
                         if (DoesFileExist(metaPath)) MoveAssetToFolder(metaPath, child->path);
 
-                        LOG("Movido %s a %s", path.c_str(), child->path.c_str());
+                        LOG(LogType::LOG_INFO, "Movido %s a %s", path.c_str(), child->path.c_str());
 
                         dataPtr += path.length() + 1;
                     }
@@ -675,7 +675,7 @@ bool ProjectWindow::ExecuteRename(DirectoryNode* node, const std::string& newNam
 
     if (DoesFileExist(newPath))
     {
-        LOG("Error: A file with that name already exists.");
+        LOG(LogType::LOG_ERROR, "A file with that name already exists.");
         return false;
     }
 
@@ -693,12 +693,12 @@ bool ProjectWindow::ExecuteRename(DirectoryNode* node, const std::string& newNam
             Engine::GetInstance().moduleResources->MoveResource(oldPath, newPath);
         }
 
-        LOG("Renamed %s to %s", oldPath.c_str(), newPath.c_str());
+        LOG(LogType::LOG_INFO, "Renamed %s to %s", oldPath.c_str(), newPath.c_str());
         return true;
     }
     else
     {
-        LOG("Error renaming file from %s to %s", oldPath.c_str(), newPath.c_str());
+        LOG(LogType::LOG_ERROR, "Failed renaming file from %s to %s", oldPath.c_str(), newPath.c_str());
         return false;
     }
 }

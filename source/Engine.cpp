@@ -48,7 +48,7 @@ bool Engine::Awake() {
         ret = module->Awake();
         if (!ret) {
 
-            LOG("CRITICAL: %s failed in Awake!", module->name.c_str());
+            LOG(LogType::LOG_ERROR, "%s failed in Awake!", module->name.c_str());
             return false;
         }
     }
@@ -67,7 +67,7 @@ bool Engine::Start() {
         ret = module->Start();
         if (!ret) {
 
-            LOG("CRITICAL: %s failed in Start!", module->name.c_str());
+            LOG(LogType::LOG_ERROR, "%s failed in Start!", module->name.c_str());
             return false;
         }
     }
@@ -84,7 +84,7 @@ bool Engine::PreUpdate() {
         ret = module->PreUpdate();
         if (!ret) {
 
-            LOG("CRITICAL: %s failed in Pre Update!", module->name.c_str());
+            LOG(LogType::LOG_ERROR, "%s failed in Pre Update!", module->name.c_str());
             return false;
         }
     }
@@ -101,7 +101,7 @@ bool Engine::Update() {
         ret = module->Update();
         if (!ret) {
 
-            LOG("CRITICAL: %s failed in Update!", module->name.c_str());
+            LOG(LogType::LOG_ERROR, "%s failed in Update!", module->name.c_str());
             return false;
         }
     }
@@ -124,7 +124,7 @@ bool Engine::PostUpdate() {
         ret = module->PostUpdate();
         if (!ret) {
 
-            LOG("CRITICAL: %s failed in Post Update!", module->name.c_str());
+            LOG(LogType::LOG_ERROR, "%s failed in Post Update!", module->name.c_str());
             return false;
         }
     }
@@ -144,7 +144,7 @@ bool Engine::CleanUp() {
 
         if (module->CleanUp() == false)
         {
-            LOG("CRITICAL: %s failed Cleaning Up!", module->name.c_str());
+            LOG(LogType::LOG_ERROR, "%s failed Cleaning Up!", module->name.c_str());
             ret = false;
         }
 

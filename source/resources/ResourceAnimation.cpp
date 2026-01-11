@@ -17,7 +17,7 @@ bool ResourceAnimation::LoadToMemory_Internal()
 
     if (!file.is_open())
     {
-        LOG("Error: Could not open animation library file: %s", libraryPath.c_str());
+        LOG(LogType::LOG_ERROR, "Could not open animation library file: %s", libraryPath.c_str());
         return false;
     }
 

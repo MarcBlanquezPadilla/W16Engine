@@ -15,7 +15,7 @@ bool ImporterTexture::Import_Internal()
 
 	if (!ilLoadImage(assetPath.c_str()))
 	{
-		LOG("Error: Failed loading file from %s.", assetPath.c_str());
+		LOG(LogType::LOG_ERROR, "Failed loading file from %s.", assetPath.c_str());
 		ilDeleteImages(1, &ilImageID);
 		return false;
 	}
@@ -24,7 +24,7 @@ bool ImporterTexture::Import_Internal()
 
 	if (!ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE))
 	{
-		LOG("Error converting image to RGBA: %s", assetPath.c_str());
+		LOG(LogType::LOG_ERROR, "Failed converting image to RGBA: %s", assetPath.c_str());
 		ilDeleteImages(1, &ilImageID);
 		return false;
 	}
@@ -51,11 +51,11 @@ bool ImporterTexture::Import_Internal()
         file.write((const char*)ilGetData(), dataSize);
 
         file.close();
-        LOG("Texture saved to Library: %s (%dx%d)", libraryPath.c_str(), width, height);
+        LOG(LogType::LOG_INFO, "Texture saved to Library: %s (%dx%d)", libraryPath.c_str(), width, height);
     }
     else
     {
-        LOG("Error importing texture binary: %s", libraryPath.c_str());
+        LOG(LogType::LOG_ERROR, "Error importing texture binary: %s", libraryPath.c_str());
         ilDeleteImages(1, &ilImageID);
         return false;
     }

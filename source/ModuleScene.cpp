@@ -86,7 +86,7 @@ bool ModuleScene::CleanUp()
 {
 	bool ret = true;
 
-	LOG("Cleaning Scene");
+	LOG(LogType::LOG_INFO, "Cleaning Scene.");
 	Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
 
 	objectsPendingToDelete.clear();
@@ -119,7 +119,7 @@ bool ModuleScene::CleanUp()
 bool ModuleScene::NewScene()
 {
 	bool ret = true;
-	LOG("Creating New Scene");
+	LOG(LogType::LOG_INFO, "Creating New Scene.");
 
 	for (auto& pair : allGameObjects)
 	{
@@ -248,7 +248,7 @@ void ModuleScene::RebuildTree()
 
 		staticTreeDirty = false;
 
-		LOG("Static octree rebuilt with %d objects", staticGameObjects.size());
+		LOG(LogType::LOG_INFO, "Static octree rebuilt with %d objects", staticGameObjects.size());
 	}
 }
 

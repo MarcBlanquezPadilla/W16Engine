@@ -46,7 +46,7 @@ Tree::Tree(TreeType type, int maxDepth, int maxObjectsPerNode) : type(type), max
     rootNode = new TreeNode(mapLimits,0, childrenPerNode);
 
     const char* typeName = (type == TreeType::Quadtree) ? "Quadtree" : "Octree";
-    LOG("%s created with %d children per node", typeName, childrenPerNode);
+    LOG(LogType::LOG_INFO, "%s created with %d children per node", typeName, childrenPerNode);
 }
 
 Tree::~Tree()
@@ -62,7 +62,7 @@ Tree::~Tree()
 
 void Tree::Build(std::vector<GameObject*> gameObjects, AABB worldLimits)
 {
-    LOG("Building spatial tree with %d objects", gameObjects.size());
+    LOG(LogType::LOG_INFO, "Building spatial tree with %d objects", gameObjects.size());
 
     Clear();
 
@@ -76,7 +76,7 @@ void Tree::Build(std::vector<GameObject*> gameObjects, AABB worldLimits)
         Insert(rootNode, obj, globalAABB);
     }
 
-    LOG("Spatial tree built with %d nodes", GetNodeCount());
+    LOG(LogType::LOG_INFO, "Spatial tree built with %d nodes", GetNodeCount());
 }
 
 void Tree::Clear()

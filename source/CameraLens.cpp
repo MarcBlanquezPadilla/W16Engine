@@ -186,7 +186,7 @@ void CameraLens::SetRenderTarget(int width, int height)
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        LOG("Error: Framebuffer de la cámara no está completo.");
+        LOG(LogType::LOG_ERROR, "Framebuffer de la cámara no está completo.");
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

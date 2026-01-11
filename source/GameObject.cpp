@@ -102,7 +102,7 @@ Component* GameObject::AddComponent(ComponentType type)
 {
 	if (components.count(type) > 0)
 	{
-		LOG("Error: This GameObject already has a component of this type.");
+		LOG(LogType::LOG_ERROR, "This GameObject already has a component of this type.");
 		return components[type];
 	}
 
@@ -271,7 +271,7 @@ void GameObject::Load(Config& gameObjectNode)
 			if (component) component->Load(componentNode);
 			else
 			{
-				LOG("Failed to load component %d to %s game object", (int)type, name);
+				LOG(LogType::LOG_ERROR, "Failed to load component %d to %s game object", (int)type, name);
 			}
 
 			componentNode = componentNode.GetNextSibling("Component");
@@ -296,7 +296,7 @@ void GameObject::Load(Config& gameObjectNode)
 			}
 			else
 			{
-				LOG("Error: Could not create new GameObject while loading scene.");
+				LOG(LogType::LOG_ERROR, "Could not create new GameObject while loading scene.");
 			}
 
 			childNode = childNode.GetNextSibling("GameObject");

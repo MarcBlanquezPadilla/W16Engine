@@ -1,20 +1,28 @@
 #include "Log.h"
-#include <iostream>
 #include <cstdarg>
 #include <cstdio>
-#include <string>
+#include <iostream>
 
-void Log(const char file[], int line, const char* format, ...)
+void Log(LogType type, const char file[], int line, const char* format, ...)
 {
-    char tmp_string[4096];
-    char tmp_string2[4096];
-    va_list ap;
+    const int bufferSize = 2048;
+    char textBuffer[bufferSize];
 
-    va_start(ap, format);
-    vsprintf_s(tmp_string, 4096, format, ap);
-    va_end(ap);
-    sprintf_s(tmp_string2, 4096, "\n%s(%d) : %s", file, line, tmp_string);
-    printf(tmp_string2);
+    va_list args;
+    va_start(args, format);
+    vsnprintf(textBuffer, bufferSize, format, args);
+    va_end(args);
+    
+    std::string header = "";
+    switch (type) {
+    case LogType::LOG_INFO:    header = "[INFO] "; break;
+    case LogType::LOG_WARNING: header = "[WARN] "; break;
+    case LogType::LOG_ERROR:   header = "[ERROR] "; break;
+    }
 
-    LogBuffer::GetInstance().AddMessage(tmp_string);
+    std::string message = header + textBuffer;
+
+    LogBuffer::GetInstance().AddLog(type, message);
+
+    printf("%s\n", message.c_str());
 }

@@ -26,10 +26,10 @@ bool ModuleWindow::Awake()
 	height = WINDOW_HEIGHT;
 
 	//INIT SDL
-	LOG("Initializing SDL3");
+	LOG(LogType::LOG_INFO, "Initializing SDL3");
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
-		LOG("SDL_VIDEO could not initialize! SDL_Error: %s\n", SDL_GetError());
+		LOG(LogType::LOG_ERROR, "SDL_VIDEO could not initialize! SDL_Error: %s\n", SDL_GetError());
 		ret = false;
 	}
 	else
@@ -55,7 +55,7 @@ bool ModuleWindow::Awake()
 
 		if (window == NULL)
 		{
-			LOG("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+			LOG(LogType::LOG_ERROR, "Window could not be created! SDL_Error: %s\n", SDL_GetError());
 			ret = false;
 		}
 
@@ -113,7 +113,7 @@ bool ModuleWindow::Awake()
 bool ModuleWindow::CleanUp()
 {
 	Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
-	LOG("Destroying SDL window and quitting all SDL systems");
+	LOG(LogType::LOG_INFO, "Destroying SDL window and quitting all SDL systems");
 
 	if (context != NULL)
 	{

@@ -23,7 +23,7 @@ bool ImporterAnimation::Import(const std::string libraryPath, const UID uid, con
 	// Si has delegado la responsabilidad al artista, aquí podrías avisar si viene mal.
 	// Si dura 100 ticks y solo hay 2 keys... huele a que no está baked.
 	 if (assimpAnim->mChannels[0]->mNumPositionKeys < (unsigned int)animData.duration) {
-	    LOG("WARNING: Animation %d seems NOT baked. Runtime glitches expected.", uid);
+	    LOG(LogType::LOG_WARNING, "Animation %d seems NOT baked. Runtime glitches expected.", uid);
 	 }
 
 	// 2. RELLENAR CANALES (HUESOS)
@@ -123,10 +123,10 @@ bool ImporterAnimation::Save(const std::string libraryPath, const UID uid, const
 		}
 
 		file.close();
-		LOG("Animation imported to Library (BAKED format): %s", libraryPath.c_str());
+		LOG(LogType::LOG_INFO, "Animation imported to Library (BAKED format): %s", libraryPath.c_str());
 		return true;
 	}
 
-	LOG("Error saving animation to library: %s", libraryPath.c_str());
+	LOG(LogType::LOG_ERROR, "Failed saving animation to library: %s", libraryPath.c_str());
 	return false;
 }

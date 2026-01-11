@@ -45,16 +45,16 @@ bool ModuleRender::Awake()
 
 	if (version == 0)
 	{
-		LOG("Error loading the glad library");
+		LOG(LogType::LOG_ERROR, "Failed loading the glad library.");
 		return false;
 	}
 
-	LOG("Initializing Devil");
+	LOG(LogType::LOG_INFO, "Initializing Devil.");
 	ilInit();
 	ilEnable(IL_ORIGIN_SET);
 	ilOriginFunc(IL_ORIGIN_LOWER_LEFT);
 		
-	LOG("Initializing Glad");
+	LOG(LogType::LOG_INFO, "Initializing Glad.");
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glClearDepth(1.0f); 
 	glClearColor(0.2f, 0.2f, 0.2f, 1.f);
@@ -70,49 +70,49 @@ bool ModuleRender::Awake()
 	//CREATE DEFAULT SHADER
 	if (!CreateDefaultShader())
 	{
-		LOG("Error creating default shader");
+		LOG(LogType::LOG_ERROR, "Failed creating default shader");
 		return false;
 	}
 
 	//CREATE NORMAL SHADER
 	if (!CreateNormalShader())
 	{
-		LOG("Error creating normal shader");
+		LOG(LogType::LOG_ERROR, "Failed creating normal shader");
 		return false;
 	}
 
 	//CREATE STENCIL SHADER
 	if (!CreateOutlineShader())
 	{
-		LOG("Error creating outline shader");
+		LOG(LogType::LOG_ERROR, "Failed creating outline shader");
 		return false;
 	}
 	
 	//CREATE LINE SHADER
 	if (!CreateLineShader())
 	{
-		LOG("Error creating outline shader");
+		LOG(LogType::LOG_ERROR, "Failed creating outline shader");
 		return false;
 	}
 
 	//CREATE MESH LINES SHADER
 	if (!CreateMeshLinesShader())
 	{
-		LOG("Error creating mesh lines shader");
+		LOG(LogType::LOG_ERROR, "Failed creating mesh lines shader");
 		return false;
 	}
 
 	//CREATE CHECKER TEXTURE
 	if (!CreateDefaultTexture())
 	{
-		LOG("Error creating default texture");
+		LOG(LogType::LOG_ERROR, "Failed creating default texture");
 		return false;
 	}
 
 	//CREATE CHECKER TEXTURE
 	if (!CreateCheckerTexture())
 	{
-		LOG("Error creating checker texture");
+		LOG(LogType::LOG_ERROR, "Failed creating checker texture");
 		return false;
 	}
 
@@ -567,7 +567,7 @@ bool ModuleRender::CreateShaderFromSources(unsigned int& shaderID, int type, con
 		{
 			char* logg = new char[length];
 			glGetShaderInfoLog(shaderID, length, nullptr, logg);
-			LOG("%s", logg);
+			LOG(LogType::LOG_ERROR, "%s", logg);
 			delete[] logg;
 		}
 		return false;
@@ -659,7 +659,7 @@ bool ModuleRender::CreateDefaultShader()
 		{
 			char* logg = new char[length];
 			glGetProgramInfoLog(shaderProgram, length, nullptr, logg);
-			LOG("%s", logg);
+			LOG(LogType::LOG_ERROR, "%s", logg);
 			delete[] logg;
 		}
 		return false;
@@ -843,7 +843,7 @@ bool ModuleRender::CreateOutlineShader()
 	glGetProgramiv(outlineShaderProgram, GL_LINK_STATUS, &status);
 	if (status == GL_FALSE)
 	{
-		LOG("Error linking outline shader!");
+		LOG(LogType::LOG_ERROR, "Failed linking outline shader!");
 		return false;
 	}
 
@@ -975,7 +975,7 @@ bool ModuleRender::CreateMeshLinesShader()
 	glGetProgramiv(meshLinesShaderProgram, GL_LINK_STATUS, &status);
 	if (status == GL_FALSE)
 	{
-		LOG("Error al linkar el shader de normales!");
+		LOG(LogType::LOG_ERROR, "Failed linking normal sahder.");
 		return false;
 	}
 
@@ -1073,7 +1073,7 @@ bool ModuleRender::UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>
 
 	glBindVertexArray(0);
 
-	LOG("Mesh uploaded to GPU. VAO: %u, VBO: %u, EBO: %u, Indices: %d",
+	LOG(LogType::LOG_INFO, "Mesh uploaded to GPU. VAO: %u, VBO: %u, EBO: %u, Indices: %d",
 		meshData.VAO, meshData.VBO, meshData.EBO, indices.size());
 
 	return true;
@@ -1107,7 +1107,7 @@ bool ModuleRender::UploadSmoothedMeshToGPU(StencilData& stencilData, unsigned in
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	LOG("Outline smoothed mesh upload to GPU. VAO: %u, VBO: % u", stencilData.VAO, stencilData.VBO);
+	LOG(LogType::LOG_INFO, "Outline smoothed mesh upload to GPU. VAO: %u, VBO: % u", stencilData.VAO, stencilData.VBO);
 	return true;
 }
 
@@ -1128,13 +1128,13 @@ bool ModuleRender::UploadLinesToGPU(unsigned int& vao, unsigned int& vbo, const 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	LOG("Lines of normals uploaded to GPU. VAO: %u, Vertices: %d", vao, lines.size());
+	LOG(LogType::LOG_INFO, "Lines of normals uploaded to GPU. VAO: %u, Vertices: %d", vao, lines.size());
 	return true;
 }
 
 void ModuleRender::DeleteMeshFromGPU(MeshData& meshData)
 {
-	LOG("Mesh removed from GPU. VAO: %d, EBO: %d, VBO: %d", meshData.VAO, meshData.EBO, meshData.VBO);
+	LOG(LogType::LOG_INFO, "Mesh removed from GPU. VAO: %d, EBO: %d, VBO: %d", meshData.VAO, meshData.EBO, meshData.VBO);
 	if (meshData.VBO != 0) glDeleteBuffers(1, &meshData.VBO);
 	if (meshData.EBO != 0) glDeleteBuffers(1, &meshData.EBO);
 	if (meshData.VAO != 0) glDeleteVertexArrays(1, &meshData.VAO);
@@ -1144,7 +1144,7 @@ void ModuleRender::DeleteMeshFromGPU(MeshData& meshData)
 
 void ModuleRender::DeleteSmoothedMeshFromGPU(StencilData& stencilData)
 {
-	LOG("Mesh removed from GPU. VAO: %d, VBO: %d", stencilData.VAO, stencilData.VBO);
+	LOG(LogType::LOG_INFO, "Mesh removed from GPU. VAO: %d, VBO: %d", stencilData.VAO, stencilData.VBO);
 	if (stencilData.VBO != 0) glDeleteBuffers(1, &stencilData.VBO);
 	if (stencilData.VAO != 0) glDeleteVertexArrays(1, &stencilData.VAO);
 	stencilData = StencilData();
@@ -1170,7 +1170,7 @@ unsigned int ModuleRender::UploadTextureToGPU(unsigned char* data, int width, in
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	LOG("Texture uploaded to GPU. ID: %u", textureID);
+	LOG(LogType::LOG_INFO, "Texture uploaded to GPU. ID: %u", textureID);
 	return textureID;
 }
 
@@ -1179,7 +1179,7 @@ void ModuleRender::DeleteTextureFromGPU(unsigned int textureID)
 	if (textureID != 0)
 	{
 		glDeleteTextures(1, &textureID);
-		LOG("Texture removed from GPU. ID: %u", textureID);
+		LOG(LogType::LOG_INFO, "Texture removed from GPU. ID: %u", textureID);
 	}
 }
 
@@ -1218,7 +1218,7 @@ CameraLens* ModuleRender::GetMainCamera()
 
 	if (mainCameras > 1)
 	{
-		LOG("WARNING: There's more than one active camera with Depth = 0 (Main Layer)!");
+		LOG(LogType::LOG_WARNING, "There's more than one active camera with Depth = 0 (Main Layer)!");
 	}
 
 	mainCamera = nullptr;

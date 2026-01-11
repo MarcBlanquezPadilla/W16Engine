@@ -67,7 +67,7 @@ bool ModuleLoader::LoadModel(const std::string& filePath)
 
 	if (modelUID == 0)
 	{
-		LOG("Error: Model not found at %s", filePath.c_str());
+		LOG(LogType::LOG_ERROR,"Model not found at %s", filePath.c_str());
 		return false;
 	}
 
@@ -78,7 +78,7 @@ bool ModuleLoader::LoadModel(const std::string& filePath)
 		Config gameObjectNode = modelRes->gameObjectConfig.GetChild("GameObject");
 
 		if (!gameObjectNode.IsValid()) {
-			LOG("Error: Still invalid. XML structure is unexpected.");
+			LOG(LogType::LOG_ERROR, "Error: Still invalid. XML structure is unexpected.");
 			return false;
 		}
 
@@ -89,7 +89,7 @@ bool ModuleLoader::LoadModel(const std::string& filePath)
 			Engine::GetInstance().moduleScene->AddGameObject(gameObject);
 		}
 
-		LOG("Model loaded successfully: %s", filePath.c_str());
+		LOG(LogType::LOG_INFO, "Model loaded successfully: %s", filePath.c_str());
 
 		//RELEASE RESOURCE
 		Engine::GetInstance().moduleResources->ReleaseResource(modelUID);
@@ -118,16 +118,16 @@ bool ModuleLoader::LoadTextureToGameObjects(const std::string& filePath, std::ve
 			}
 
 			texture->SetResource(Engine::GetInstance().moduleResources->Find(filePath));
-			LOG("INFO: Texture applied to GameObject %s", gameObject->name.c_str());
+			LOG(LogType::LOG_INFO,"Texture applied to GameObject %s", gameObject->name.c_str());
 			ret = true;
 		}
 		else
 		{
-			LOG("INFO: Texture not applied because the object was nullptr.");
+			LOG(LogType::LOG_INFO, "Texture not applied because the object was nullptr.");
 			continue;
 		}
 	}
-	if (!ret) LOG("INFO: Texture not applied to any object. Select one object before to apply texture.");
+	if (!ret) LOG(LogType::LOG_INFO, "Texture not applied to any object. Select one object before to apply texture.");
 	return ret;
 }
 
@@ -166,13 +166,13 @@ bool ModuleLoader::LoadFromAssimpMaterial(aiMaterial* material, const std::strin
 		}
 		else
 		{
-			LOG("Error: Could not find texture '%s' in any location", fileName.c_str());
+			LOG(LogType::LOG_ERROR, "Could not find texture '%s' in any location", fileName.c_str());
 			return false;
 		}
 	}
 	else
 	{
-		LOG("INFO: The material does not have a diffuse texture.");
+		LOG(LogType::LOG_INFO, "The material does not have a diffuse texture.");
 		return false;
 	}
 }
@@ -189,7 +189,7 @@ bool ModuleLoader::LoadTexture(const std::string& path, unsigned int& textureID,
 
 		if (!ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE))
 		{
-			LOG("Error converting image to RGBA: %s", path.c_str());
+			LOG(LogType::LOG_ERROR, "Error converting image to RGBA: %s", path.c_str());
 			ilDeleteImages(1, &ilImageID);
 			return false;
 		}
@@ -197,11 +197,11 @@ bool ModuleLoader::LoadTexture(const std::string& path, unsigned int& textureID,
 		width = ilGetInteger(IL_IMAGE_WIDTH);
 		height = ilGetInteger(IL_IMAGE_HEIGHT);
 
-		LOG("INFO: Texture loaded into CPU from: %s (Width: %d, Height: %d)", path.c_str(), width, height);
+		LOG(LogType::LOG_INFO, "Texture loaded into CPU from: %s (Width: %d, Height: %d)", path.c_str(), width, height);
 
 		if (ilImageID == 0)
 		{
-			LOG("Error: An attempt was made to upload a texture to the GPU without first loading it to the CPU.");
+			LOG(LogType::LOG_ERROR, "An attempt was made to upload a texture to the GPU without first loading it to the CPU.");
 			return false;
 		}
 
@@ -224,7 +224,7 @@ bool ModuleLoader::LoadTexture(const std::string& path, unsigned int& textureID,
 	}
 	else
 	{
-		LOG("Error: Failed loading file from %s.", path.c_str());
+		LOG(LogType::LOG_ERROR, "Failed loading file from %s.", path.c_str());
 		ilDeleteImages(1, &ilImageID);
 		return false;
 	}
@@ -267,11 +267,11 @@ void ModuleLoader::LoadEmpty()
 bool ModuleLoader::SaveScene(const std::string& savePath)
 {
 	//SAVE SCENE
-	LOG("INFO: Saving scene in: %s", savePath.c_str());
+	LOG(LogType::LOG_INFO, "Saving scene in: %s", savePath.c_str());
 
 	if (DoesFileExist(savePath)) 
 	{
-		LOG("ERROR: Saving scene failed, file already exist");
+		LOG(LogType::LOG_ERROR, "Saving scene failed, file already exist");
 		return false;
 	}
 
@@ -279,16 +279,16 @@ bool ModuleLoader::SaveScene(const std::string& savePath)
 
 	if (!SaveSceneToMemory(sceneConfig))
 	{
-		LOG("ERROR: Failed parsing scene to XML");
+		LOG(LogType::LOG_ERROR, "Failed parsing scene to XML");
 	}
 
 	if (!sceneConfig.Save(savePath.c_str()))
 	{
-		LOG("ERROR: Error saving the scene file.");
+		LOG(LogType::LOG_ERROR, "Error saving the scene file.");
 		return false;
 	}
 
-	LOG("INFO:Scene saved successfully.");
+	LOG(LogType::LOG_INFO, "Scene saved successfully.");
 	return true;
 }
 
@@ -328,7 +328,7 @@ bool ModuleLoader::LoadScene(const std::string& assetPath)
 
 	if (sceneUID == 0)
 	{
-		LOG("ERROR: Scene not found at %s", assetPath.c_str());
+		LOG(LogType::LOG_ERROR, "Scene not found at %s", assetPath.c_str());
 		return false;
 	}
 
@@ -353,14 +353,14 @@ bool ModuleLoader::LoadSceneFromMemory(Config& sceneConfig)
 	Config sceneNode = sceneConfig.GetChild("Scene");
 
 	if (!sceneNode.IsValid()) {
-		LOG("ERROR: Still invalid. XML structure is unexpected.");
+		LOG(LogType::LOG_ERROR, "Failed loading scene: XML structure is unexpected. Scene node invalid");
 		return false;
 	}
 
 	Config gameObjectsNode = sceneNode.GetChild("GameObjects");
 	if (!gameObjectsNode.IsValid())
 	{
-		LOG("ERROR loading scene: gameObjects node invalid.");
+		LOG(LogType::LOG_ERROR, "Failed loading scene: XML structure is unexpected. GameObjects node invalid");
 		return false;
 	}
 

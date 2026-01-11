@@ -19,7 +19,7 @@ bool ResourceTexture::LoadToMemory_Internal()
     std::ifstream file(libraryPath, std::ios::in | std::ios::binary);
     if (!file.is_open())
     {
-        LOG("Error: Could not open texture library file: %s", libraryPath.c_str());
+        LOG(LogType::LOG_ERROR, "Could not open texture library file: %s", libraryPath.c_str());
         return false;
     }
 
@@ -31,14 +31,14 @@ bool ResourceTexture::LoadToMemory_Internal()
 
     if (fileUID != this->uid)
     {
-        LOG("Error: UID Mismatch in file %s. Expected %u, got %u", libraryPath.c_str(), this->uid, fileUID);
+        LOG(LogType::LOG_ERROR, "UID Mismatch in file %s. Expected %u, got %u", libraryPath.c_str(), this->uid, fileUID);
         file.close();
         return false;
     }
 
     if (fileType != Resource::Type::texture)
     {
-        LOG("Error: Resource Type Mismatch! %s is not a TEXTURE", libraryPath.c_str());
+        LOG(LogType::LOG_ERROR, "Resource Type Mismatch! %s is not a TEXTURE", libraryPath.c_str());
         file.close();
         return false;
     }
@@ -64,7 +64,7 @@ bool ResourceTexture::LoadToMemory_Internal()
 
         if (gpuID != 0)
         {
-            LOG("Texture loaded to VRAM: %s (%dx%d)", libraryPath.c_str(), width, height);
+            LOG(LogType::LOG_INFO, "Texture loaded to VRAM: %s (%dx%d)", libraryPath.c_str(), width, height);
             return true;
         }
     }

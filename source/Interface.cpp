@@ -41,7 +41,7 @@ bool Interface::Awake()
 {
 	bool ret = true;
 	//IMGUI SETUP
-	LOG("Initializing ImGui");
+	LOG(LogType::LOG_INFO, "Initializing ImGui");
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io_ref = ImGui::GetIO();
@@ -58,13 +58,13 @@ bool Interface::Awake()
 
 	if (!ImGui_ImplSDL3_InitForOpenGL(window, gl_context))
 	{
-		LOG("Error initializing ImGui_ImplSDL3_InitForOpenGL");
+		LOG(LogType::LOG_ERROR, "Failed initializing ImGui_ImplSDL3_InitForOpenGL");
 		ret = false;
 	}
 
 	if (!ImGui_ImplOpenGL3_Init(glsl_version))
 	{
-		LOG("Error initializing ImGui_ImplOpenGL3_Init");
+		LOG(LogType::LOG_ERROR, "Failed initializing ImGui_ImplOpenGL3_Init");
 		ret = false;
 	}
 
@@ -285,7 +285,7 @@ bool Interface::CleanUp()
 	delete toolBar;
 	toolBar = nullptr;
 
-	LOG("Turning off ImGui");
+	LOG(LogType::LOG_INFO, "Turning off ImGui");
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL3_Shutdown();
 	ImGui::DestroyContext();
