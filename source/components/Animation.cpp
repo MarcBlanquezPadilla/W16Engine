@@ -111,6 +111,7 @@ void Animation::Play(const std::string& name, float blendTime)
     {
         if (currentAnimation->GetUID() == newUID) return;
 
+        targetAnimationUID = newUID;
         targetAnimation = (ResourceAnimation*)Engine::GetInstance().moduleResources->RequestResource(newUID);
 
         if (targetAnimation)
@@ -218,6 +219,7 @@ void Animation::Update()
 
             // C. Reseteamos variables de blend
             targetAnimation = nullptr;
+            targetAnimationUID = 0;
             isBlending = false;
             currentBlendTime = 0.0f;
 
@@ -534,8 +536,14 @@ void Animation::OnResourceLost(UID lostUID)
 {
     if (currentAnimationUID == lostUID)
     {
-        LOG(LogType::LOG_INFO, "Animation currentAnimation deleted! Removing reference in Component.");
+        LOG(LogType::LOG_INFO, "Current animation resource deleted! Removing reference in Component.");
         currentAnimation = nullptr;
         currentAnimationUID = 0;
+    }
+    if (targetAnimationUID == lostUID)
+    {
+        LOG(LogType::LOG_INFO, "Target animation resource deleted! Removing reference in Component.");
+        targetAnimation = nullptr;
+        targetAnimationUID = 0;
     }
 }

@@ -66,6 +66,7 @@ private:
 
 public:
     UID currentAnimationUID = 0;
+    UID targetAnimationUID = 0;
     ResourceAnimation* currentAnimation = nullptr;
     ResourceAnimation* targetAnimation = nullptr;
 
