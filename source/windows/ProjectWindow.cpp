@@ -125,12 +125,20 @@ void ProjectWindow::Draw()
             if (DeleteAsset(pathToDelete))
             {
                 Engine::GetInstance().moduleResources->RemoveResource(uid);
+                if (currentNode == node)
+                {
+                    currentNode = rootNode;
+                }
                 windowChanged = true;
             }
+
+            
         }
 
         selectedNodes.clear();
         nodesToDelete.clear();
+        currentAsset = nullptr;
+       
     }
 
     ImGui::End();

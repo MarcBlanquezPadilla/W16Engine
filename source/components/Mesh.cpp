@@ -171,6 +171,22 @@ void Mesh::OnEditor()
     {
         if (resource && resource->IsLoadedToMemory())
         {
+            ImGui::Text("Mesh:");
+            ImGui::Button(resource->GetName(), ImVec2(ImGui::GetContentRegionAvail().x, 20));
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(RESOURCE_DRAG))
+                {
+                    UID droppedUID = *(UID*)payload->Data;
+
+                    const Resource* res = Engine::GetInstance().moduleResources->PeekResource(droppedUID);
+                    if (res && res->GetType() == Resource::Type::mesh)
+                    {
+                        SetResource(droppedUID);
+                    }
+                }
+                ImGui::EndDragDropTarget();
+            }
             ImGui::Text("Path:");
             ImGui::TextWrapped(resource->GetAssetFile());
             ImGui::Text("Vertices:");
@@ -189,7 +205,25 @@ void Mesh::OnEditor()
             ImGui::SameLine();
             ImGui::TextUnformatted(resource->hasUVs ? "Yes" : "No");
         }
-        else ImGui::Text("There's no mesh attatched");
+        else
+        {
+            ImGui::Text("Mesh:");
+            ImGui::Button("Drop mesh", ImVec2(ImGui::GetContentRegionAvail().x, 20));
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(RESOURCE_DRAG))
+                {
+                    UID droppedUID = *(UID*)payload->Data;
+
+                    const Resource* res = Engine::GetInstance().moduleResources->PeekResource(droppedUID);
+                    if (res && res->GetType() == Resource::Type::mesh)
+                    {
+                        SetResource(droppedUID);
+                    }
+                }
+                ImGui::EndDragDropTarget();
+            }
+        }
     }
 }
 

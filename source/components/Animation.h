@@ -39,7 +39,11 @@ public:
 
     ComponentType GetType() override { return ComponentType::Animation; };
 
+    void Save(Config& componentNode) override;
+    void Load(Config& componentNode) override;
+
     void AddAnimation(const std::string& name, uint32_t uid, std::string resourceName);
+    void RemoveAnimation(const std::string& name);
 
     void Play(const std::string& name, float blendTime = 0.2f);
     void ResetPose();

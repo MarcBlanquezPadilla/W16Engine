@@ -10,6 +10,7 @@
 #include "../resources/ResourceTexture.h"
 
 #include "../utils/Log.h"
+#include "../utils/FileUtils.h"
 
 #include "imgui.h"
 
@@ -117,23 +118,107 @@ void Texture::OnEditor()
 {
     if (ImGui::CollapsingHeader("Texture"))
     {
-        ImGui::Text("Path:");
         if (resource && resource->IsLoadedToMemory())
         {
+            ImGui::Text("Texture:");
+            ImGui::Image(GetTextureID(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().x));
+
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSETS_DRAG))
+                {
+                    const char* dataPtr = (const char*)payload->Data;
+                    const char* endPtr = dataPtr + payload->DataSize;
+
+                    while (dataPtr < endPtr)
+                    {
+                        std::string path = dataPtr;
+                        if (path.empty()) break;
+
+                        if (!IsFileDirectory(path))
+                        {
+                            Resource::Type type = Engine::GetInstance().moduleResources->GetTypeFromExtension(path);
+                            if (type == Resource::texture)
+                            {
+                                UID droppedUID = Engine::GetInstance().moduleResources->Find(path);
+                                const Resource* res = Engine::GetInstance().moduleResources->PeekResource(droppedUID);
+
+                                if (res && res->GetType() == Resource::Type::texture)
+                                {
+                                    SetResource(droppedUID);
+                                }
+                            }
+                        }
+
+                        dataPtr += path.length() + 1;
+                    }
+                }
+                ImGui::EndDragDropTarget();
+            }
+
+            ImGui::Text("Path:");
             ImGui::TextWrapped(resource->GetAssetFile());
             ImGui::Text("Size:");
             ImGui::SameLine();
             ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%dx%d", GetTextureWidth(), GetTextureHeight());
-            ImGui::Text("Texture ID (GPU):");
-            ImGui::SameLine();
-            ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%u", GetTextureID());
         }
-        else ImGui::TextWrapped("Default texture");
+        else
+        {
+            ImGui::Text("Texture:");
+            ImGui::Button("Drop texture", ImVec2(ImGui::GetContentRegionAvail().x, 20));
+
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(RESOURCE_DRAG))
+                {
+                    UID droppedUID = *(UID*)payload->Data;
+
+                    const Resource* res = Engine::GetInstance().moduleResources->PeekResource(droppedUID);
+                    if (res && res->GetType() == Resource::Type::texture)
+                    {
+                        SetResource(droppedUID);
+                    }
+                }
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSETS_DRAG))
+                {
+                    const char* dataPtr = (const char*)payload->Data;
+                    const char* endPtr = dataPtr + payload->DataSize;
+
+                    while (dataPtr < endPtr)
+                    {
+                        std::string path = dataPtr;
+                        if (path.empty()) break;
+
+                        if (!IsFileDirectory(path))
+                        {
+                            Resource::Type type = Engine::GetInstance().moduleResources->GetTypeFromExtension(path);
+                            if (type == Resource::texture)
+                            {
+                                UID droppedUID = Engine::GetInstance().moduleResources->Find(path);
+                                const Resource* res = Engine::GetInstance().moduleResources->PeekResource(droppedUID);
+
+                                if (res && res->GetType() == Resource::Type::texture)
+                                {
+                                    SetResource(droppedUID);
+                                }
+                            }
+                        }
+
+                        dataPtr += path.length() + 1;
+                    }
+                }
+                ImGui::EndDragDropTarget();
+            }
+            
+            ImGui::Text("Path:");
+            ImGui::TextWrapped("Default texture");
+        }
        
         ImGui::Checkbox("Use Checker Texture", &use_checker);
         ImGui::Checkbox("Transparent", &transparent);
     }
 }
+
 
 
 void Texture::OnResourceLost(UID lostUID)

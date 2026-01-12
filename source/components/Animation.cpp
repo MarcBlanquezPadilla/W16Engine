@@ -53,9 +53,28 @@ void Animation::AddAnimation(const std::string& name, uint32_t uid, std::string 
     animationsLibrary[name] = data;
 }
 
+void Animation::RemoveAnimation(const std::string& name)
+{
+    auto it = animationsLibrary.find(name);
+
+    if (it == animationsLibrary.end()) return;
+
+    UID uidToRemove = it->second.uid;
+
+    if (currentAnimationUID == uidToRemove)
+    {
+        Stop();
+    }
+    else if (targetAnimationUID == uidToRemove)
+    {
+        Stop();
+    }
+
+    animationsLibrary.erase(it);
+}
+
 void Animation::ResetPose()
 {
-    // Recorremos todo el esqueleto que hemos descubierto hasta ahora
     for (const auto& link : skeletonCache)
     {
         if (link.transform)
@@ -137,11 +156,23 @@ void Animation::Stop()
 {
     playing = false;
     currentTime = 0.0f;
-    currentAnimation = nullptr;
+
+    if (currentAnimation)
+    {
+        currentAnimation->UnloadFromMemory();
+        currentAnimation->RemoveReference(this);
+        currentAnimation = nullptr;
+    }
     currentAnimationUID = 0;
 
-    targetAnimation = nullptr;
+    if (targetAnimation)
+    {
+        targetAnimation->UnloadFromMemory();
+        targetAnimation->RemoveReference(this);
+        targetAnimation = nullptr;
+    }
     targetAnimationUID = 0;
+
     isBlending = false;
     currentBlendTime = 0.0f;
 
@@ -424,7 +455,6 @@ void Animation::OnEditor()
         ImGui::Text("Library:");
 
         int i = 0;
-        // Iteramos el mapa
         for (auto it = animationsLibrary.begin(); it != animationsLibrary.end(); )
         {
             ImGui::PushID(it->first.c_str());
@@ -432,7 +462,7 @@ void Animation::OnEditor()
             bool deleteRequested = false;
 
             ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_SpanAvailWidth;
-
+            
             bool isNodeOpen = ImGui::TreeNodeEx(it->first.c_str(), flags);
 
             ImGui::SameLine();
@@ -446,15 +476,17 @@ void Animation::OnEditor()
                 deleteRequested = true;
             }
 
-            if (isNodeOpen && !deleteRequested)
+            if (isNodeOpen)
             {
-                ImGui::Text("Name: %s", it->second.resourceName.c_str());
-
-                ImGui::Checkbox("Loop", &it->second.loop);
- 
-                if (ImGui::Button("PLAY", ImVec2(-1, 0)))
+                if (!deleteRequested)
                 {
-                    Play(it->first, 0.5f);
+                    ImGui::Text("Name: %s", it->second.resourceName.c_str());
+                    ImGui::Checkbox("Loop", &it->second.loop);
+
+                    if (ImGui::Button("PLAY", ImVec2(-1, 0)))
+                    {
+                        Play(it->first, 0.5f);
+                    }
                 }
 
                 ImGui::TreePop();
@@ -464,7 +496,12 @@ void Animation::OnEditor()
 
             if (deleteRequested)
             {
-                it = animationsLibrary.erase(it);
+                auto nextIt = it;
+                ++nextIt;
+
+                RemoveAnimation(it->first);
+
+                it = nextIt;
             }
             else
             {
@@ -510,6 +547,33 @@ void Animation::OnEditor()
             {
                 addAnimation = true;
             }
+        }
+    }
+}
+
+void Animation::Save(Config& componentNode)
+{
+    for (const auto& [name, data] : animationsLibrary)
+    {
+        Config animationNode = componentNode.AddChild("Animation");
+        animationNode.SetString("name", name);
+        animationNode.SetUInt("UID", data.uid);
+        animationNode.SetBool("loop", data.loop);
+    }
+}
+
+void Animation::Load(Config& componentNode)
+{
+    Config animationNode = componentNode.GetChild("Animation");
+    UID animationUID = animationNode.GetUInt("UID");
+    if (animationUID!=0)
+    {
+        std::string animationName = animationNode.GetString("name");
+        const Resource* resource = Engine::GetInstance().moduleResources->PeekResource(animationUID);
+        if (resource)
+        {
+            AddAnimation(animationName, animationUID, resource->GetName());
+            animationsLibrary[animationName].loop = animationNode.GetBool("loop");
         }
     }
 }

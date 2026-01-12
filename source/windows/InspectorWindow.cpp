@@ -96,14 +96,13 @@ void InspectorWindow::DrawGameObjectInfo(GameObject* gameObject)
     {   
         if (pair.second) 
         {
+            ImGui::BeginGroup();
             ImGui::PushID(pair.second);
             pair.second->OnEditor();
+            ImGui::EndGroup();
             if (ImGui::BeginPopupContextItem("ComponentOptions"))
             {
-                ImGui::TextDisabled("Options");
-                ImGui::Separator();
-
-                if (ImGui::MenuItem("Remove Component"))
+                if (ImGui::MenuItem("Remove"))
                 {
                     gameObject->RemoveComponent(pair.first);
                 }
