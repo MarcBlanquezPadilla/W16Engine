@@ -24,21 +24,8 @@ void Animation::CleanUp()
 {
     Engine::GetInstance().moduleEvents->Unsubscribe(Event::Type::GameObjectDestroyed, this);
 
-
-    if (currentAnimation)
-    {
-        currentAnimation->UnloadFromMemory();
-        currentAnimation->RemoveReference(this);
-        currentAnimation = nullptr;
-        currentAnimationUID = 0;
-    }
-
-    if (targetAnimation)
-    {
-        targetAnimation->UnloadFromMemory();
-        targetAnimation->RemoveReference(this);
-        targetAnimation = nullptr;
-    }
+    UnloadAnimation(currentAnimation);
+    UnloadAnimation(targetAnimation);
 }
 
 void Animation::AddAnimation(const std::string& name, uint32_t uid, std::string resourceName)
@@ -61,11 +48,11 @@ void Animation::RemoveAnimation(const std::string& name)
 
     UID uidToRemove = it->second.uid;
 
-    if (currentAnimationUID == uidToRemove)
+    if (currentAnimation.uid == uidToRemove)
     {
         Stop();
     }
-    else if (targetAnimationUID == uidToRemove)
+    else if (targetAnimation.uid == uidToRemove)
     {
         Stop();
     }
@@ -91,150 +78,164 @@ void Animation::Play(const std::string& name, float blendTime)
     auto it = animationsLibrary.find(name);
     if (it == animationsLibrary.end()) return;
 
-    // 1. RECUPERAMOS LOS DATOS DE LA LIBRERÍA
     AnimationData& data = it->second;
-    UID newUID = data.uid;
-    bool shouldLoop = data.loop; // Leemos la config guardada
 
-    // --- CASO 1: RESET / INICIO ---
-    if (blendTime <= 0.0f || !currentAnimation || !playing)
+    AnimationInstance newInstance;
+    newInstance.uid = data.uid;
+    newInstance.loop = data.loop;
+    newInstance.speed = data.speed;
+    newInstance.currentTime = 0.0f;
+
+    newInstance.resource = (ResourceAnimation*)Engine::GetInstance().moduleResources->RequestResource(data.uid);
+    if (newInstance.resource) {
+        newInstance.resource->LoadToMemory();
+        newInstance.resource->AddReference(this);
+    }
+
+    if (blendTime <= 0.0f || !currentAnimation.resource || !playing)
     {
-        if (currentAnimation)
-        {
-            currentAnimation->UnloadFromMemory();
-            currentAnimation->RemoveReference(this);
-        }
 
-        currentAnimationUID = newUID;
-        currentAnimation = (ResourceAnimation*)Engine::GetInstance().moduleResources->RequestResource(newUID);
+        UnloadAnimation(currentAnimation);
+        UnloadAnimation(targetAnimation);
 
-        if (currentAnimation)
-        {
-            currentAnimation->LoadToMemory();
-            currentAnimation->AddReference(this);
-        }
-
-        // APLICAMOS EL LOOP QUE HEMOS LEÍDO
-        this->loop = shouldLoop;
-
+        currentAnimation = newInstance;
         playing = true;
-        currentTime = 0.0f;
         isBlending = false;
-        targetAnimation = nullptr;
+        
+        targetAnimation = AnimationInstance();
 
-        EnsureSkeletonMatches(currentAnimation);
+        EnsureSkeletonMatches(currentAnimation.resource);
         UpdateChannelPointers();
     }
     // --- CASO 2: BLENDING ---
     else
     {
-        if (currentAnimation->GetUID() == newUID) return;
+        if (currentAnimation.uid == newInstance.uid) return;
 
-        targetAnimationUID = newUID;
-        targetAnimation = (ResourceAnimation*)Engine::GetInstance().moduleResources->RequestResource(newUID);
+        UnloadAnimation(targetAnimation);
 
-        if (targetAnimation)
-        {
-            targetAnimation->LoadToMemory();
-            targetAnimation->AddReference(this);
+        targetAnimation = newInstance;
+        isBlending = true;
+        currentBlendTime = 0.0f;
+        blendDuration = blendTime;
 
-            targetTime = 0.0f;
-            isBlending = true;
-            blendDuration = blendTime;
-            currentBlendTime = 0.0f;
-
-            // APLICAMOS EL LOOP AQUÍ TAMBIÉN
-            this->loop = shouldLoop;
-
-            EnsureSkeletonMatches(targetAnimation);
-            UpdateChannelPointers();
-        }
+        EnsureSkeletonMatches(targetAnimation.resource);
+        UpdateChannelPointers();
     }
 }
 
 void Animation::Stop()
 {
     playing = false;
-    currentTime = 0.0f;
-
-    if (currentAnimation)
-    {
-        currentAnimation->UnloadFromMemory();
-        currentAnimation->RemoveReference(this);
-        currentAnimation = nullptr;
-    }
-    currentAnimationUID = 0;
-
-    if (targetAnimation)
-    {
-        targetAnimation->UnloadFromMemory();
-        targetAnimation->RemoveReference(this);
-        targetAnimation = nullptr;
-    }
-    targetAnimationUID = 0;
-
     isBlending = false;
     currentBlendTime = 0.0f;
+    
+    UnloadAnimation(currentAnimation);
+    UnloadAnimation(targetAnimation);
 
     ResetPose();
+}
+
+void Animation::SetAnimationSpeed(const std::string& name, float newSpeed)
+{
+
+    auto it = animationsLibrary.find(name);
+    if (it == animationsLibrary.end())
+    {
+        LOG(LogType::LOG_WARNING, "Trying to set speed for non-existent animation '%s'", name.c_str());
+        return;
+    }
+
+    float speed = newSpeed;
+
+    if (speed < 0) speed = 0;
+
+    AnimationData& data = it->second;
+    data.speed = speed;
+
+
+    if (currentAnimation.resource && currentAnimation.uid == data.uid)
+    {
+        currentAnimation.speed = speed;
+    }
+
+    if (targetAnimation.resource && targetAnimation.uid == data.uid)
+    {
+        targetAnimation.speed = speed;
+    }
+}
+
+void Animation::SetAnimationLoop(const std::string& name, bool loop)
+{
+    auto it = animationsLibrary.find(name);
+    if (it == animationsLibrary.end()) return;
+
+    AnimationData& data = it->second;
+    data.loop = loop;
+
+    if (currentAnimation.resource && currentAnimation.uid == data.uid)
+    {
+        currentAnimation.loop = loop;
+    }
+
+    if (targetAnimation.resource && targetAnimation.uid == data.uid)
+    {
+        targetAnimation.loop = loop;
+    }
+}
+
+void Animation::UnloadAnimation(AnimationInstance& animation)
+{
+    if (animation.resource)
+    {
+        animation.resource->UnloadFromMemory();
+        animation.resource->RemoveReference(this);
+    }
+    animation.resource = nullptr;
+    animation.uid = 0;
 }
 
 // EL CORAZÓN DEL SISTEMA
 void Animation::Update()
 {
     // Si no estamos reproduciendo o no hay recurso base, no hacemos nada
-    if (!playing || !currentAnimation) return;
+    if (!playing || !currentAnimation.resource) return;
 
     float dt = Time::deltaTime;
 
     // =============================================================
     // 1. AVANZAR ANIMACIÓN ACTUAL (SOURCE / A)
     // =============================================================
-    currentTime += dt * currentAnimation->ticksPerSecond * speed;
+    currentAnimation.currentTime += dt * currentAnimation.resource->ticksPerSecond * currentAnimation.speed;
 
-    // Gestión del Loop para A
-    if (currentTime >= currentAnimation->duration)
+    if (currentAnimation.currentTime >= currentAnimation.resource->duration)
     {
-        if (loop)
+        if (currentAnimation.loop)
         {
-            currentTime = std::fmod(currentTime, currentAnimation->duration);
+            currentAnimation.currentTime = std::fmod(currentAnimation.currentTime, currentAnimation.resource->duration);
         }
         else
         {
-            currentTime = currentAnimation->duration;
-
-            // IMPORTANTE: Si estamos mezclando, NO paramos 'playing'.
-            // Queremos que A se congele en el último frame mientras B entra suavemente.
-            if (!isBlending)
-            {
-                playing = false;
-            }
+            currentAnimation.currentTime = currentAnimation.resource->duration;
         }
     }
 
-    // =============================================================
-    // 2. AVANZAR ANIMACIÓN DESTINO (TARGET / B) - Solo si hay Blend
-    // =============================================================
-    if (isBlending && targetAnimation)
+    if (isBlending && targetAnimation.resource)
     {
-        // Avanzamos el tiempo de la animación B
-        targetTime += dt * targetAnimation->ticksPerSecond * speed;
-
-        // Avanzamos el cronómetro de la mezcla
+        targetAnimation.currentTime += dt * targetAnimation.resource->ticksPerSecond * targetAnimation.speed;
+        
+        // Lógica de mezcla
         currentBlendTime += dt;
 
-        // Gestión del Loop para B (Target)
-        // Por defecto asumimos loop, o podrías leer una flag de la targetAnimation
-        if (targetTime >= targetAnimation->duration)
+        if (targetAnimation.currentTime >= targetAnimation.resource->duration)
         {
-            if (this->loop)
+            if (targetAnimation.loop)
             {
-                targetTime = std::fmod(targetTime, targetAnimation->duration);
+                targetAnimation.currentTime = std::fmod(targetAnimation.currentTime, targetAnimation.resource->duration);
             }
             else
             {
-                targetTime = targetAnimation->duration;
-                // No paramos 'playing' aquí, esperamos al swap
+                targetAnimation.currentTime = targetAnimation.resource->duration;
             }
         }
 
@@ -243,28 +244,19 @@ void Animation::Update()
         // =============================================================
         if (currentBlendTime >= blendDuration)
         {
-            // ¡El Rey ha muerto, viva el Rey!
+            // A. Limpiar A
+            UnloadAnimation(currentAnimation);
 
-            // A. Liberamos la animación vieja (A)
-            // Nota: Si usas contadores de referencia, aquí restas uno.
-            currentAnimation->RemoveReference(this);
-            currentAnimation->UnloadFromMemory();
-
-            // B. Promocionamos la animación nueva (B -> A)
+            // B. Promocionar B -> A (Copiamos toda la struct)
             currentAnimation = targetAnimation;
-            currentAnimationUID = targetAnimation->GetUID(); // Mantener UID sincronizado
-            currentTime = targetTime; // Sincronizamos el tiempo para que no salte
 
-            // C. Reseteamos variables de blend
-            targetAnimation = nullptr;
-            targetAnimationUID = 0;
+            // C. Resetear B (Target)
+            targetAnimation = AnimationInstance();
+
+            // D. Resetear flags de mezcla
             isBlending = false;
             currentBlendTime = 0.0f;
 
-            // D. RE-CONECTAR LOS CABLES
-            // Esto es vital: Ahora 'channelA' en el esqueleto debe apuntar 
-            // a los canales de la nueva animación (la que antes era B).
-            // Y 'channelB' pasará a ser nullptr.
             UpdateChannelPointers();
         }
     }
@@ -362,17 +354,17 @@ void Animation::UpdateTransformations(const ResourceAnimation* ignored, float cu
         // APORTACIÓN A
         if (link.channelA)
         {
-            finalPos = GetPositionValue(*link.channelA, currentTime);
-            finalRot = GetRotationValue(*link.channelA, currentTime);
-            finalScl = GetScaleValue(*link.channelA, currentTime);
+            finalPos = GetPositionValue(*link.channelA, currentAnimation.currentTime);
+            finalRot = GetRotationValue(*link.channelA, currentAnimation.currentTime);
+            finalScl = GetScaleValue(*link.channelA, currentAnimation.currentTime);
         }
 
         // BLEND CON B
         if (isBlending && link.channelB)
         {
-            glm::vec3 posB = GetPositionValue(*link.channelB, targetTime);
-            glm::quat rotB = GetRotationValue(*link.channelB, targetTime);
-            glm::vec3 sclB = GetScaleValue(*link.channelB, targetTime);
+            glm::vec3 posB = GetPositionValue(*link.channelB, targetAnimation.currentTime);
+            glm::quat rotB = GetRotationValue(*link.channelB, targetAnimation.currentTime);
+            glm::vec3 sclB = GetScaleValue(*link.channelB, targetAnimation.currentTime);
 
             finalPos = glm::mix(finalPos, posB, factor);
             finalRot = glm::slerp(finalRot, rotB, factor);
@@ -391,12 +383,12 @@ void Animation::UpdateChannelPointers()
     for (auto& link : skeletonCache)
     {
         // 1. Enlazamos Animación A (Current)
-        link.channelA = FindChannel(currentAnimation, link.boneName);
+        link.channelA = FindChannel(currentAnimation.resource, link.boneName);
 
         // 2. Enlazamos Animación B (Target)
-        if (isBlending && targetAnimation)
+        if (isBlending && targetAnimation.resource)
         {
-            link.channelB = FindChannel(targetAnimation, link.boneName);
+            link.channelB = FindChannel(targetAnimation.resource, link.boneName);
         }
         else
         {
@@ -481,9 +473,20 @@ void Animation::OnEditor()
                 if (!deleteRequested)
                 {
                     ImGui::Text("Name: %s", it->second.resourceName.c_str());
-                    ImGui::Checkbox("Loop", &it->second.loop);
 
-                    if (ImGui::Button("PLAY", ImVec2(-1, 0)))
+                    bool loop = it->second.loop;
+                    if (ImGui::Checkbox("Loop", &loop))
+                    {
+                        SetAnimationLoop(it->first, loop);
+                    }
+
+                    float speed = it->second.speed;
+                    if (ImGui::DragFloat("Speed", &speed))
+                    {
+                        SetAnimationSpeed(it->first, speed);
+                    }
+
+                    if (ImGui::Button("Play", ImVec2(-1, 0)))
                     {
                         Play(it->first, 0.5f);
                     }
@@ -559,6 +562,7 @@ void Animation::Save(Config& componentNode)
         animationNode.SetString("name", name);
         animationNode.SetUInt("UID", data.uid);
         animationNode.SetBool("loop", data.loop);
+        animationNode.SetFloat("speed", data.speed);
     }
 }
 
@@ -574,6 +578,7 @@ void Animation::Load(Config& componentNode)
         {
             AddAnimation(animationName, animationUID, resource->GetName());
             animationsLibrary[animationName].loop = animationNode.GetBool("loop");
+            animationsLibrary[animationName].speed = animationNode.GetFloat("speed");
         }
     }
 }
@@ -605,16 +610,16 @@ void Animation::OnEvent(const Event& event)
 
 void Animation::OnResourceLost(UID lostUID)
 {
-    if (currentAnimationUID == lostUID)
+    if (currentAnimation.uid == lostUID)
     {
         LOG(LogType::LOG_INFO, "Current animation resource deleted! Removing reference in Component.");
-        currentAnimation = nullptr;
-        currentAnimationUID = 0;
+        currentAnimation.resource = nullptr;
+        currentAnimation.uid = 0;
     }
-    if (targetAnimationUID == lostUID)
+    if (targetAnimation.uid == lostUID)
     {
         LOG(LogType::LOG_INFO, "Target animation resource deleted! Removing reference in Component.");
-        targetAnimation = nullptr;
-        targetAnimationUID = 0;
+        targetAnimation.resource = nullptr;
+        targetAnimation.uid = 0;
     }
 }

@@ -9,7 +9,6 @@
 class GameObject;
 class Transform;
 
-// ESTRUCTURA DE CACHÉ OPTIMIZADA
 struct BoneLink {
     std::string boneName;
     Transform* transform;
@@ -21,10 +20,20 @@ struct BoneLink {
     glm::vec3 originalScl;
 };
 
+struct AnimationInstance {
+    UID uid = 0;
+    ResourceAnimation* resource = nullptr;
+
+    float currentTime = 0.0f;
+    bool loop = true;
+    float speed = 1.0f;
+};
+
 struct AnimationData {
     uint32_t uid = 0;
     std::string resourceName = " ";
     bool loop = true;
+    float speed = 1.0f;
 };
 
 class Animation : public Component, public ResourceUser, public EventListener
@@ -45,10 +54,16 @@ public:
     void AddAnimation(const std::string& name, uint32_t uid, std::string resourceName);
     void RemoveAnimation(const std::string& name);
 
+    void UnloadAnimation(AnimationInstance& animation);
+
     void Play(const std::string& name, float blendTime = 0.2f);
+    const bool IsPlaying() { return playing; };
     void ResetPose();
     void Stop();
     void Pause();
+
+    void SetAnimationSpeed(const std::string& name, float newSpeed);
+    void SetAnimationLoop(const std::string& name, bool loop);
 
     void OnEditor() override;
     void OnEvent(const Event& event) override;
@@ -69,23 +84,15 @@ private:
 
 
 public:
-    UID currentAnimationUID = 0;
-    UID targetAnimationUID = 0;
-    ResourceAnimation* currentAnimation = nullptr;
-    ResourceAnimation* targetAnimation = nullptr;
+    
+    AnimationInstance currentAnimation;
+    AnimationInstance targetAnimation;
 
     std::map<std::string, AnimationData> animationsLibrary;
 
-    bool loop = true;
-    bool playing = false;
-    float speed = 1.0f;
-
-    float currentTime = 0.0f;
-
 private:
 
-    // NUEVAS VARIABLES DE BLENDING
-    float targetTime = 0.0f;
+    bool playing = false;
 
     bool isBlending = false;
     float blendDuration = 0.0f;
@@ -95,8 +102,5 @@ private:
     std::vector<BoneLink> skeletonCache;
     std::map<std::string, int> boneIndexMap;
 
-
-    bool debugDraw = false;
-    bool invalidatingFlag = false;
     bool addAnimation = false;
 };
