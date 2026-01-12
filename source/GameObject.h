@@ -49,6 +49,9 @@ public:
 	//COMPONENTS
 	Component* AddComponent(ComponentType type);
 	Component* GetComponent(ComponentType type);
+	void RemoveComponent(ComponentType type);
+	void DeletePendingComponents();
+
 	bool GetGlobalMatrix(glm::mat4& globalMatrix);
 	bool TryGetGlobalAABB(AABB& globalAABB);
 	bool TryGetComponent(ComponentType type, Component*& component);
@@ -64,6 +67,7 @@ public:
 
 	Transform* transform;
 	std::map<ComponentType, Component*> components;
+	std::vector<Component*> componentsToDestroy;
 
 	uint32_t UUID;
 	bool pendingToDelete = false;

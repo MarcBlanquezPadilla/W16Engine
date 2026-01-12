@@ -42,14 +42,19 @@ bool GameObject::Update()
 {
 	bool ret = true;
 
-	for (auto const& pair : components)
+	auto it = components.begin();
+	while (it != components.end())
 	{
-		Component* component = pair.second;
+		Component* component = it->second;
+
 		if (component->enabled)
 		{
 			component->Update();
 		}
+		++it;
 	}
+
+	DeletePendingComponents();
 
 	return ret;
 }
@@ -139,6 +144,14 @@ Component* GameObject::AddComponent(ComponentType type)
 	return component;
 }
 
+void GameObject::RemoveComponent(ComponentType type)
+{
+	if (components.count(type) == 0 || type == ComponentType::Transform) return;
+	
+	Component* componentToRemove = components[type];
+	componentsToDestroy.push_back(componentToRemove);
+}
+
 Component* GameObject::GetComponent(ComponentType type)
 {
 	if (components.count(type) > 0)
@@ -158,6 +171,22 @@ bool GameObject::TryGetComponent(ComponentType type, Component*& outComponent)
 		return true;
 	}
 	return false;
+}
+
+void GameObject::DeletePendingComponents()
+{
+	if (componentsToDestroy.empty()) return;
+
+	for (Component* component : componentsToDestroy)
+	{
+		components.erase(component->GetType());
+		component->OnDisable();
+		component->CleanUp();
+		delete component;
+		component = nullptr;
+	}
+
+	componentsToDestroy.clear();
 }
 
 void GameObject::AddChild(GameObject* gameObject)
@@ -247,6 +276,8 @@ void GameObject::Save(Config& gameObjectNode)
 		}
 	}
 }
+
+
 
 void GameObject::Load(Config& gameObjectNode)
 {

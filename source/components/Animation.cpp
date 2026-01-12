@@ -137,6 +137,13 @@ void Animation::Stop()
 {
     playing = false;
     currentTime = 0.0f;
+    currentAnimation = nullptr;
+    currentAnimationUID = 0;
+
+    targetAnimation = nullptr;
+    targetAnimationUID = 0;
+    isBlending = false;
+    currentBlendTime = 0.0f;
 
     ResetPose();
 }

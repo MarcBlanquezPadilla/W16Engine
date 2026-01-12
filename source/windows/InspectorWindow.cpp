@@ -93,8 +93,25 @@ void InspectorWindow::DrawGameObjectInfo(GameObject* gameObject)
     }
 
     for (auto const& pair : gameObject->components)
-    {
-        if (pair.second) pair.second->OnEditor();
+    {   
+        if (pair.second) 
+        {
+            ImGui::PushID(pair.second);
+            pair.second->OnEditor();
+            if (ImGui::BeginPopupContextItem("ComponentOptions"))
+            {
+                ImGui::TextDisabled("Options");
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("Remove Component"))
+                {
+                    gameObject->RemoveComponent(pair.first);
+                }
+
+                ImGui::EndPopup();
+            }
+            ImGui::PopID();
+        }
     }
 
     ImGui::Spacing();
