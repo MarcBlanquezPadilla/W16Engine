@@ -4,6 +4,7 @@
 #include "ModuleWindow.h"
 #include "ModuleScene.h"
 #include "ModuleLoader.h"
+#include "ModuleResources.h"
 
 #include "windows/UIWindow.h"
 #include "windows/ConfigWindow.h"
@@ -237,6 +238,7 @@ bool Interface::Update()
 			scenePath += saveSceneNameBuffer;
 			scenePath += ".wscene";
 			Engine::GetInstance().moduleLoader->SaveScene(scenePath);
+			Engine::GetInstance().moduleResources->PublishAssetChangedEvent();
 			showSaveSceneModal = false;
 			ImGui::CloseCurrentPopup();
 		}
