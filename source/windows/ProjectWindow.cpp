@@ -546,16 +546,18 @@ unsigned int ProjectWindow::GetIconTextureWithResource(const Resource* resource)
 void ProjectWindow::RefreshTree()
 {
     std::string previousPath = "Assets";
-    if (currentNode != nullptr)
-    {
-        previousPath = currentNode->path;
-    }
+    if (currentNode != nullptr) previousPath = currentNode->path;
+
+    std::string previousAssetPath = "";
+    if (currentAsset != nullptr) previousAssetPath = currentAsset->path;
 
     if (rootNode)
     {
         delete rootNode;
         rootNode = nullptr;
     }
+
+    currentAsset = nullptr;
 
     rootNode = new DirectoryNode(rootPath, rootPath, true);
     rootNode->recourse = nullptr;
@@ -571,6 +573,15 @@ void ProjectWindow::RefreshTree()
     else
     {
         currentNode = rootNode;
+    }
+
+    if (!previousAssetPath.empty())
+    {
+        DirectoryNode* assetNode = FindNodeByPath(rootNode, previousAssetPath);
+        if (assetNode)
+        {
+            currentAsset = assetNode;
+        }
     }
 
     expandTreeToSelection = true;

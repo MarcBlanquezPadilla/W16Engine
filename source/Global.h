@@ -16,7 +16,7 @@ static UID GenerateNewUID()
 #define WINDOW_HEIGHT 720
 #define WINDOW_SCALE 1
 
-#define VERSION "2.0"
+#define VERSION "3.0"
 #define NAME "W16 Motor"
 #define DEVELOPER_1 "Marc Blanquez"
 #define DEVELOPER_2 "Arnau Balasch"
