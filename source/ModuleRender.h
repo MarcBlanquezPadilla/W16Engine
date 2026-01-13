@@ -1,6 +1,7 @@
 #pragma once
 #include "Module.h"
 #include "EventListener.h"
+#include "Global.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include "glad/glad.h"
 #include <glm/glm.hpp>
@@ -83,6 +84,9 @@ public:
 	//EVENTS
 	void OnEvent(const Event& event) override;
 
+	//GET OBJECT
+	UID GetObjectInPixel(const CameraLens* camera, int x, int y);
+
 
 private:
 
@@ -96,6 +100,7 @@ private:
 	bool CreateMeshLinesShader();
 	bool CreateOutlineShader();
 	bool CreateLineShader();
+	bool CreatePickingShader();
 
 	//DRAW FUNCTIONS
 	void DrawRenderList(const std::multimap<float, RenderObject>& map, const CameraLens* camera);
@@ -155,6 +160,16 @@ private:
 	GLint meshLinesColorLoc;
 	GLint meshLinesHasBonesLoc = 0;
 	GLint meshLinesFinalBonesMatricesLoc = 0;
+
+	//PICKING SHADER
+	unsigned int pickingShaderProgram;
+	GLint pickingModelMatrixLoc;
+	GLint pickingViewMatrixLoc;
+	GLint pickingProjectionMatrixLoc;
+	GLint pickingHasUVsLoc;
+	GLint pickingHasBonesLoc = 0;
+	GLint pickingFinalBonesMatricesLoc = 0;
+	GLint pickingColorLoc;
 
 	unsigned int defaultTextureID;
 	unsigned int checkerTextureID;

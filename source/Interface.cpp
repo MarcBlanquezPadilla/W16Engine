@@ -5,6 +5,7 @@
 #include "ModuleScene.h"
 #include "ModuleLoader.h"
 #include "ModuleResources.h"
+#include "ModuleTime.h"
 
 #include "windows/UIWindow.h"
 #include "windows/ConfigWindow.h"
@@ -130,10 +131,12 @@ bool Interface::Update()
 			{
 				Engine::GetInstance().moduleScene->NewScene();
 			}
+			ImGui::BeginDisabled(Engine::GetInstance().moduleTime->GetIsRunning());
 			if (ImGui::MenuItem("Save Scene"))
 			{
 				showSaveSceneModal = true;
 			}
+			ImGui::EndDisabled();
 			ImGui::EndMenu();
 		}
 

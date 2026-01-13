@@ -28,14 +28,21 @@ Engine::Engine() {
     moduleLoader = new ModuleLoader(true);
     moduleEditor = new ModuleEditor(true);
     
+    //CORE MODULES
     AddModule(moduleTime);
     AddModule(moduleEvents);
     AddModule(moduleWindow);
     AddModule(moduleInput);
-    AddModule(moduleScene);
-    AddModule(moduleRender);
+
+    //DATA MODULES
     AddModule(moduleResources);
     AddModule(moduleLoader);
+
+    //LOGIC MODULES
+    AddModule(moduleRender);
+    AddModule(moduleScene);
+
+    //TOOLS MODULES
     AddModule(moduleEditor);
 }
 

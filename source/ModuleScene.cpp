@@ -298,7 +298,14 @@ void ModuleScene::QueryRayToDynamic(Ray ray, std::vector<GameObject*>& results)
 
 GameObject* ModuleScene::GetObjectByUUID(UID uuid)
 {
-	return allGameObjects[uuid];
+	auto it = allGameObjects.find(uuid);
+
+	if (it != allGameObjects.end())
+	{
+		return it->second;
+	}
+
+	return nullptr;
 }
 
 AABB ModuleScene::GetWorldLimits()

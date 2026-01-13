@@ -281,7 +281,6 @@ bool ModuleEditor::PostUpdate()
 
 bool ModuleEditor::CleanUp()
 {
-
 	Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
 
 	userInterface->CleanUp();
@@ -293,7 +292,22 @@ bool ModuleEditor::CleanUp()
 	return true;
 }
 
-void ModuleEditor::TestMouseRay(int mouseX, int mouseY, int width, int height)
+void ModuleEditor::TestMousePixelPicking(int mouseX, int mouseY)
+{
+	UID objectToSelectUID = Engine::GetInstance().moduleRender->GetObjectInPixel(editorCamera->GetCameraLens(), mouseX, mouseY);
+	GameObject* objectToSelect = Engine::GetInstance().moduleScene->GetObjectByUUID(objectToSelectUID);
+
+	bool ctrlPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
+	bool shiftPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
+	bool eraseSelecteds = !(ctrlPressed || shiftPressed);
+
+	if (objectToSelect) {
+		SetSelected(objectToSelect, eraseSelecteds);
+	}
+	else SetSelected(nullptr, eraseSelecteds);
+}
+
+void ModuleEditor::TestMouseRayPicking(int mouseX, int mouseY, int width, int height)
 {
 	Ray ray = editorCamera->GetCameraLens()->GetRayFromMouse(mouseX, mouseY, width, height);
 
@@ -348,6 +362,7 @@ void ModuleEditor::TestMouseRay(int mouseX, int mouseY, int width, int height)
 			}
 		}
 	}
+
 
 	bool ctrlPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
 	bool shiftPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;

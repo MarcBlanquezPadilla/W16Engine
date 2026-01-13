@@ -31,6 +31,7 @@ public:
     const std::vector<GameObject*>& GetBones() { return boneGameObjects; };
     void LinkBones();
     void UpdateSkinningMatrices();
+    void UpdateDynamicAABB();
     const bool& HasSkinningData() { return hasSkinningData; };
     const std::vector<glm::mat4>& GetCachedBones() { return cachedBoneMatrices; };
 
@@ -53,4 +54,6 @@ private:
     bool bonesLinked = false;
     bool hasSkinningData = false;
     bool cachedBones = false;
+
+    AABB dynamicAABB;
 };

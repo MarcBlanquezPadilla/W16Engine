@@ -238,7 +238,14 @@ bool EditorCamera::PreUpdate()
 
 	if (windowChanged)
 	{
-		cameraLens->SetPerspective(fieldOfView, (float)Engine::GetInstance().moduleWindow->width / (float)Engine::GetInstance().moduleWindow->height, 0.1f, 1000.0f);
+		float aspectRatio = 1.77f;
+
+		if (cameraLens->textureHeight > 0)
+		{
+			aspectRatio = (float)cameraLens->textureWidth / (float)cameraLens->textureHeight;
+		}
+
+		cameraLens->SetPerspective(fieldOfView, aspectRatio, 0.1f, 1000.0f);
 		windowChanged = false;
 	}
 

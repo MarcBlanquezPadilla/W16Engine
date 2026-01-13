@@ -102,6 +102,12 @@ bool ModuleRender::Awake()
 		return false;
 	}
 
+	if (!CreatePickingShader())
+	{
+		LOG(LogType::LOG_ERROR, "Failed creating picking shader");
+		return false;
+	}
+
 	//CREATE CHECKER TEXTURE
 	if (!CreateDefaultTexture())
 	{
@@ -169,6 +175,7 @@ bool ModuleRender::CleanUp()
 	bool ret = true;
 
 	activeCameras.clear();
+	mainCamera = nullptr;
 	Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
 
 	glDeleteProgram(shaderProgram);
@@ -273,6 +280,7 @@ void ModuleRender::BuildRenderListsRecursive(GameObject* gameObject, const Camer
 			{
 				gameObject->GetGlobalMatrix(globalModelMatrix);
 				
+				mesh->UpdateDynamicAABB();
 				const AABB& globalAABB = mesh->GetGlobalAABB();
 
 				if (camera->GetFrustum()->InFrustum(globalAABB))
@@ -992,6 +1000,104 @@ bool ModuleRender::CreateMeshLinesShader()
 	return true;
 }
 
+bool ModuleRender::CreatePickingShader()
+{
+	unsigned int vShader = 0;
+	const char* vertexShaderSource = "#version 460 core\n"
+		"layout (location = 0) in vec3 position;\n"
+		"layout (location = 1) in vec2 aTexCoord;\n"
+		"layout (location = 3) in ivec4 boneIDs;\n"
+		"layout (location = 4) in vec4 weights;\n"
+		"\n"
+		"uniform mat4 model; \n"
+		"uniform mat4 view; \n"
+		"uniform mat4 projection; \n"
+		"\n"
+		"const int MAX_BONES = 200;\n"
+		"uniform mat4 finalBonesMatrices[MAX_BONES];\n"
+		"uniform bool hasBones;\n"
+		"\n"
+		"out vec3 localPos; \n"
+		"out vec2 texCoord; \n"
+		"\n"
+		"void main()\n"
+		"{\n"
+		"    vec4 totalPosition = vec4(0.0f);\n"
+		"    if (hasBones)\n"
+		"    {\n"
+		"       float weightSum = weights.x + weights.y + weights.z + weights.w;\n"
+		"       if (weightSum > 0.0f) {\n"
+		"           for(int i = 0 ; i < 4 ; i++)\n"
+		"           {\n"
+		"               if(boneIDs[i] == -1 || boneIDs[i] >= MAX_BONES) continue;\n"
+		"               vec4 localPosition = finalBonesMatrices[boneIDs[i]] * vec4(position, 1.0f);\n"
+		"               totalPosition += localPosition * (weights[i] / weightSum);\n"
+		"           }\n"
+		"       } else {\n"
+		"           totalPosition = vec4(position, 1.0f);\n"
+		"       }\n"
+		"    }\n"
+		"    else\n"
+		"    {\n"
+		"        totalPosition = vec4(position, 1.0f);\n"
+		"    }\n"
+		"\n"
+		"    gl_Position = projection * view * model * totalPosition;\n"
+		"    localPos = position;\n"
+		"    texCoord = aTexCoord;\n"
+		"}\n";
+
+	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
+		return false;
+
+	unsigned int fShader = 0;
+	const char* fragmentShaderSource = "#version 460 core\n"
+		"out vec4 color;\n"
+		"uniform vec4 pickingColor;\n"
+		"\n"
+		"void main()\n"
+		"{\n"
+		"    color = pickingColor;\n"
+		"}\n";;
+
+	if (!CreateShaderFromSources(fShader, GL_FRAGMENT_SHADER, fragmentShaderSource, strlen(fragmentShaderSource)))
+		return false;
+
+	pickingShaderProgram = glCreateProgram();
+	glAttachShader(pickingShaderProgram, vShader);
+	glAttachShader(pickingShaderProgram, fShader);
+	glLinkProgram(pickingShaderProgram);
+	int status = 0;
+	glGetProgramiv(pickingShaderProgram, GL_LINK_STATUS, &status);
+	if (status == GL_FALSE)
+	{
+		int length = 0;
+		glGetProgramiv(pickingShaderProgram, GL_INFO_LOG_LENGTH, &length);
+		if (length > 0)
+		{
+			char* logg = new char[length];
+			glGetProgramInfoLog(pickingShaderProgram, length, nullptr, logg);
+			LOG(LogType::LOG_ERROR, "%s", logg);
+			delete[] logg;
+		}
+		return false;
+	}
+	glDeleteShader(vShader);
+	glDeleteShader(fShader);
+
+	pickingModelMatrixLoc = glGetUniformLocation(pickingShaderProgram, "model");
+	pickingViewMatrixLoc = glGetUniformLocation(pickingShaderProgram, "view");
+	pickingProjectionMatrixLoc = glGetUniformLocation(pickingShaderProgram, "projection");
+	pickingHasUVsLoc = glGetUniformLocation(pickingShaderProgram, "u_hasUVs");
+	
+	pickingColorLoc = glGetUniformLocation(pickingShaderProgram, "pickingColor");
+
+	pickingHasBonesLoc = glGetUniformLocation(pickingShaderProgram, "hasBones");
+	pickingFinalBonesMatricesLoc = glGetUniformLocation(pickingShaderProgram, "finalBonesMatrices");
+
+	return true;
+}
+
 #pragma endregion
 
 #pragma region Matrix
@@ -1237,6 +1343,7 @@ CameraLens* ModuleRender::GetMainCamera()
 
 #pragma endregion
 
+#pragma region Textures
 bool ModuleRender::CreateCheckerTexture()
 {
 	GLubyte checkerImage[CHECKERS_HEIGHT][CHECKERS_WIDTH][4];
@@ -1295,6 +1402,111 @@ bool ModuleRender::CreateDefaultTexture()
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	return true;
+}
+#pragma endregion
+
+UID ModuleRender::GetObjectInPixel(const CameraLens* camera, int x, int y)
+{
+	if (!camera) return 0;
+
+	if (camera->fboID != 0)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, camera->fboID);
+		glViewport(0, 0, camera->textureWidth, camera->textureHeight);
+	}
+	else
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, Engine::GetInstance().moduleWindow->width, Engine::GetInstance().moduleWindow->height);
+	}
+
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+	glDepthFunc(GL_LESS);
+
+	glUseProgram(pickingShaderProgram);
+	glUniformMatrix4fv(pickingViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
+	glUniformMatrix4fv(pickingProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+
+	for (const auto pair : Engine::GetInstance().moduleScene->GetAllGameObjects())
+	{
+		GameObject* gameObject = pair.second;
+		glm::mat4 globalModelMatrix;
+		if (gameObject && gameObject->GetEnabled())
+		{
+			if (gameObject && gameObject->transform)
+			{
+				Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
+
+				if (mesh && mesh->enabled && mesh->GetResource() && mesh->GetResource()->IsLoadedToMemory())
+				{
+					
+					int id = gameObject->UUID;
+					float r = ((id & 0x000000FF) >> 0) / 255.0f;
+					float g = ((id & 0x0000FF00) >> 8) / 255.0f;
+					float b = ((id & 0x00FF0000) >> 16) / 255.0f;
+					float a = ((id & 0xFF000000) >> 24) / 255.0f;
+					glUniform4f(pickingColorLoc, r, g, b, a);
+
+					gameObject->GetGlobalMatrix(globalModelMatrix);
+
+					glUniformMatrix4fv(pickingModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(globalModelMatrix));
+
+					mesh->UpdateDynamicAABB();
+					const AABB& globalAABB = mesh->GetGlobalAABB();
+
+					if (camera->GetFrustum()->InFrustum(globalAABB))
+					{
+						mesh->UpdateSkinningMatrices();
+						
+						glUniform1i(pickingHasUVsLoc, true);
+
+
+						if (mesh->HasSkinningData() && !mesh->GetCachedBones().empty())
+						{
+							int amountToUpload = mesh->GetCachedBones().size();
+							if (amountToUpload > 200) amountToUpload = 200;
+
+							glUniformMatrix4fv(pickingFinalBonesMatricesLoc, amountToUpload, GL_FALSE, glm::value_ptr(mesh->GetCachedBones()[0]));
+
+							glUniform1i(pickingHasBonesLoc, true);
+						}
+						else
+						{
+							glUniform1i(pickingHasBonesLoc, false);
+						}
+
+						glBindVertexArray(mesh->GetResource()->meshData.VAO);
+
+						glDrawElements(GL_TRIANGLES, mesh->GetResource()->numIndices, GL_UNSIGNED_INT, 0);
+
+						glBindVertexArray(0);
+					}
+				}
+			}
+		}
+	}
+
+
+	UID pickedID = 0;
+	if (camera->textureHeight > 0 && camera->textureWidth > 0)
+	{
+		unsigned char pixel[4];
+		glReadPixels(x, camera->textureHeight - y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
+
+		pickedID = pixel[0] + (pixel[1] << 8) + (pixel[2] << 16) + (pixel[3] << 24);
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glUseProgram(0);
+
+	glEnable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+
+	return pickedID;
 }
 
 void ModuleRender::ChangeWindowSize(int x, int y)

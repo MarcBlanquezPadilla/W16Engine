@@ -472,18 +472,24 @@ void Animation::OnEditor()
             {
                 if (!deleteRequested)
                 {
+                    ImGui::Unindent();
                     ImGui::Text("Name: %s", it->second.resourceName.c_str());
 
-                    bool loop = it->second.loop;
-                    if (ImGui::Checkbox("Loop", &loop))
-                    {
-                        SetAnimationLoop(it->first, loop);
-                    }
 
+                    ImGui::Text("Speed");
+                    ImGui::SameLine();
                     float speed = it->second.speed;
-                    if (ImGui::DragFloat("Speed", &speed))
+                    if (ImGui::InputFloat("##Speed", &speed))
                     {
                         SetAnimationSpeed(it->first, speed);
+                    }
+
+                    ImGui::Text("Loop");
+                    ImGui::SameLine();
+                    bool loop = it->second.loop;
+                    if (ImGui::Checkbox("##Loop", &loop))
+                    {
+                        SetAnimationLoop(it->first, loop);
                     }
 
                     if (ImGui::Button("Play", ImVec2(-1, 0)))

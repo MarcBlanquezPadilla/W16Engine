@@ -30,7 +30,8 @@ public:
 
 	bool CleanUp();
 
-	void TestMouseRay(int mouseX, int mouseY, int width, int height);
+	void TestMouseRayPicking(int mouseX, int mouseY, int width, int height);
+	void TestMousePixelPicking(int mouseX, int mouseY);
 
 	void HandleInput(SDL_Event* event);
 

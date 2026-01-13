@@ -99,6 +99,9 @@ bool ResourceMesh::LoadToMemory_Internal()
 		localAABB.Enclose(v.position);
 	}
 
+	localAABB.min -= glm::vec3(AABB_PADDING);
+	localAABB.max += glm::vec3(AABB_PADDING);
+
 	// 7. GENERAR BUFFERS GPU
 	// Importante: Asegúrate de que GenerateBuffers() configura los atributos 3 (IDs) y 4 (Pesos)
 	if (!GenerateBuffers()) return false;

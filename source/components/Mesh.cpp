@@ -21,12 +21,11 @@ Mesh::~Mesh()
 
 void Mesh::Update()
 {
-
     if (!bonesLinked)
     {
         if (resource != nullptr)
         {
-            LinkBones(); // <--- LLAMADA CLAVE
+            LinkBones();
 
             if (!boneGameObjects.empty() || resource->bones.empty())
             {
@@ -99,24 +98,19 @@ void Mesh::LinkBones()
 {
     if (!resource) return;
 
-    // Si el resource no tiene huesos, no hacemos nada
     if (resource->bones.empty()) {
         boneGameObjects.clear();
         return;
     }
 
-    // 1. Limpiamos y preparamos el vector
     boneGameObjects.clear();
     boneGameObjects.resize(resource->bones.size());
 
-    // 2. Buscamos la raíz del modelo (subimos hasta encontrar el Animator o el tope)
     GameObject* root = owner;
     for (int i = 0; root->parent != nullptr; i++) {
         root = root->parent;
-        // Si tuvieras un componente Animator, podrías parar aquí.
     }
 
-    // 3. Enlazamos los nombres del Resource con los GameObjects de la Scene [cite: 9]
     for (size_t i = 0; i < resource->bones.size(); ++i)
     {
         std::string boneName = resource->bones[i].name;
@@ -128,7 +122,6 @@ void Mesh::LinkBones()
         }
         else
         {
-            // Si no lo encuentra, null (y luego pondremos matriz identidad)
             boneGameObjects[i] = nullptr;
             LOG(LogType::LOG_WARNING, "Bone '%s' not found for mesh '%s'", boneName.c_str(), owner->name.c_str());
         }
@@ -147,20 +140,25 @@ ResourceMesh* Mesh::GetResource() const
 
  AABB Mesh::GetGlobalAABB()
 {
-    ResourceMesh* r = GetResource();
-    if (r && r->IsLoadedToMemory())
-    {
-        glm::mat4 globalMatrix;
+     if (hasSkinningData && !boneGameObjects.empty())
+     {
+         return dynamicAABB;
+     }
+     else if (resource && owner && owner->transform)
+     {
+         ResourceMesh* r = GetResource();
+         if (r && r->IsLoadedToMemory())
+         {
+             glm::mat4 globalMatrix;
 
-        if (owner->GetGlobalMatrix(globalMatrix))
-        {
-            return r->localAABB.GetGlobalAABB(globalMatrix);
-        }
-    }
+             if (owner->GetGlobalMatrix(globalMatrix))
+             {
+                 return r->localAABB.GetGlobalAABB(globalMatrix);
+             }
+         }
+     }
 
-    AABB empty;
-    empty.SetNegativeInfinity();
-    return empty;
+    return AABB();
 }
 
 
@@ -268,6 +266,28 @@ void Mesh::UpdateSkinningMatrices()
     }
 
     hasSkinningData = true;
+}
+
+void Mesh::UpdateDynamicAABB()
+{
+    if (!hasSkinningData || boneGameObjects.empty()) return;
+
+    glm::vec3 minP(INFINITY);
+    glm::vec3 maxP(-INFINITY);
+
+    for (GameObject* bone : boneGameObjects)
+    {
+        if (bone && bone->transform)
+        {
+            glm::vec3 pos = bone->transform->GetGlobalPosition();
+            minP = glm::min(minP, pos);
+            maxP = glm::max(maxP, pos);
+        }
+    }
+
+    float padding = AABB_PADDING;
+    dynamicAABB.min = minP - glm::vec3(padding);
+    dynamicAABB.max = maxP + glm::vec3(padding);
 }
 
 void Mesh::OnEvent(const Event& event)

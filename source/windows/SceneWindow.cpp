@@ -89,6 +89,7 @@ void SceneWindow::Draw()
 
 	ImGui::Image((ImTextureID)(intptr_t)textureID, viewportSize, ImVec2(0, 1), ImVec2(1, 0));
 
+	//DROP
 	if(ImGui::BeginDragDropTarget())
 	{
 		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ASSETS_DRAG))
@@ -116,17 +117,22 @@ void SceneWindow::Draw()
 	}
 
 	//PICKING
-	if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0) && !ImGuizmo::IsOver())
+	if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0))
 	{
-		ImVec2 mousePos = ImGui::GetMousePos();
-		int mouseX = (int)(mousePos.x - winPos.x);
-		int mouseY = (int)(mousePos.y - winPos.y);
+		bool isGuizmoActive = !Engine::GetInstance().moduleEditor->GetSelectedGameObjects().empty();
 
-		bool ctrlPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LCTRL) == KEY_REPEAT;
-		bool shiftPressed = Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_LSHIFT) == KEY_REPEAT;
-		bool multiSelect = ctrlPressed || shiftPressed;
+		if (isGuizmoActive && (ImGuizmo::IsOver() || ImGuizmo::IsUsing()))
+		{
+			//NO HACEMOS NADA
+		}
+		else
+		{
+			ImVec2 mousePos = ImGui::GetMousePos();
+			int mouseX = (int)(mousePos.x - winPos.x);
+			int mouseY = (int)(mousePos.y - winPos.y);
 
-		Engine::GetInstance().moduleEditor->TestMouseRay(mouseX, mouseY, (int)viewportSize.x, (int)viewportSize.y);
+			Engine::GetInstance().moduleEditor->TestMousePixelPicking(mouseX, mouseY);
+		}
 	}
 
 	const std::vector<GameObject*>& selectedObjects = Engine::GetInstance().moduleEditor->GetSelectedGameObjects();
