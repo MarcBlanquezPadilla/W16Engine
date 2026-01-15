@@ -41,10 +41,10 @@ public:
 
 	//GETTERS & SETTERS
 	void SetStatic(bool s);
-	bool GetStatic();
+	const bool& GetStatic();
 	void SetEnabled(bool enabled);
 	void UpdateEnabledRecursive(bool enabled);
-	bool GetEnabled();
+	const bool& GetEnabled();
 
 	//COMPONENTS
 	Component* AddComponent(ComponentType type);

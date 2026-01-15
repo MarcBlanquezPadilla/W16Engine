@@ -94,22 +94,22 @@ void Transform::InvalidateGlobalMatrix()
     }
 }
 
-glm::vec3 Transform::GetLocalPosition()
+const glm::vec3& Transform::GetLocalPosition()
 {
     return position;
 }
 
-glm::vec3 Transform::GetLocalEulerRotation()
+const glm::vec3& Transform::GetLocalEulerRotation()
 {
     return eulerRotation;
 }
 
-glm::quat Transform::GetLocalQuaterionRotation()
+const glm::quat& Transform::GetLocalQuaterionRotation()
 {
     return rotation;
 }
 
-glm::vec3 Transform::GetLocalScale()
+const glm::vec3& Transform::GetLocalScale()
 {
     return scale;
 }
@@ -199,14 +199,14 @@ void Transform::SetLocalMatrix(const glm::mat4& newLocalMatrix)
     InvalidateGlobalMatrix();
 }
 
-glm::vec3 Transform::GetGlobalPosition()
+const glm::vec3& Transform::GetGlobalPosition()
 {
     glm::mat4 globalMatrix = GetGlobalMatrix();
 
     return glm::vec3(globalMatrix[3]);
 }
 
-glm::quat Transform::GetGlobalQuaterionRotation()
+const glm::quat& Transform::GetGlobalQuaterionRotation()
 {
     glm::mat4 globalMat = GetGlobalMatrix();
 
@@ -221,7 +221,7 @@ glm::quat Transform::GetGlobalQuaterionRotation()
     return rotation;
 }
 
-glm::vec3 Transform::GetGlobalScale()
+const glm::vec3& Transform::GetGlobalScale()
 {
     glm::mat4 globalMat = GetGlobalMatrix();
 

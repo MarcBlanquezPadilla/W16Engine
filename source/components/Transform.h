@@ -35,13 +35,13 @@ public:
 
     void OnTransformChanged();
 
-    glm::vec3 GetLocalPosition();
-    glm::vec3 GetGlobalPosition();
-    glm::vec3 GetLocalEulerRotation();
-    glm::quat GetLocalQuaterionRotation();
-    glm::quat GetGlobalQuaterionRotation();
-    glm::vec3 GetLocalScale();
-    glm::vec3 GetGlobalScale();
+    const glm::vec3& GetLocalPosition();
+    const glm::vec3& GetGlobalPosition();
+    const glm::vec3& GetLocalEulerRotation();
+    const glm::quat& GetLocalQuaterionRotation();
+    const glm::quat& GetGlobalQuaterionRotation();
+    const glm::vec3& GetLocalScale();
+    const glm::vec3& GetGlobalScale();
 
     const glm::mat4& GetLocalMatrix();
     const glm::mat4& GetGlobalMatrix();

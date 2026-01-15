@@ -395,7 +395,7 @@ void GameObject::UpdateEnabledRecursive(bool effectiveState)
 	}
 }
 
-bool GameObject::GetEnabled()
+const bool& GameObject::GetEnabled()
 {
 	if (!enabled) return false;
 
@@ -435,7 +435,7 @@ bool GameObject::OnDisable()
 	return true;
 }
 
-bool GameObject::GetStatic()
+const bool& GameObject::GetStatic()
 {
 	return isStatic;
 }
