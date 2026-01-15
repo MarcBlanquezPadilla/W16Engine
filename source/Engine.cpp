@@ -33,13 +33,13 @@ Engine::Engine() {
     AddModule(moduleEvents);
     AddModule(moduleWindow);
     AddModule(moduleInput);
+    AddModule(moduleRender);
 
     //DATA MODULES
     AddModule(moduleResources);
     AddModule(moduleLoader);
 
     //LOGIC MODULES
-    AddModule(moduleRender);
     AddModule(moduleScene);
 
     //TOOLS MODULES

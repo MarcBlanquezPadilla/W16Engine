@@ -12,6 +12,7 @@
 Mesh::Mesh(GameObject* owner) : Component(owner)
 {
     Engine::GetInstance().moduleEvents->Subscribe(Event::Type::GameObjectDestroyed, this);
+    bonesLinked = false;
 }
 
 Mesh::~Mesh()
@@ -239,25 +240,31 @@ void Mesh::UpdateSkinningMatrices()
 {
     if (cachedBones) return;
 
-    if (!resource || resource->bones.empty() || GetBones().empty()) {
+    if (!resource || resource->bones.empty()) {
         hasSkinningData = false;
         return;
     }
 
-    if (cachedBoneMatrices.size() < resource->bones.size()) {
-        cachedBoneMatrices.resize(resource->bones.size());
+    const auto& resourceBonesGO = resource->bones;
+    size_t numBonesResource = resource->bones.size();
+
+    const auto& bonesGO = GetBones();
+    size_t numBonesGO = bonesGO.size();
+
+    if (cachedBoneMatrices.size() != numBonesResource) {
+        cachedBoneMatrices.resize(numBonesResource);
     }
 
     glm::mat4 globalMatrix = owner->transform->GetGlobalMatrix();
     glm::mat4 meshInverseTransform = glm::inverse(globalMatrix);
 
-    for (size_t i = 0; i < GetBones().size(); ++i)
+    for (size_t i = 0; i < numBonesResource; ++i)
     {
-        GameObject* boneGO = GetBones()[i];
-        if (boneGO)
+        if (i < numBonesGO && bonesGO[i] != nullptr)
         {
-            Transform* trans = (Transform*)boneGO->transform;
-            cachedBoneMatrices[i] = meshInverseTransform * trans->GetGlobalMatrix() * resource->bones[i].offsetMatrix;
+            Transform* t = (Transform*)bonesGO[i]->transform;
+
+            cachedBoneMatrices[i] = meshInverseTransform * t->GetGlobalMatrix() * resourceBonesGO[i].offsetMatrix;
         }
         else
         {

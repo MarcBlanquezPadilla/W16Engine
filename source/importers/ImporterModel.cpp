@@ -117,7 +117,7 @@ bool ImporterModel::Import_Internal()
 	}
 
 	GameObject* modelGameObject = new GameObject(true, GetFileName(assetPath));
-
+	modelGameObject->UUID = 0;
 	if (!modelGameObject || !ProcessNode(scene->mRootNode, scene, modelGameObject))
 	{
 		LOG(LogType::LOG_ERROR, "Failed to process root node for model: %s", assetPath.c_str());
@@ -189,6 +189,7 @@ bool ImporterModel::ProcessNode(aiNode* node, const aiScene* scene, GameObject* 
 		{
 			aiMesh* assimpMesh = scene->mMeshes[node->mMeshes[i]];
 			GameObject* meshGameObject = new GameObject(true, assimpMesh->mName.C_Str());
+			meshGameObject->UUID = 0;
 
 			if (meshGameObject && AddMeshAndTexture(assimpMesh, scene, meshGameObject))
 			{
@@ -207,6 +208,7 @@ bool ImporterModel::ProcessNode(aiNode* node, const aiScene* scene, GameObject* 
 	for (unsigned int i = 0; i < node->mNumChildren; i++)
 	{
 		GameObject* childNodeGO = new GameObject(true, node->mChildren[i]->mName.C_Str());
+		childNodeGO->UUID = 0;
 			
 		if (ProcessNode(node->mChildren[i], scene, childNodeGO))
 		{

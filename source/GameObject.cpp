@@ -283,6 +283,7 @@ void GameObject::Load(Config& gameObjectNode)
 {
 	name = gameObjectNode.GetString("Name");
 	UUID = gameObjectNode.GetUInt("UID");
+	if (UUID == 0) UUID = GenerateNewUID();
 	enabled = gameObjectNode.GetBool("Enabled");
 	isStatic = gameObjectNode.GetBool("Static");
 

@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<Data UID="1107645186" Type="1" FileHash="219882758" ReferedObjects="32">
+	<ReferedObject UID="79566793" Name="AnimalArmature|Jump_toIdle" Type="4" />
+	<ReferedObject UID="84281615" Name="Jump_toIdle" Type="4" />
+	<ReferedObject UID="173590641" Name="Idle" Type="4" />
+	<ReferedObject UID="254885514" Name="AnimalArmature|Walk" Type="4" />
+	<ReferedObject UID="444248101" Name="AnimalArmature|Attack_Kick" Type="4" />
+	<ReferedObject UID="601702524" Name="AnimalArmature|Gallop_Jump" Type="4" />
+	<ReferedObject UID="910031941" Name="Cube" Type="2" />
+	<ReferedObject UID="1010991159" Name="Eating" Type="4" />
+	<ReferedObject UID="1214782299" Name="Walk" Type="4" />
+	<ReferedObject UID="1220903849" Name="AnimalArmature|Idle_Headlow" Type="4" />
+	<ReferedObject UID="1623835781" Name="Cube" Type="2" />
+	<ReferedObject UID="1773826030" Name="AnimalArmature|Gallop" Type="4" />
+	<ReferedObject UID="1955057347" Name="Attack_Kick" Type="4" />
+	<ReferedObject UID="1970623526" Name="Cube" Type="2" />
+	<ReferedObject UID="1999494921" Name="Idle_Headlow" Type="4" />
+	<ReferedObject UID="2115078119" Name="AnimalArmature|Idle" Type="4" />
+	<ReferedObject UID="2263365730" Name="AnimalArmature|Attack_Headbutt" Type="4" />
+	<ReferedObject UID="2294668433" Name="AnimalArmature|Idle_HitReact_Left" Type="4" />
+	<ReferedObject UID="2406457567" Name="AnimalArmature|Death" Type="4" />
+	<ReferedObject UID="2648303616" Name="Gallop" Type="4" />
+	<ReferedObject UID="2709441933" Name="Cube" Type="2" />
+	<ReferedObject UID="2855578670" Name="Idle_HitReact_Left" Type="4" />
+	<ReferedObject UID="3020940164" Name="AnimalArmature|Idle_2" Type="4" />
+	<ReferedObject UID="3029609414" Name="Idle_2" Type="4" />
+	<ReferedObject UID="3144953513" Name="Cube" Type="2" />
+	<ReferedObject UID="3846813764" Name="Death" Type="4" />
+	<ReferedObject UID="3995223752" Name="Attack_Headbutt" Type="4" />
+	<ReferedObject UID="4079300711" Name="Cube" Type="2" />
+	<ReferedObject UID="4119261820" Name="Idle_HitReact_Right" Type="4" />
+	<ReferedObject UID="4130072607" Name="Cube" Type="2" />
+	<ReferedObject UID="4163558501" Name="Gallop_Jump" Type="4" />
+	<ReferedObject UID="4170380992" Name="AnimalArmature|Eating" Type="4" />
+</Data>
