@@ -212,7 +212,7 @@ bool MoveAssetToFolder(const std::string& oldPath, const std::string& destinatio
         return false;
     }
 
-    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetsChanged, source.generic_string().c_str(), finalDestination.generic_string().c_str()));
+    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetMoved, source.generic_string().c_str(), finalDestination.generic_string().c_str()));
 
     return true;
 }
@@ -242,9 +242,7 @@ bool CopyAssetToFolder(const std::string& sourcePath, const std::string& destina
         return false;
     }
 
-    Engine::GetInstance().moduleEvents->PublishImmediate(
-        Event(Event::Type::AssetsChanged, source.generic_string().c_str(), finalDestination.generic_string().c_str())
-    );
+    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetMoved, source.generic_string().c_str(), finalDestination.generic_string().c_str()));
 
     return true;
 }
@@ -268,9 +266,10 @@ bool DeletePath(const std::string& path)
     }
 
     LOG(LogType::LOG_INFO, "Deleted asset successfully: %s", path.c_str());
-    return true;
 
-    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetsChanged, path.c_str()));
+    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetDeleted, path.c_str()));
+
+    return true;
 }
 
 bool DeleteAsset(const std::string& path)
@@ -307,9 +306,10 @@ bool DeleteAsset(const std::string& path)
     }
 
     LOG(LogType::LOG_INFO, "Deleted asset successfully: %s", path.c_str());
-    return true;
 
-    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetsChanged, path.c_str()));
+    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetDeleted, path.c_str()));
+
+    return true;
 }
 
 std::string GetFileNameNoExtension(const std::string& filePath)

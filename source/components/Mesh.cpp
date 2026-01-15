@@ -245,11 +245,17 @@ void Mesh::UpdateSkinningMatrices()
         return;
     }
 
-    const auto& resourceBonesGO = resource->bones;
-    size_t numBonesResource = resource->bones.size();
 
     const auto& bonesGO = GetBones();
     size_t numBonesGO = bonesGO.size();
+
+    if (bonesGO.empty()) {
+        hasSkinningData = false;
+        return;
+    }
+
+    const auto& resourceBonesGO = resource->bones;
+    size_t numBonesResource = resource->bones.size();
 
     if (cachedBoneMatrices.size() != numBonesResource) {
         cachedBoneMatrices.resize(numBonesResource);
