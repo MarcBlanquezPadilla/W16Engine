@@ -46,7 +46,7 @@ bool ModuleResources::Awake()
 	checkAssetsModifications = false;
 	checkChangesTimer.Start();
 
-	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::AssetMoved, this);
+	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::AssetsChanged, this);
 
 	return true;
 }
@@ -81,7 +81,7 @@ bool ModuleResources::CleanUp()
 {
 	bool ret = true;
 	
-	Engine::GetInstance().moduleEvents->Unsubscribe(Event::Type::AssetMoved, this);
+	Engine::GetInstance().moduleEvents->Unsubscribe(Event::Type::AssetsChanged, this);
 
 	LOG(LogType::LOG_INFO, "Deleting all resources.");
 
@@ -832,7 +832,7 @@ void ModuleResources::OnEvent(const Event& event)
 {
 	switch (event.type)
 	{
-	case Event::Type::AssetMoved:
+	case Event::Type::AssetsChanged:
 	{
 		{
 			std::string oldPath = event.data.strings.string1;

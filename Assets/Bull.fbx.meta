@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<Data UID="1370390214" Type="1" FileHash="219882758" ReferedObjects="32">
+	<ReferedObject UID="3398363" Name="Eating" Type="4" />
+	<ReferedObject UID="359340928" Name="AnimalArmature|Gallop" Type="4" />
+	<ReferedObject UID="375283687" Name="Idle_2" Type="4" />
+	<ReferedObject UID="399381362" Name="Death" Type="4" />
+	<ReferedObject UID="592115345" Name="Gallop" Type="4" />
+	<ReferedObject UID="639291320" Name="Cube" Type="2" />
+	<ReferedObject UID="653124007" Name="Idle_HitReact_Left" Type="4" />
+	<ReferedObject UID="657828126" Name="Cube" Type="2" />
+	<ReferedObject UID="771285003" Name="Idle_HitReact_Right" Type="4" />
+	<ReferedObject UID="1007622230" Name="AnimalArmature|Jump_toIdle" Type="4" />
+	<ReferedObject UID="1149836107" Name="AnimalArmature|Idle_HitReact_Left" Type="4" />
+	<ReferedObject UID="1155403959" Name="Gallop_Jump" Type="4" />
+	<ReferedObject UID="1458427398" Name="AnimalArmature|Death" Type="4" />
+	<ReferedObject UID="1721854408" Name="AnimalArmature|Idle" Type="4" />
+	<ReferedObject UID="1802392949" Name="AnimalArmature|Attack_Kick" Type="4" />
+	<ReferedObject UID="1807671344" Name="Idle_Headlow" Type="4" />
+	<ReferedObject UID="2006788204" Name="Jump_toIdle" Type="4" />
+	<ReferedObject UID="2378904523" Name="Cube" Type="2" />
+	<ReferedObject UID="2479242242" Name="AnimalArmature|Idle_2" Type="4" />
+	<ReferedObject UID="2790775036" Name="AnimalArmature|Eating" Type="4" />
+	<ReferedObject UID="2950795249" Name="AnimalArmature|Gallop_Jump" Type="4" />
+	<ReferedObject UID="3049815631" Name="Walk" Type="4" />
+	<ReferedObject UID="3076465174" Name="Attack_Kick" Type="4" />
+	<ReferedObject UID="3312028606" Name="AnimalArmature|Walk" Type="4" />
+	<ReferedObject UID="3446030969" Name="AnimalArmature|Attack_Headbutt" Type="4" />
+	<ReferedObject UID="3494020662" Name="AnimalArmature|Idle_Headlow" Type="4" />
+	<ReferedObject UID="3684572049" Name="Cube" Type="2" />
+	<ReferedObject UID="3772861936" Name="Cube" Type="2" />
+	<ReferedObject UID="3846001205" Name="Cube" Type="2" />
+	<ReferedObject UID="3957792331" Name="Cube" Type="2" />
+	<ReferedObject UID="4049822380" Name="Attack_Headbutt" Type="4" />
+	<ReferedObject UID="4101539566" Name="Idle" Type="4" />
+</Data>

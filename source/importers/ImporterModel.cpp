@@ -72,13 +72,11 @@ bool ImporterModel::Import_Internal()
 			ImporterAnimation* animImporter = new ImporterAnimation();
 			aiAnimation* assimpAnim = scene->mAnimations[i];
 
-			// 1. Obtener nombre y buscar UID persistente
 			std::string animName = assimpAnim->mName.C_Str();
 			if (animName.empty()) animName = "Animation_" + std::to_string(i);
 
 			UID animUID = 0;
 
-			// Si ya existe en el meta (reimportación), mantenemos el UID
 			if (UIDsByName.find(animName) != UIDsByName.end())
 			{
 				animUID = UIDsByName[animName];
@@ -88,19 +86,16 @@ bool ImporterModel::Import_Internal()
 				animUID = GenerateNewUID();
 			}
 
-			// 2. Importar la animación a la librería
-			// Asegúrate de que tu función GetLibraryPath funciona con Resource::Type::animation
-			// O construye la ruta manualmente si es necesario (ej: "Library/Animations/" + uid)
 			std::string libPath = GetLibraryPath(animUID);
 
 			bool success = animImporter->Import(libPath, animUID, assimpAnim);
 
 			if (success)
 			{
-				// 3. Añadir a la lista de referencias para que salga en el .meta
+
 				ReferedsData importData;
 				importData.name = animName;
-				importData.type = Resource::Type::animation; // Asegúrate de tener este enum
+				importData.type = Resource::Type::animation;
 
 				referedUIDs.emplace(animUID, importData);
 
@@ -279,6 +274,11 @@ bool ImporterModel::LoadMesh(aiMesh* assimpMesh, GameObject* target)
 
 bool ImporterModel::LoadTexture(aiMaterial* material, const aiScene* scene, GameObject* obj)
 {
+	aiTextureType type = aiTextureType_DIFFUSE;
+	if (material->GetTextureCount(type) == 0) {
+		type = aiTextureType_BASE_COLOR;
+	}
+
 	if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
 	{
 		aiString aiPath;
@@ -288,38 +288,28 @@ bool ImporterModel::LoadTexture(aiMaterial* material, const aiScene* scene, Game
 		std::string fileName = "";
 		bool foundFile = false;
 
-		// 1. INTENTAR CARGAR COMO TEXTURA EMBEBIDA (EMBEDDED)
-		// Esta función comprueba si el path apunta a una textura dentro de la escena
-		// Funciona tanto para "*0" como para "nombre_archivo.png"
 		const aiTexture* aiTex = scene->GetEmbeddedTexture(aiPath.C_Str());
 
 		if (aiTex != nullptr)
 		{
 			LOG(LogType::LOG_INFO, "Texture found embedded in the model: %s", aiPath.C_Str());
 
-			// Procesar textura embebida
-			if (aiTex->mHeight == 0) // Comprimida (jpg/png)
+			if (aiTex->mHeight == 0)
 			{
-				// Decidir extensión
 				std::string extension = "";
 				if (aiTex->achFormatHint[0])
 					extension = std::string(aiTex->achFormatHint);
 				if (extension.empty())
-					extension = "png"; // Fallback seguro
-
-				// Crear nombre único. Usamos el aiPath para generar un nombre o un índice si es posible.
-				// Nota: GetFileName limpia la ruta y deja solo el nombre
+					extension = "png";
 				std::string rawName = GetFileNameNoExtension(aiPath.C_Str());
 				if (rawName.empty() || rawName == "*") rawName = "embedded_tex";
 
-				// Sugerencia: Añadir el nombre del modelo para evitar colisiones
 				std::string modelName = GetFileNameNoExtension(assetPath);
 				fileName = modelName + "_" + rawName + "." + extension;
 
 				std::string modelDir = GetDirectoryFromPath(assetPath);
 				texPath = modelDir + fileName;
 
-				// Escribir a disco si no existe
 				if (!DoesFileExist(texPath))
 				{
 					std::ofstream file(texPath, std::ios::binary);
@@ -337,25 +327,35 @@ bool ImporterModel::LoadTexture(aiMaterial* material, const aiScene* scene, Game
 				LOG(LogType::LOG_WARNING, "Embedded texture is raw ARGB(not supported yet).");
 			}
 		}
-		// 2. SI NO ES EMBEBIDA, BUSCAR EN DISCO (Lógica original)
 		else
 		{
-			LOG(LogType::LOG_INFO, "Texture not embedded, searching in disk: %s", aiPath.C_Str());
-
 			std::string modelDirectory = GetDirectoryFromPath(assetPath);
-			fileName = GetFileName(aiPath.C_Str());
 
-			// Opción A: Ruta tal cual viene
-			texPath = modelDirectory + aiPath.C_Str();
+			// 2. CORRECCIÓN DE RUTAS: Limpiar barras erróneas de Assimp
+			std::string cleanAiPath = aiPath.C_Str();
+			// (Implementa esto o usa std::filesystem::path para normalizar separadores)
+			// std::replace(cleanAiPath.begin(), cleanAiPath.end(), '\\', '/'); 
+
+			// CASO A: Ruta relativa directa
+			texPath = modelDirectory + cleanAiPath;
 			if (DoesFileExist(texPath)) foundFile = true;
 
-			// Opción B: En la misma carpeta del modelo
+			// CASO B: Ruta absoluta (El error que te comenté)
+			if (!foundFile) {
+				// Si aiPath ya era absoluta y existe en TU disco (raro, pero posible)
+				if (DoesFileExist(cleanAiPath)) {
+					texPath = cleanAiPath;
+					foundFile = true;
+				}
+			}
+
+			// CASO C: En la misma carpeta (Filename only)
 			if (!foundFile) {
 				texPath = modelDirectory + fileName;
 				if (DoesFileExist(texPath)) foundFile = true;
 			}
 
-			// Opción C: Búsqueda recursiva (costosa, úsala con cuidado)
+			// CASO D: Búsqueda recursiva (Tu fallback)
 			if (!foundFile) {
 				texPath = FindFileInDirectory(modelDirectory, fileName);
 				if (DoesFileExist(texPath)) foundFile = true;
@@ -368,7 +368,6 @@ bool ImporterModel::LoadTexture(aiMaterial* material, const aiScene* scene, Game
 			Texture* texture = (Texture*)obj->AddComponent(ComponentType::Texture);
 			if (texture)
 			{
-				// Asegurar importación (meta data, etc)
 				Engine::GetInstance().moduleResources->CheckFileLoaded(texPath);
 				Engine::GetInstance().moduleResources->PublishAssetChangedEvent();
 
@@ -376,17 +375,18 @@ bool ImporterModel::LoadTexture(aiMaterial* material, const aiScene* scene, Game
 				if (textureUID != 0)
 				{
 					texture->SetResource(textureUID);
-					return true; // Éxito
+					return true;
 				}
 				else
 				{
-					LOG(LogType::LOG_ERROR, "Failed loading texture resource % s", texPath.c_str());
+					LOG(LogType::LOG_ERROR, "Failed loading texture resource %s", texPath.c_str());
 				}
 			}
 		}
 		else
 		{
-			LOG(LogType::LOG_ERROR, "Could not find texture '%s' (Embedded check failed & Disk check failed)", aiPath.C_Str());
+			// LOG IMPORTANTE: Muestra qué intentó buscar
+			LOG(LogType::LOG_WARNING, "Texture missing. Assimp path: '%s', Filename: '%s'", aiPath.C_Str(), fileName.c_str());
 		}
 	}
 

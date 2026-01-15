@@ -34,6 +34,8 @@ uint32_t GetFileHash(const std::string& path);
 
 bool MoveAssetToFolder(const std::string& oldPath, const std::string& destinationFolder);
 
+bool CopyAssetToFolder(const std::string& oldPath, const std::string& destinationFolder);
+
 bool DeletePath(const std::string& path);
 
 bool DeleteAsset(const std::string& path);

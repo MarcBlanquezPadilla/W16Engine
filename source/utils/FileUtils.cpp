@@ -212,7 +212,39 @@ bool MoveAssetToFolder(const std::string& oldPath, const std::string& destinatio
         return false;
     }
 
-    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetMoved, source.generic_string().c_str(), finalDestination.generic_string().c_str()));
+    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetsChanged, source.generic_string().c_str(), finalDestination.generic_string().c_str()));
+
+    return true;
+}
+
+bool CopyAssetToFolder(const std::string& sourcePath, const std::string& destinationFolder)
+{
+    std::error_code ec;
+
+    std::filesystem::path source(sourcePath);
+    std::filesystem::path destDir(destinationFolder);
+    std::filesystem::path finalDestination = destDir / source.filename();
+
+    if (!std::filesystem::exists(source)) {
+        LOG(LogType::LOG_ERROR, "Source file does not exist. Copy cancelled: %s", sourcePath.c_str());
+        return false;
+    }
+
+    if (std::filesystem::exists(finalDestination)) {
+        LOG(LogType::LOG_ERROR, "Destination file already exists. Copy cancelled: %s", finalDestination.string().c_str());
+        return false;
+    }
+
+    std::filesystem::copy(source, finalDestination, std::filesystem::copy_options::recursive, ec);
+
+    if (ec) {
+        LOG(LogType::LOG_ERROR, "Failed copying asset: %s", ec.message().c_str());
+        return false;
+    }
+
+    Engine::GetInstance().moduleEvents->PublishImmediate(
+        Event(Event::Type::AssetsChanged, source.generic_string().c_str(), finalDestination.generic_string().c_str())
+    );
 
     return true;
 }
@@ -238,7 +270,7 @@ bool DeletePath(const std::string& path)
     LOG(LogType::LOG_INFO, "Deleted asset successfully: %s", path.c_str());
     return true;
 
-    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetMoved, path.c_str()));
+    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetsChanged, path.c_str()));
 }
 
 bool DeleteAsset(const std::string& path)
@@ -277,7 +309,7 @@ bool DeleteAsset(const std::string& path)
     LOG(LogType::LOG_INFO, "Deleted asset successfully: %s", path.c_str());
     return true;
 
-    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetMoved, path.c_str()));
+    Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::AssetsChanged, path.c_str()));
 }
 
 std::string GetFileNameNoExtension(const std::string& filePath)

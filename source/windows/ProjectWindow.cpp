@@ -738,7 +738,7 @@ void ProjectWindow::OnEvent(const Event& event)
     {
         {
             std::string endPath = DoesFileExist(currentNode->path) ? currentNode->path : rootPath;
-            MoveAssetToFolder(event.data.string.string, currentNode->path);
+            CopyAssetToFolder(event.data.string.string, currentNode->path);
         }
         break;
     }
