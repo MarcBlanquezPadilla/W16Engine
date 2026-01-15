@@ -330,34 +330,21 @@ bool ImporterModel::LoadTexture(aiMaterial* material, const aiScene* scene, Game
 		else
 		{
 			std::string modelDirectory = GetDirectoryFromPath(assetPath);
+			fileName = GetFileName(aiPath.C_Str());
 
-			// 2. CORRECCIÓN DE RUTAS: Limpiar barras erróneas de Assimp
-			std::string cleanAiPath = aiPath.C_Str();
-			// (Implementa esto o usa std::filesystem::path para normalizar separadores)
-			// std::replace(cleanAiPath.begin(), cleanAiPath.end(), '\\', '/'); 
-
-			// CASO A: Ruta relativa directa
-			texPath = modelDirectory + cleanAiPath;
+			//PRIMER INTENTO: RUTA TAL CUAL VIENE
+			texPath = GetCleanPath(aiPath.C_Str());
 			if (DoesFileExist(texPath)) foundFile = true;
 
-			// CASO B: Ruta absoluta (El error que te comenté)
-			if (!foundFile) {
-				// Si aiPath ya era absoluta y existe en TU disco (raro, pero posible)
-				if (DoesFileExist(cleanAiPath)) {
-					texPath = cleanAiPath;
-					foundFile = true;
-				}
-			}
-
-			// CASO C: En la misma carpeta (Filename only)
+			//SEGUNDO INTENTO: EN LA MISMA CARPETA DEL MODELO
 			if (!foundFile) {
 				texPath = modelDirectory + fileName;
 				if (DoesFileExist(texPath)) foundFile = true;
 			}
 
-			// CASO D: Búsqueda recursiva (Tu fallback)
+			//TERCER INTENTO: BUSCAR EN TODA LA CARPETA DE ASSETS
 			if (!foundFile) {
-				texPath = FindFileInDirectory(modelDirectory, fileName);
+				texPath = FindFileInDirectory("Assets", fileName);
 				if (DoesFileExist(texPath)) foundFile = true;
 			}
 		}

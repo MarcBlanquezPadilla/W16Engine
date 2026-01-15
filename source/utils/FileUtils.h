@@ -41,3 +41,5 @@ bool DeletePath(const std::string& path);
 bool DeleteAsset(const std::string& path);
 
 std::string GetFileNameNoExtension(const std::string& path);
+
+std::string GetCleanPath(const std::string& path);

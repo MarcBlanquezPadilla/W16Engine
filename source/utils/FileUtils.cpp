@@ -318,3 +318,9 @@ std::string GetFileNameNoExtension(const std::string& filePath)
 
     return path.stem().string();
 }
+
+std::string GetCleanPath(const std::string& incomingPath)
+{
+    std::filesystem::path path(incomingPath);
+    return path.generic_string().c_str();
+}
