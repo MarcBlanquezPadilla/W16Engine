@@ -12,7 +12,6 @@
 Mesh::Mesh(GameObject* owner) : Component(owner)
 {
     Engine::GetInstance().moduleEvents->Subscribe(Event::Type::GameObjectDestroyed, this);
-    bonesLinked = false;
 }
 
 Mesh::~Mesh()
@@ -20,25 +19,6 @@ Mesh::~Mesh()
     CleanUp();
 }
 
-void Mesh::Update()
-{
-    if (!bonesLinked)
-    {
-        if (resource != nullptr)
-        {
-            LinkBones();
-
-            if (!boneGameObjects.empty() || resource->bones.empty())
-            {
-                bonesLinked = true;
-            }
-        }
-    }
-    else
-    {
-        cachedBones = false;
-    }
-}
 
 void Mesh::CleanUp()
 {
@@ -86,48 +66,11 @@ void Mesh::SetResource(UID uid)
     {
         resource = (ResourceMesh*)res;
         resource->AddReference(this);
-        bonesLinked = false;
-        boneGameObjects.clear();
     }
     else
     {
         resource = nullptr;
     }
-}
-
-void Mesh::LinkBones()
-{
-    if (!resource) return;
-
-    if (resource->bones.empty()) {
-        boneGameObjects.clear();
-        return;
-    }
-
-    boneGameObjects.clear();
-    boneGameObjects.resize(resource->bones.size());
-
-    GameObject* root = owner;
-    for (int i = 0; root->parent != nullptr; i++) {
-        root = root->parent;
-    }
-
-    for (size_t i = 0; i < resource->bones.size(); ++i)
-    {
-        std::string boneName = resource->bones[i].name;
-        GameObject* foundBone = root->FindChild(boneName);
-
-        if (foundBone)
-        {
-            boneGameObjects[i] = foundBone;
-        }
-        else
-        {
-            boneGameObjects[i] = nullptr;
-            LOG(LogType::LOG_WARNING, "Bone '%s' not found for mesh '%s'", boneName.c_str(), owner->name.c_str());
-        }
-    }
-    LOG(LogType::LOG_INFO, "Skinning: Linked %d bones for mesh %s", boneGameObjects.size(), owner->name.c_str());
 }
 
 ResourceMesh* Mesh::GetResource() const
@@ -141,12 +84,8 @@ ResourceMesh* Mesh::GetResource() const
 
  AABB Mesh::GetGlobalAABB()
 {
-     if (hasSkinningData && !boneGameObjects.empty())
-     {
-         return dynamicAABB;
-     }
-     else if (resource && owner && owner->transform)
-     {
+    if (resource && owner && owner->transform)
+    {
          ResourceMesh* r = GetResource();
          if (r && r->IsLoadedToMemory())
          {
@@ -157,7 +96,7 @@ ResourceMesh* Mesh::GetResource() const
                  return r->localAABB.GetGlobalAABB(globalMatrix);
              }
          }
-     }
+    }
 
     return AABB();
 }
@@ -165,7 +104,6 @@ ResourceMesh* Mesh::GetResource() const
 
 void Mesh::OnEditor()
 {
-
     if (ImGui::CollapsingHeader("Mesh"))
     {
         if (resource && resource->IsLoadedToMemory())
@@ -233,98 +171,5 @@ void Mesh::OnResourceLost(UID lostUID)
         LOG(LogType::LOG_INFO, "Texture Resource deleted! Removing reference in Component.");
         resource = nullptr;
         resourceUID = 0;
-    }
-}
-
-void Mesh::UpdateSkinningMatrices()
-{
-    if (cachedBones) return;
-
-    if (!resource || resource->bones.empty()) {
-        hasSkinningData = false;
-        return;
-    }
-
-
-    const auto& bonesGO = GetBones();
-    size_t numBonesGO = bonesGO.size();
-
-    if (bonesGO.empty()) {
-        hasSkinningData = false;
-        return;
-    }
-
-    const auto& resourceBonesGO = resource->bones;
-    size_t numBonesResource = resource->bones.size();
-
-    if (cachedBoneMatrices.size() != numBonesResource) {
-        cachedBoneMatrices.resize(numBonesResource);
-    }
-
-    glm::mat4 globalMatrix = owner->transform->GetGlobalMatrix();
-    glm::mat4 meshInverseTransform = glm::inverse(globalMatrix);
-
-    for (size_t i = 0; i < numBonesResource; ++i)
-    {
-        if (i < numBonesGO && bonesGO[i] != nullptr)
-        {
-            Transform* t = (Transform*)bonesGO[i]->transform;
-
-            cachedBoneMatrices[i] = meshInverseTransform * t->GetGlobalMatrix() * resourceBonesGO[i].offsetMatrix;
-        }
-        else
-        {
-            cachedBoneMatrices[i] = glm::mat4(1.0f);
-        }
-    }
-
-    hasSkinningData = true;
-}
-
-void Mesh::UpdateDynamicAABB()
-{
-    if (!hasSkinningData || boneGameObjects.empty()) return;
-
-    glm::vec3 minP(INFINITY);
-    glm::vec3 maxP(-INFINITY);
-
-    for (GameObject* bone : boneGameObjects)
-    {
-        if (bone && bone->transform)
-        {
-            glm::vec3 pos = bone->transform->GetGlobalPosition();
-            minP = glm::min(minP, pos);
-            maxP = glm::max(maxP, pos);
-        }
-    }
-
-    float padding = AABB_PADDING;
-    dynamicAABB.min = minP - glm::vec3(padding);
-    dynamicAABB.max = maxP + glm::vec3(padding);
-}
-
-void Mesh::OnEvent(const Event& event)
-{
-    switch (event.type)
-    {
-    case Event::Type::GameObjectDestroyed:
-    {
-        if (boneGameObjects.empty()) return;
-
-        GameObject* deletedGO = event.data.gameObject.gameObject;
-
-        for (size_t i = 0; i < boneGameObjects.size(); ++i)
-        {
-            if (boneGameObjects[i] == deletedGO)
-            {
-                boneGameObjects[i] = nullptr;
-            }
-        }
-
-        break;
-    }
-
-    default:
-        break;
     }
 }

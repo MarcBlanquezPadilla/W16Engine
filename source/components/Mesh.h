@@ -13,47 +13,39 @@ class Mesh : public Component, public ResourceUser, public EventListener
 {
 public:
     Mesh(GameObject* owner);
-    ~Mesh() override;
+    virtual ~Mesh() override;
 
-    void Update() override;
+    void Update() override { cachedBones = false; }
     void CleanUp() override;
 
-    ComponentType GetType() override { return ComponentType::Mesh; }
+    virtual ComponentType GetType() override { return ComponentType::Mesh; }
+    bool IsType(ComponentType type) override { return type == ComponentType::Mesh; };
     void Save(Config& componentNode) override;
     void Load(Config& componentNode) override;
 
-    void OnEditor() override;
+    virtual void OnEditor() override;
 
-    void SetResource(UID uid);
+    virtual void SetResource(UID uid);
     ResourceMesh* GetResource() const;
-    UID GetMeshUID() const { return resourceUID; };
-    AABB GetGlobalAABB();
-    const std::vector<GameObject*>& GetBones() { return boneGameObjects; };
-    void LinkBones();
-    void UpdateSkinningMatrices();
-    void UpdateDynamicAABB();
-    const bool& HasSkinningData() { return hasSkinningData; };
-    const std::vector<glm::mat4>& GetCachedBones() { return cachedBoneMatrices; };
 
+    virtual AABB GetGlobalAABB();
+
+    //SKINNING
+    virtual void UpdateSkinningMatrices() {}
+    virtual void UpdateDynamicAABB() {}
+    virtual bool HasSkinning() const { return false; }
+    virtual const std::vector<glm::mat4>& GetBoneMatrices() const { static std::vector<glm::mat4> empty; return empty; }
+    
     void OnResourceLost(UID resourceUID) override;
-    void OnEvent(const Event& event) override;
+    virtual void OnEvent(const Event& event) override {};
 
 public:
-
     bool drawNormals = false;
     bool drawMesh = false;
     bool drawStencil = false;
 
-private:
+protected:
     UID resourceUID = 0;
     mutable ResourceMesh* resource = nullptr;
-
-    std::vector<GameObject*> boneGameObjects;
-    std::vector<glm::mat4> cachedBoneMatrices;
-    bool debugSkeleton = false;
-    bool bonesLinked = false;
-    bool hasSkinningData = false;
     bool cachedBones = false;
-
-    AABB dynamicAABB;
 };

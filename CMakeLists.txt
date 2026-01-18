@@ -53,6 +53,8 @@ add_executable(W16Engine
 	source/components/Component.h
 	source/components/Mesh.cpp
 	source/components/Mesh.h
+	source/components/SkinnedMesh.cpp
+	source/components/SkinnedMesh.h
 	source/components/Transform.cpp
 	source/components/Transform.h
 	source/components/Texture.cpp

@@ -11,9 +11,8 @@ public:
     Camera(GameObject* owner);
     ~Camera();
 
-    ComponentType GetType() override {
-        return ComponentType::Camera;
-    };
+    ComponentType GetType() override { return ComponentType::Camera; };
+    bool IsType(ComponentType type) override { return type == ComponentType::Camera; };
 
     void Start() override;
     void OnEnable() override;

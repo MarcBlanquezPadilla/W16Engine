@@ -239,7 +239,19 @@ bool ImporterModel::AddMeshAndTexture(aiMesh* assimpMesh, const aiScene* scene, 
 
 bool ImporterModel::LoadMesh(aiMesh* assimpMesh, GameObject* target)
 {
-	Mesh* meshComp = (Mesh*)target->AddComponent(ComponentType::Mesh);
+	// --- CAMBIO LÓGICO AQUÍ ---
+	Mesh* meshComp = nullptr;
+
+	// Si Assimp nos dice que hay huesos, creamos la versión pesada (SkinnedMesh)
+	if (assimpMesh->mNumBones > 0)
+	{
+		meshComp = (Mesh*)target->AddComponent(ComponentType::SkinnedMesh);
+	}
+	else
+	{
+		// Si no hay huesos, creamos la versión ligera (Mesh)
+		meshComp = (Mesh*)target->AddComponent(ComponentType::Mesh);
+	}
 	if (!meshComp) return false;
 
 	//GET UID

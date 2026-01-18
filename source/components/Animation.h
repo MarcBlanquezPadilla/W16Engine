@@ -47,6 +47,7 @@ public:
     void Update() override;
 
     ComponentType GetType() override { return ComponentType::Animation; };
+    bool IsType(ComponentType type) override { return type == ComponentType::Animation; };
 
     void Save(Config& componentNode) override;
     void Load(Config& componentNode) override;

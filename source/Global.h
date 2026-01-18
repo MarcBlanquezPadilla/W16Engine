@@ -55,4 +55,5 @@ static UID GenerateNewUID()
 #define CAMERA_COLOR 1.0f,1.0f,1.0f,1.0f
 
 #define MAX_BONE_INFLUENCE 4
+#define MAX_BONES 200
 #define AABB_PADDING 1

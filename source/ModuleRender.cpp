@@ -327,9 +327,8 @@ void ModuleRender::DrawRenderList(const std::multimap<float, RenderObject>& map,
 	for (auto pair = map.rbegin(); pair != map.rend(); ++pair)
 	{
 		RenderObject renderObject = pair->second;
-		Mesh* meshComp = renderObject.mesh; // Acceso rápido
+		Mesh* meshComp = renderObject.mesh;
 
-		// --- STENCIL (Igual que antes) ---
 		if (meshComp->drawStencil) {
 			glStencilFunc(GL_ALWAYS, 1, 0xFF);
 			glStencilMask(0xFF);
@@ -340,20 +339,16 @@ void ModuleRender::DrawRenderList(const std::multimap<float, RenderObject>& map,
 			glStencilMask(0x00);
 		}
 
-		// --- TEXTURAS Y UNIFORMS BÁSICOS (Igual que antes) ---
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, renderObject.textToBind);
 		glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
 		glUniform1i(hasUVsLoc, true);
 
 
-		if (meshComp->HasSkinningData() && !meshComp->GetCachedBones().empty())
+		if (meshComp->HasSkinning())
 		{
-			int amountToUpload = meshComp->GetCachedBones().size();
-			if (amountToUpload > 200) amountToUpload = 200;
-
-			glUniformMatrix4fv(finalBonesMatricesLoc, amountToUpload, GL_FALSE, glm::value_ptr(meshComp->GetCachedBones()[0]));
-
+			const auto& matrices = meshComp->GetBoneMatrices();
+			glUniformMatrix4fv(finalBonesMatricesLoc, matrices.size(), GL_FALSE, glm::value_ptr(matrices[0]));
 			glUniform1i(hasBonesLoc, true);
 		}
 		else
@@ -423,12 +418,10 @@ void ModuleRender::DrawNormalsList(const CameraLens* camera)
 
 			Mesh* meshComp = renderObject.mesh;
 
-			if (meshComp->HasSkinningData() && !meshComp->GetCachedBones().empty())
+			if (meshComp->HasSkinning())
 			{
-				int amountToUpload = meshComp->GetCachedBones().size();
-				if (amountToUpload > 200) amountToUpload = 200;
-
-				glUniformMatrix4fv(normalFinalBonesMatricesLoc, amountToUpload, GL_FALSE, glm::value_ptr(meshComp->GetCachedBones()[0]));
+				const auto& matrices = meshComp->GetBoneMatrices();
+				glUniformMatrix4fv(normalFinalBonesMatricesLoc, matrices.size(), GL_FALSE, glm::value_ptr(matrices[0]));
 				glUniform1i(normalHasBonesLoc, true);
 			}
 			else
@@ -464,12 +457,10 @@ void ModuleRender::DrawStencilList(const CameraLens* camera)
 
 		Mesh* meshComp = renderObject.mesh;
 
-		if (meshComp->HasSkinningData() && !meshComp->GetCachedBones().empty())
+		if (meshComp->HasSkinning())
 		{
-			int amountToUpload = meshComp->GetCachedBones().size();
-			if (amountToUpload > 200) amountToUpload = 200;
-
-			glUniformMatrix4fv(outlineFinalBonesMatricesLoc, amountToUpload, GL_FALSE, glm::value_ptr(meshComp->GetCachedBones()[0]));
+			const auto& matrices = meshComp->GetBoneMatrices();
+			glUniformMatrix4fv(outlineFinalBonesMatricesLoc, (GLsizei)matrices.size(), GL_FALSE, glm::value_ptr(matrices[0]));
 			glUniform1i(outlineHasBonesLoc, true);
 		}
 		else
@@ -525,14 +516,11 @@ void ModuleRender::DrawMeshLinesList(const CameraLens* camera)
 		glUniformMatrix4fv(meshLinesProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 		glUniform4f(meshLinesColorLoc, debugColor.r, debugColor.g, debugColor.b, debugColor.a);
 
-
 		Mesh* meshComp = renderObject.mesh;
-		if (meshComp->HasSkinningData() && !meshComp->GetCachedBones().empty())
+		if (meshComp->HasSkinning())
 		{
-			int amountToUpload = meshComp->GetCachedBones().size();
-			if (amountToUpload > 200) amountToUpload = 200;
-
-			glUniformMatrix4fv(meshLinesFinalBonesMatricesLoc, amountToUpload, GL_FALSE, glm::value_ptr(meshComp->GetCachedBones()[0]));
+			const auto& matrices = meshComp->GetBoneMatrices();
+			glUniformMatrix4fv(meshLinesFinalBonesMatricesLoc, matrices.size(), GL_FALSE, glm::value_ptr(matrices[0]));
 			glUniform1i(meshLinesHasBonesLoc, true);
 		}
 		else
@@ -1464,14 +1452,10 @@ UID ModuleRender::GetObjectInPixel(const CameraLens* camera, int x, int y)
 						
 						glUniform1i(pickingHasUVsLoc, true);
 
-
-						if (mesh->HasSkinningData() && !mesh->GetCachedBones().empty())
+						if (mesh->HasSkinning())
 						{
-							int amountToUpload = mesh->GetCachedBones().size();
-							if (amountToUpload > 200) amountToUpload = 200;
-
-							glUniformMatrix4fv(pickingFinalBonesMatricesLoc, amountToUpload, GL_FALSE, glm::value_ptr(mesh->GetCachedBones()[0]));
-
+							const auto& matrices = mesh->GetBoneMatrices();
+							glUniformMatrix4fv(pickingFinalBonesMatricesLoc, matrices.size(), GL_FALSE, glm::value_ptr(matrices[0]));
 							glUniform1i(pickingHasBonesLoc, true);
 						}
 						else

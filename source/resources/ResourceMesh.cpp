@@ -109,7 +109,7 @@ bool ResourceMesh::LoadToMemory_Internal()
 	// Si usas Stencil o algo extra
 	GenerateStencilBuffers();
 
-	LOG(LogType::LOG_INFO, "Mesh loaded: %s (Bones: %d)", libraryPath.c_str(), numBones);
+	LOG(LogType::LOG_INFO, "Mesh loaded: %s", libraryPath.c_str(), numBones);
 	return true;
 }
 

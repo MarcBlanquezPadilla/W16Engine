@@ -4,6 +4,7 @@
 #include "ModuleEvents.h"
 #include "components/Component.h"
 #include "components/Mesh.h"
+#include "components/SkinnedMesh.h"
 #include "components/Transform.h"
 #include "components/Texture.h"
 #include "components/Camera.h"
@@ -123,6 +124,9 @@ Component* GameObject::AddComponent(ComponentType type)
 	case ComponentType::Mesh:
 		component = new Mesh(this);
 		break;
+	case ComponentType::SkinnedMesh:
+		component = new SkinnedMesh(this);
+		break;
 	case ComponentType::Texture:
 		component = new Texture(this);
 		break;
@@ -154,11 +158,13 @@ void GameObject::RemoveComponent(ComponentType type)
 
 Component* GameObject::GetComponent(ComponentType type)
 {
-	if (components.count(type) > 0)
+	for (auto pair : components)
 	{
-		return components[type];
+		if (pair.second->IsType(type))
+		{
+			return pair.second;
+		}
 	}
-
 	return nullptr;
 }
 

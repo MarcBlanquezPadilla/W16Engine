@@ -5,7 +5,6 @@
 #include "../utils/AABB.h"
 #include <vector>
 
-// Estructuras para guardar los IDs de OpenGL
 struct MeshData
 {
 	unsigned int VAO = 0;
@@ -48,4 +47,6 @@ private:
 
 	bool GenerateBuffers();
 	bool GenerateStencilBuffers();
+
+	bool IsSkinned() { return bones.size() != 0; }
 };

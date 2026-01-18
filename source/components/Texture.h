@@ -18,9 +18,8 @@ public:
 
     void CleanUp() override;
     
-    ComponentType GetType() override {
-        return ComponentType::Texture;
-    };
+    ComponentType GetType() override { return ComponentType::Texture; };
+    bool IsType(ComponentType type) override { return type == ComponentType::Texture; };
 
     void Save(Config& componentNode) override;
     void Load(Config& componentNode) override;

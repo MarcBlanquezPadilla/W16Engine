@@ -6,6 +6,7 @@ enum class ComponentType {
     None,
     Transform,
     Mesh,
+    SkinnedMesh,
     Texture,
     Camera,
     Animation
@@ -29,7 +30,9 @@ public:
 
     virtual void CleanUp() {}
     
-    virtual ComponentType GetType() { return ComponentType::None; };
+    virtual ComponentType GetType() = 0;
+    
+    virtual bool IsType(ComponentType type) = 0;
 
     virtual void Save(Config& componentNode) {}
 
