@@ -5,7 +5,6 @@ class GameObject;
 enum class ComponentType {
     None,
     Transform,
-    Texture,
     MeshRenderer,
     SkinnedMeshRenderer,
     Camera,

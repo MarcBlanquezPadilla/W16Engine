@@ -6,7 +6,6 @@
 #include "components/MeshRenderer.h"
 #include "components/SkinnedMeshRenderer.h"
 #include "components/Transform.h"
-#include "components/Texture.h"
 #include "components/Camera.h"
 #include "components/Animation.h"
 #include "utils/Log.h"
@@ -126,9 +125,6 @@ Component* GameObject::AddComponent(ComponentType type)
 		break;
 	case ComponentType::SkinnedMeshRenderer:
 		component = new SkinnedMeshRenderer(this);
-		break;
-	case ComponentType::Texture:
-		component = new Texture(this);
 		break;
 	case ComponentType::Camera:
 		component = new Camera(this);

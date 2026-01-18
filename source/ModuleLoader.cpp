@@ -110,14 +110,14 @@ bool ModuleLoader::LoadTextureToGameObjects(const std::string& filePath, std::ve
 	{
 		if (gameObject)
 		{
-			Texture* texture = (Texture*)gameObject->GetComponent(ComponentType::Texture);
+			MeshRenderer* texture = (MeshRenderer*)gameObject->GetComponent(ComponentType::MeshRenderer);
 
 			if (texture == nullptr)
 			{
-				texture = (Texture*)gameObject->AddComponent(ComponentType::Texture);
+				texture = (MeshRenderer*)gameObject->AddComponent(ComponentType::MeshRenderer);
 			}
 
-			texture->SetResource(Engine::GetInstance().moduleResources->Find(filePath));
+			texture->SetTextureResource(Engine::GetInstance().moduleResources->Find(filePath));
 			LOG(LogType::LOG_INFO,"Texture applied to GameObject %s", gameObject->name.c_str());
 			ret = true;
 		}
