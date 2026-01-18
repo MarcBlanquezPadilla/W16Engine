@@ -10,7 +10,7 @@
 #include <assimp/postprocess.h>
 
 class GameObject;
-
+class MeshRenderer;
 
 class ImporterModel : public Importer
 {
@@ -31,8 +31,8 @@ public:
 private:
 	bool ProcessNode(aiNode* node, const aiScene* scene, GameObject* targetGameObject);
 	bool AddMeshAndTexture(aiMesh* assimpMesh, const aiScene* scene, GameObject* target);
-	bool LoadMesh(aiMesh* assimpMesh, GameObject* mesh);
-	bool LoadTexture(aiMaterial* material, const aiScene* scene, GameObject* obj);
+	MeshRenderer* LoadMesh(aiMesh* assimpMesh, GameObject* meshObject);
+	bool LoadTexture(aiMaterial* material, const aiScene* scene, MeshRenderer* mesh);
 
 private:
 	std::map<UID, ReferedsData> referedUIDs;

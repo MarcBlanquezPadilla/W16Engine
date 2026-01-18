@@ -9,7 +9,7 @@
 
 #include "../GameObject.h"
 #include "../components/Transform.h"
-#include "../components/Mesh.h"
+#include "../components/MeshRenderer.h"
 #include "../components/Texture.h"
 
 #include "../resources/Resource.h"
@@ -223,39 +223,34 @@ bool ImporterModel::AddMeshAndTexture(aiMesh* assimpMesh, const aiScene* scene, 
 {
 	if (target)
 	{
-		//ADD MESH
-		LoadMesh(assimpMesh, target);
+		MeshRenderer* meshComp = LoadMesh(assimpMesh, target);
 
-		//ADD TEXTURE
-		if (scene->HasMaterials())
+		if (meshComp && scene->HasMaterials())
 		{
 			aiMaterial* material = scene->mMaterials[assimpMesh->mMaterialIndex];
-			LoadTexture(material, scene, target);
+			LoadTexture(material, scene, meshComp);
 		}
-		return true;
+		return (meshComp != nullptr);
 	}
 	return false;
 }
 
-bool ImporterModel::LoadMesh(aiMesh* assimpMesh, GameObject* target)
+MeshRenderer* ImporterModel::LoadMesh(aiMesh* assimpMesh, GameObject* target)
 {
-	// --- CAMBIO LÓGICO AQUÍ ---
-	Mesh* meshComp = nullptr;
+	MeshRenderer* meshComp = nullptr;
 
-	// Si Assimp nos dice que hay huesos, creamos la versión pesada (SkinnedMesh)
 	if (assimpMesh->mNumBones > 0)
 	{
-		meshComp = (Mesh*)target->AddComponent(ComponentType::SkinnedMesh);
+		meshComp = (MeshRenderer*)target->AddComponent(ComponentType::SkinnedMeshRenderer);
 	}
 	else
 	{
-		// Si no hay huesos, creamos la versión ligera (Mesh)
-		meshComp = (Mesh*)target->AddComponent(ComponentType::Mesh);
+		meshComp = (MeshRenderer*)target->AddComponent(ComponentType::MeshRenderer);
 	}
-	if (!meshComp) return false;
+	if (!meshComp) return nullptr;
 
-	//GET UID
 	UID meshUID = 0;
+	
 	if (UIDsByName.find(target->name) != UIDsByName.end())
 	{
 		meshUID = UIDsByName[target->name];
@@ -270,21 +265,21 @@ bool ImporterModel::LoadMesh(aiMesh* assimpMesh, GameObject* target)
 
 	if (success)
 	{
-		meshComp->SetResource(meshUID);
+		meshComp->SetMeshResource(meshUID);
 		ReferedsData importMeshData;
 		importMeshData.name = target->name;
 		importMeshData.type = Resource::Type::mesh;
 		referedUIDs.emplace(meshUID,importMeshData);
-		return true;
+		return meshComp;
 	}
 	else
 	{
 		LOG(LogType::LOG_ERROR, "Failed loading mesh data for %s.", target->name.c_str());
-		return false;
+		return nullptr;
 	}
 }
 
-bool ImporterModel::LoadTexture(aiMaterial* material, const aiScene* scene, GameObject* obj)
+bool ImporterModel::LoadTexture(aiMaterial* material, const aiScene* scene, MeshRenderer* mesh)
 {
 	aiTextureType type = aiTextureType_DIFFUSE;
 	if (material->GetTextureCount(type) == 0) {
@@ -364,8 +359,7 @@ bool ImporterModel::LoadTexture(aiMaterial* material, const aiScene* scene, Game
 		// 3. CARGAR EN EL MOTOR
 		if (foundFile)
 		{
-			Texture* texture = (Texture*)obj->AddComponent(ComponentType::Texture);
-			if (texture)
+			if (mesh)
 			{
 				Engine::GetInstance().moduleResources->CheckFileLoaded(texPath);
 				Engine::GetInstance().moduleResources->PublishAssetChangedEvent();
@@ -373,7 +367,7 @@ bool ImporterModel::LoadTexture(aiMaterial* material, const aiScene* scene, Game
 				UID textureUID = Engine::GetInstance().moduleResources->Find(texPath);
 				if (textureUID != 0)
 				{
-					texture->SetResource(textureUID);
+					mesh->SetTextureResource(textureUID);
 					return true;
 				}
 				else
@@ -384,7 +378,6 @@ bool ImporterModel::LoadTexture(aiMaterial* material, const aiScene* scene, Game
 		}
 		else
 		{
-			// LOG IMPORTANTE: Muestra qué intentó buscar
 			LOG(LogType::LOG_WARNING, "Texture missing. Assimp path: '%s', Filename: '%s'", aiPath.C_Str(), fileName.c_str());
 		}
 	}

@@ -3,8 +3,8 @@
 #include "Engine.h"
 #include "ModuleEvents.h"
 #include "components/Component.h"
-#include "components/Mesh.h"
-#include "components/SkinnedMesh.h"
+#include "components/MeshRenderer.h"
+#include "components/SkinnedMeshRenderer.h"
 #include "components/Transform.h"
 #include "components/Texture.h"
 #include "components/Camera.h"
@@ -48,7 +48,7 @@ bool GameObject::Update()
 	{
 		Component* component = it->second;
 
-		if (component->enabled)
+		if (component->GetEnabled())
 		{
 			component->Update();
 		}
@@ -121,11 +121,11 @@ Component* GameObject::AddComponent(ComponentType type)
 		component = new Transform(this);
 		transform = (Transform*)component;
 		break;
-	case ComponentType::Mesh:
-		component = new Mesh(this);
+	case ComponentType::MeshRenderer:
+		component = new MeshRenderer(this);
 		break;
-	case ComponentType::SkinnedMesh:
-		component = new SkinnedMesh(this);
+	case ComponentType::SkinnedMeshRenderer:
+		component = new SkinnedMeshRenderer(this);
 		break;
 	case ComponentType::Texture:
 		component = new Texture(this);
@@ -266,7 +266,7 @@ void GameObject::Save(Config& gameObjectNode)
 			if (component)
 			{
 				compoenntNode.SetInt("type", (int)component->GetType());
-				compoenntNode.SetBool("enabled", component->enabled);
+				compoenntNode.SetBool("enabled", component->GetEnabled());
 				component->Save(compoenntNode);
 			}
 		}
@@ -354,7 +354,7 @@ bool GameObject::GetGlobalMatrix(glm::mat4& globalMatrix)
 }
 bool GameObject::TryGetGlobalAABB(AABB& globalAABB)
 {
-	Mesh* mesh = (Mesh*)GetComponent(ComponentType::Mesh);
+	MeshRenderer* mesh = (MeshRenderer*)GetComponent(ComponentType::MeshRenderer);
 	if (mesh && transform)
 	{
 		globalAABB = mesh->GetGlobalAABB();
@@ -365,6 +365,7 @@ bool GameObject::TryGetGlobalAABB(AABB& globalAABB)
 
 void GameObject::SetStatic(bool _static)
 {
+	if (isStatic == _static) return;
 	isStatic = _static;
 	Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::StaticChanged, this));
 }
@@ -373,16 +374,8 @@ void GameObject::SetEnabled(bool _enabled)
 {
 	if (enabled == _enabled) return;
 
-	bool wasActive = GetEnabled();
-
 	enabled = _enabled;
-
-	bool nowActive = GetEnabled();
-
-	if (wasActive != nowActive)
-	{
-		UpdateEnabledRecursive(nowActive);
-	}
+	UpdateEnabledRecursive(enabled);
 }
 
 void GameObject::UpdateEnabledRecursive(bool effectiveState)
@@ -418,8 +411,9 @@ bool GameObject::OnEnable()
 	for (auto const& pair : components)
 	{
 		Component* component = pair.second;
-		if (component->enabled)
+		if (!component->GetEnabled())
 		{
+			component->SetEnabled(true);
 			component->OnEnable();
 		}
 	}
@@ -432,8 +426,9 @@ bool GameObject::OnDisable()
 	for (auto const& pair : components)
 	{
 		Component* component = pair.second;
-		if (component->enabled)
+		if (component->GetEnabled())
 		{
+			component->SetEnabled(false);
 			component->OnDisable();
 		}
 	}

@@ -58,11 +58,11 @@ bool ResourceTexture::LoadToMemory_Internal()
 
         file.close();
 
-        gpuID = Engine::GetInstance().moduleRender->UploadTextureToGPU(data, width, height);
+        textureGpuId = Engine::GetInstance().moduleRender->UploadTextureToGPU(data, width, height);
 
         delete[] data;
 
-        if (gpuID != 0)
+        if (textureGpuId != 0)
         {
             LOG(LogType::LOG_INFO, "Texture loaded to VRAM: %s (%dx%d)", libraryPath.c_str(), width, height);
             return true;
@@ -78,10 +78,10 @@ bool ResourceTexture::LoadToMemory_Internal()
 
 bool ResourceTexture::UnloadFromMemory_Internal()
 {
-    if (gpuID != 0)
+    if (textureGpuId != 0)
     {
-        Engine::GetInstance().moduleRender->DeleteTextureFromGPU(gpuID);
-        gpuID = 0;
+        Engine::GetInstance().moduleRender->DeleteTextureFromGPU(textureGpuId);
+        textureGpuId = 0;
     }
 
     width = 0;

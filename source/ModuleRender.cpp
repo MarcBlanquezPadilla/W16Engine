@@ -14,9 +14,7 @@
 
 #include "GameObject.h"
 
-#include "components/Mesh.h"
-#include "components/Texture.h"
-#include "components/Transform.h"
+#include "components/MeshRenderer.h"
 
 #include "resources/ResourceMesh.h"
 #include "resources/ResourceTexture.h"
@@ -173,7 +171,8 @@ bool ModuleRender::PostUpdate()
 bool ModuleRender::CleanUp()
 {
 	bool ret = true;
-
+	
+	meshes.clear();
 	activeCameras.clear();
 	mainCamera = nullptr;
 	Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
@@ -217,10 +216,7 @@ bool ModuleRender::RenderScene(const CameraLens* camera)
 	opaqueList.clear();
 	transparentList.clear();
 
-	for (GameObject* gameObject : Engine::GetInstance().moduleScene->GetRootGameObjects())
-	{
-		BuildRenderListsRecursive(gameObject, camera);
-	}
+	BuildRenderLists(camera);
 
 	//CONFIG OPENGL
 	glUseProgram(shaderProgram);
@@ -267,57 +263,41 @@ bool ModuleRender::RenderScene(const CameraLens* camera)
 	return true;
 }
 
-void ModuleRender::BuildRenderListsRecursive(GameObject* gameObject, const CameraLens* camera)
+void ModuleRender::BuildRenderLists(const CameraLens* camera)
 {
-	glm::mat4 globalModelMatrix;
-	if (gameObject && gameObject->GetEnabled())
+	for (MeshRenderer* mesh : meshes)
 	{
-		if (gameObject && gameObject->transform)
-		{
-			Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
+		if (!mesh->GetEnabled()) continue;
 
-			if (mesh && mesh->enabled && mesh->GetResource() && mesh->GetResource()->IsLoadedToMemory())
+		ResourceMesh* resMesh = mesh->GetMeshResource();
+		if (!resMesh || !resMesh->IsLoadedToMemory()) continue;
+
+		glm::mat4 globalModelMatrix;
+		mesh->owner->GetGlobalMatrix(globalModelMatrix);
+
+		mesh->UpdateDynamicAABB();
+		const AABB& globalAABB = mesh->GetGlobalAABB();
+
+		if (camera->GetFrustum()->InFrustum(globalAABB))
+		{
+			mesh->UpdateSkinningMatrices();
+
+			RenderObject renderObject = { mesh, globalModelMatrix };
+
+			glm::vec3 aabbCenter = (globalAABB.min + globalAABB.max) * 0.5f;
+			float distanceToCamera = glm::distance(aabbCenter, camera->position);
+
+			if (mesh->GetTransparent())
 			{
-				gameObject->GetGlobalMatrix(globalModelMatrix);
-				
-				mesh->UpdateDynamicAABB();
-				const AABB& globalAABB = mesh->GetGlobalAABB();
-
-				if (camera->GetFrustum()->InFrustum(globalAABB))
-				{
-					mesh->UpdateSkinningMatrices();
-
-					Texture* texture = (Texture*)gameObject->GetComponent(ComponentType::Texture);
-					unsigned int texToBind = defaultTextureID;
-
-					if (texture)
-					{
-						if (texture->use_checker) texToBind = checkerTextureID;
-						else if (texture->GetResource() && texture->GetResource()->IsLoadedToMemory() && texture->GetTextureID() != 0) texToBind = texture->GetTextureID();
-					}
-
-					RenderObject renderObject = { mesh, texToBind, globalModelMatrix };
-
-					glm::vec3 aabbCenter = (globalAABB.min + globalAABB.max) * 0.5f;
-					float distanceToCamera = glm::distance(aabbCenter, camera->position);
-
-					if (texture && texture->transparent)
-					{
-						transparentList.emplace(distanceToCamera, renderObject);
-					}
-					else
-					{
-						opaqueList.emplace(distanceToCamera, renderObject);
-					}
-
-					if (mesh->drawNormals) normalsList.push_back(renderObject);
-					if (mesh->drawMesh) meshLinesList.push_back(renderObject);
-				}
+				transparentList.emplace(distanceToCamera, renderObject);
 			}
-		}
-		for (GameObject* go : gameObject->childs)
-		{
-			BuildRenderListsRecursive(go, camera);
+			else
+			{
+				opaqueList.emplace(distanceToCamera, renderObject);
+			}
+
+			if (mesh->drawNormals) normalsList.push_back(renderObject);
+			if (mesh->drawMesh) meshLinesList.push_back(renderObject);
 		}
 	}
 }
@@ -327,7 +307,7 @@ void ModuleRender::DrawRenderList(const std::multimap<float, RenderObject>& map,
 	for (auto pair = map.rbegin(); pair != map.rend(); ++pair)
 	{
 		RenderObject renderObject = pair->second;
-		Mesh* meshComp = renderObject.mesh;
+		MeshRenderer* meshComp = renderObject.mesh;
 
 		if (meshComp->drawStencil) {
 			glStencilFunc(GL_ALWAYS, 1, 0xFF);
@@ -339,8 +319,18 @@ void ModuleRender::DrawRenderList(const std::multimap<float, RenderObject>& map,
 			glStencilMask(0x00);
 		}
 
+		unsigned int texToBind = defaultTextureID;
+		const ResourceTexture* resTex = meshComp->GetTextureResource();
+
+		if (meshComp->drawChecker) {
+			texToBind = checkerTextureID;
+		}
+		else if (resTex && resTex->IsLoadedToMemory() && resTex->GetTextureGpuId() != 0) {
+			texToBind = resTex->GetTextureGpuId();
+		}
+
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, renderObject.textToBind);
+		glBindTexture(GL_TEXTURE_2D, texToBind);
 		glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
 		glUniform1i(hasUVsLoc, true);
 
@@ -356,8 +346,8 @@ void ModuleRender::DrawRenderList(const std::multimap<float, RenderObject>& map,
 			glUniform1i(hasBonesLoc, false);
 		}
 
-		glBindVertexArray(meshComp->GetResource()->meshData.VAO);
-		glDrawElements(GL_TRIANGLES, meshComp->GetResource()->numIndices, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(meshComp->GetMeshResource()->meshData.VAO);
+		glDrawElements(GL_TRIANGLES, meshComp->GetMeshResource()->numIndices, GL_UNSIGNED_INT, 0);
 	}
 }
 
@@ -408,7 +398,7 @@ void ModuleRender::DrawNormalsList(const CameraLens* camera)
 	//DRAW NORMALS
 	for (RenderObject renderObject : normalsList)
 	{
-		if (renderObject.mesh->drawNormals && renderObject.mesh->GetResource()->meshData.VAO != 0)
+		if (renderObject.mesh->drawNormals && renderObject.mesh->GetMeshResource()->meshData.VAO != 0)
 		{
 			glUseProgram(normalShaderProgram);
 			glUniformMatrix4fv(normalModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
@@ -416,7 +406,7 @@ void ModuleRender::DrawNormalsList(const CameraLens* camera)
 
 			glUniform4f(normalColorLoc, debugColor.r, debugColor.g, debugColor.b, debugColor.a);
 
-			Mesh* meshComp = renderObject.mesh;
+			MeshRenderer* meshComp = renderObject.mesh;
 
 			if (meshComp->HasSkinning())
 			{
@@ -429,9 +419,9 @@ void ModuleRender::DrawNormalsList(const CameraLens* camera)
 				glUniform1i(normalHasBonesLoc, false);
 			}
 
-			glBindVertexArray(renderObject.mesh->GetResource()->meshData.VAO);
+			glBindVertexArray(renderObject.mesh->GetMeshResource()->meshData.VAO);
 
-			glDrawArrays(GL_POINTS, 0, renderObject.mesh->GetResource()->numVertices);
+			glDrawArrays(GL_POINTS, 0, renderObject.mesh->GetMeshResource()->numVertices);
 
 			glUseProgram(shaderProgram);
 		}
@@ -455,7 +445,7 @@ void ModuleRender::DrawStencilList(const CameraLens* camera)
 		glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
 		glUniform4f(outlineColorLoc, stencilColor.r, stencilColor.g, stencilColor.b, stencilColor.a);
 
-		Mesh* meshComp = renderObject.mesh;
+		MeshRenderer* meshComp = renderObject.mesh;
 
 		if (meshComp->HasSkinning())
 		{
@@ -467,28 +457,28 @@ void ModuleRender::DrawStencilList(const CameraLens* camera)
 		{
 			glUniform1i(outlineHasBonesLoc, false);
 		}
-		glBindVertexArray(renderObject.mesh->GetResource()->stencilData.VAO);
+		glBindVertexArray(renderObject.mesh->GetMeshResource()->stencilData.VAO);
 
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 		glStencilMask(0x00);
 		glDepthFunc(GL_LEQUAL);
 		glDepthMask(GL_FALSE);
 
-		glDrawElements(GL_TRIANGLES, renderObject.mesh->GetResource()->numIndices, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, renderObject.mesh->GetMeshResource()->numIndices, GL_UNSIGNED_INT, 0);
 
 		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 		glStencilFunc(GL_ALWAYS, 2, 0xFF);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 		glStencilMask(0xFF);
 		glDepthFunc(GL_LEQUAL);
-		glDrawElements(GL_TRIANGLES, renderObject.mesh->GetResource()->numIndices, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, renderObject.mesh->GetMeshResource()->numIndices, GL_UNSIGNED_INT, 0);
 
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 		glDepthFunc(GL_GREATER);
 		glStencilFunc(GL_NOTEQUAL, 2, 0xFF);
 		glStencilMask(0x00);
 
-		glDrawElements(GL_TRIANGLES, renderObject.mesh->GetResource()->numIndices, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, renderObject.mesh->GetMeshResource()->numIndices, GL_UNSIGNED_INT, 0);
 
 		glBindVertexArray(0);
 		glUseProgram(0);
@@ -516,7 +506,7 @@ void ModuleRender::DrawMeshLinesList(const CameraLens* camera)
 		glUniformMatrix4fv(meshLinesProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 		glUniform4f(meshLinesColorLoc, debugColor.r, debugColor.g, debugColor.b, debugColor.a);
 
-		Mesh* meshComp = renderObject.mesh;
+		MeshRenderer* meshComp = renderObject.mesh;
 		if (meshComp->HasSkinning())
 		{
 			const auto& matrices = meshComp->GetBoneMatrices();
@@ -533,8 +523,8 @@ void ModuleRender::DrawMeshLinesList(const CameraLens* camera)
 		glEnable(GL_POLYGON_OFFSET_LINE);
 		glPolygonOffset(-1.0f, -1.0f);
 
-		glBindVertexArray(renderObject.mesh->GetResource()->meshData.VAO);
-		glDrawElements(GL_TRIANGLES, renderObject.mesh->GetResource()->numIndices, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(renderObject.mesh->GetMeshResource()->meshData.VAO);
+		glDrawElements(GL_TRIANGLES, renderObject.mesh->GetMeshResource()->numIndices, GL_UNSIGNED_INT, 0);
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glDisable(GL_POLYGON_OFFSET_LINE);
@@ -1331,6 +1321,22 @@ CameraLens* ModuleRender::GetMainCamera()
 
 #pragma endregion
 
+#pragma region Meshes
+
+void ModuleRender::AddMesh(MeshRenderer* mesh) {
+	meshes.push_back(mesh);
+}
+
+void ModuleRender::RemoveMesh(MeshRenderer* mesh) {
+	auto it = std::find(meshes.begin(), meshes.end(), mesh);
+	if (it != meshes.end()) {
+		*it = meshes.back();
+		meshes.pop_back();
+	}
+}
+
+#pragma endregion
+
 #pragma region Textures
 bool ModuleRender::CreateCheckerTexture()
 {
@@ -1397,98 +1403,63 @@ UID ModuleRender::GetObjectInPixel(const CameraLens* camera, int x, int y)
 {
 	if (!camera) return 0;
 
-	if (camera->fboID != 0)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, camera->fboID);
-		glViewport(0, 0, camera->textureWidth, camera->textureHeight);
-	}
-	else
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, Engine::GetInstance().moduleWindow->width, Engine::GetInstance().moduleWindow->height);
-	}
+	glBindFramebuffer(GL_FRAMEBUFFER, (camera->fboID != 0) ? camera->fboID : 0);
+	glViewport(0, 0, (camera->fboID != 0) ? camera->textureWidth : Engine::GetInstance().moduleWindow->width,
+		(camera->fboID != 0) ? camera->textureHeight : Engine::GetInstance().moduleWindow->height);
 
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
-	glDepthFunc(GL_LESS);
 
 	glUseProgram(pickingShaderProgram);
 	glUniformMatrix4fv(pickingViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
 	glUniformMatrix4fv(pickingProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 
-	for (const auto pair : Engine::GetInstance().moduleScene->GetAllGameObjects())
+	for (MeshRenderer* mesh : meshes)
 	{
-		GameObject* gameObject = pair.second;
-		glm::mat4 globalModelMatrix;
-		if (gameObject && gameObject->GetEnabled())
-		{
-			if (gameObject && gameObject->transform)
-			{
-				Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
+		if (!mesh || !mesh->GetEnabled()) continue;
 
-				if (mesh && mesh->enabled && mesh->GetResource() && mesh->GetResource()->IsLoadedToMemory())
-				{
-					
-					int id = gameObject->UUID;
-					float r = ((id & 0x000000FF) >> 0) / 255.0f;
-					float g = ((id & 0x0000FF00) >> 8) / 255.0f;
-					float b = ((id & 0x00FF0000) >> 16) / 255.0f;
-					float a = ((id & 0xFF000000) >> 24) / 255.0f;
-					glUniform4f(pickingColorLoc, r, g, b, a);
+		ResourceMesh* res = mesh->GetMeshResource();
+		if (!res || !res->IsLoadedToMemory()) continue;
 
-					gameObject->GetGlobalMatrix(globalModelMatrix);
+		if (!camera->GetFrustum()->InFrustum(mesh->GetGlobalAABB())) continue;
 
-					glUniformMatrix4fv(pickingModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(globalModelMatrix));
+		UID id = mesh->owner->UUID;
+		float r = ((id & 0x000000FF) >> 0) / 255.0f;
+		float g = ((id & 0x0000FF00) >> 8) / 255.0f;
+		float b = ((id & 0x00FF0000) >> 16) / 255.0f;
+		float a = ((id & 0xFF000000) >> 24) / 255.0f;
+		glUniform4f(pickingColorLoc, r, g, b, a);
 
-					mesh->UpdateDynamicAABB();
-					const AABB& globalAABB = mesh->GetGlobalAABB();
+		glm::mat4 model;
+		mesh->owner->GetGlobalMatrix(model);
+		glUniformMatrix4fv(pickingModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-					if (camera->GetFrustum()->InFrustum(globalAABB))
-					{
-						mesh->UpdateSkinningMatrices();
-						
-						glUniform1i(pickingHasUVsLoc, true);
-
-						if (mesh->HasSkinning())
-						{
-							const auto& matrices = mesh->GetBoneMatrices();
-							glUniformMatrix4fv(pickingFinalBonesMatricesLoc, matrices.size(), GL_FALSE, glm::value_ptr(matrices[0]));
-							glUniform1i(pickingHasBonesLoc, true);
-						}
-						else
-						{
-							glUniform1i(pickingHasBonesLoc, false);
-						}
-
-						glBindVertexArray(mesh->GetResource()->meshData.VAO);
-
-						glDrawElements(GL_TRIANGLES, mesh->GetResource()->numIndices, GL_UNSIGNED_INT, 0);
-
-						glBindVertexArray(0);
-					}
-				}
-			}
+		if (mesh->HasSkinning()) {
+			const auto& matrices = mesh->GetBoneMatrices();
+			glUniformMatrix4fv(pickingFinalBonesMatricesLoc, matrices.size(), GL_FALSE, glm::value_ptr(matrices[0]));
+			glUniform1i(pickingHasBonesLoc, true);
 		}
-	}
+		else {
+			glUniform1i(pickingHasBonesLoc, false);
+		}
 
+		glBindVertexArray(res->meshData.VAO);
+		glDrawElements(GL_TRIANGLES, res->numIndices, GL_UNSIGNED_INT, 0);
+	}
 
 	UID pickedID = 0;
-	if (camera->textureHeight > 0 && camera->textureWidth > 0)
-	{
-		unsigned char pixel[4];
-		glReadPixels(x, camera->textureHeight - y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
+	unsigned char pixel[4];
+	int targetHeight = (camera->fboID != 0) ? camera->textureHeight : Engine::GetInstance().moduleWindow->height;
+	glReadPixels(x, targetHeight - y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
 
-		pickedID = pixel[0] + (pixel[1] << 8) + (pixel[2] << 16) + (pixel[3] << 24);
-	}
+	pickedID = pixel[0] + (pixel[1] << 8) + (pixel[2] << 16) + (pixel[3] << 24);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(0);
-
 	glEnable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
 
 	return pickedID;
 }

@@ -12,7 +12,7 @@
 #include "GameObject.h"
 #include "components/Transform.h"
 #include "components/Camera.h"
-#include "components/Mesh.h"
+#include "components/MeshRenderer.h"
 #include "geometry/Vertex.h"
 #include "resources/ResourceMesh.h"
 
@@ -174,8 +174,8 @@ bool ModuleEditor::Update()
 	{
 		for (GameObject* selectedGameObject : selectedGameObjects)
 		{
-			Mesh* selectedMesh = nullptr;
-			selectedMesh = (Mesh*)selectedGameObject->GetComponent(ComponentType::Mesh);
+			MeshRenderer* selectedMesh = nullptr;
+			selectedMesh = (MeshRenderer*)selectedGameObject->GetComponent(ComponentType::MeshRenderer);
 
 			if (selectedMesh)
 			{
@@ -321,10 +321,10 @@ void ModuleEditor::TestMouseRayPicking(int mouseX, int mouseY, int width, int he
 	for (GameObject* gameObject : candidates)
 	{
 		GameObject* go = gameObject;
-		Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
+		MeshRenderer* mesh = (MeshRenderer*)go->GetComponent(ComponentType::MeshRenderer);
 		Transform* transform = (Transform*)go->transform;
 
-		if (mesh->GetResource() && mesh->GetResource()->IsLoadedToMemory())
+		if (mesh->GetMeshResource() && mesh->GetMeshResource()->IsLoadedToMemory())
 		{
 			glm::mat4 modelMatrix = transform->GetGlobalMatrix();
 			glm::mat4 inverseModel = glm::inverse(modelMatrix);
@@ -333,8 +333,8 @@ void ModuleEditor::TestMouseRayPicking(int mouseX, int mouseY, int width, int he
 			localRay.origin = glm::vec3(inverseModel * glm::vec4(ray.origin, 1.0f));
 			localRay.direction = glm::normalize(glm::vec3(inverseModel * glm::vec4(ray.direction, 0.0f)));
 
-			const auto& vertices = mesh->GetResource()->vertices;
-			const auto& indices = mesh->GetResource()->indices;
+			const auto& vertices = mesh->GetMeshResource()->vertices;
+			const auto& indices = mesh->GetMeshResource()->indices;
 
 			if (vertices.empty() || indices.size() < 3) continue;
 
@@ -381,7 +381,7 @@ void ModuleEditor::SetSelected(GameObject* gameObject, bool eraseSelecteds)
 		for (GameObject* go : selectedGameObjects) {
 			if (go != nullptr)
 			{
-				Mesh* mesh = (Mesh*)go->GetComponent(ComponentType::Mesh);
+				MeshRenderer* mesh = (MeshRenderer*)go->GetComponent(ComponentType::MeshRenderer);
 				if (mesh) { mesh->drawStencil = false; mesh->drawNormals = false; mesh->drawMesh = false; }
 			}
 		}
@@ -395,7 +395,7 @@ void ModuleEditor::SetSelected(GameObject* gameObject, bool eraseSelecteds)
 	if (it != selectedGameObjects.end())
 	{
 		if (!eraseSelecteds) {
-			Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
+			MeshRenderer* mesh = (MeshRenderer*)gameObject->GetComponent(ComponentType::MeshRenderer);
 			if (mesh) mesh->drawStencil = false;
 			selectedGameObjects.erase(it);
 		}
@@ -403,7 +403,7 @@ void ModuleEditor::SetSelected(GameObject* gameObject, bool eraseSelecteds)
 	else
 	{
 		selectedGameObjects.push_back(gameObject);
-		Mesh* mesh = (Mesh*)gameObject->GetComponent(ComponentType::Mesh);
+		MeshRenderer* mesh = (MeshRenderer*)gameObject->GetComponent(ComponentType::MeshRenderer);
 		if (mesh) mesh->drawStencil = true;
 	}
 }

@@ -5,9 +5,9 @@ class GameObject;
 enum class ComponentType {
     None,
     Transform,
-    Mesh,
-    SkinnedMesh,
     Texture,
+    MeshRenderer,
+    SkinnedMeshRenderer,
     Camera,
     Animation
 };
@@ -40,7 +40,13 @@ public:
 
     virtual void OnEditor() {}
 
+    void SetEnabled(bool enabled) { this->enabled = enabled; }
+    
+    const bool& GetEnabled() { return enabled; }
+
 public:
     GameObject* owner;
+
+private:
     bool enabled = true;
 };

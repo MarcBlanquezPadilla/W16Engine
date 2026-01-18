@@ -4,7 +4,7 @@
 #include "../GameObject.h"
 #include "../components/Component.h"
 #include "../components/Transform.h"
-#include "../components/Mesh.h"
+#include "../components/MeshRenderer.h"
 #include "../components/Texture.h"
 #include "../utils/Log.h"
 #include "../ModuleEditor.h"
@@ -132,13 +132,9 @@ void InspectorWindow::DrawGameObjectInfo(GameObject* gameObject)
         {
             if (ImGui::MenuItem("Camera")) { gameObject->AddComponent(ComponentType::Camera); ImGui::CloseCurrentPopup(); }
         }
-        if (gameObject->GetComponent(ComponentType::Mesh) == nullptr)
+        if (gameObject->GetComponent(ComponentType::MeshRenderer) == nullptr)
         {
-            if (ImGui::MenuItem("Mesh")) { gameObject->AddComponent(ComponentType::Mesh); ImGui::CloseCurrentPopup(); }
-        }
-        if (gameObject->GetComponent(ComponentType::Texture) == nullptr)
-        {
-            if (ImGui::MenuItem("Texture")) { gameObject->AddComponent(ComponentType::Texture); ImGui::CloseCurrentPopup(); }
+            if (ImGui::MenuItem("Mesh")) { gameObject->AddComponent(ComponentType::MeshRenderer); ImGui::CloseCurrentPopup(); }
         }
         if (gameObject->GetComponent(ComponentType::Animation) == nullptr)
         {

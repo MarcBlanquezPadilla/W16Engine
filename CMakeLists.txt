@@ -51,10 +51,10 @@ add_executable(W16Engine
 	source/Event.h
 	source/EventListener.h
 	source/components/Component.h
-	source/components/Mesh.cpp
-	source/components/Mesh.h
-	source/components/SkinnedMesh.cpp
-	source/components/SkinnedMesh.h
+	source/components/MeshRenderer.cpp
+	source/components/MeshRenderer.h
+	source/components/SkinnedMeshRenderer.cpp
+	source/components/SkinnedMeshRenderer.h
 	source/components/Transform.cpp
 	source/components/Transform.h
 	source/components/Texture.cpp

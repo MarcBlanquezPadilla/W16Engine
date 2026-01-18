@@ -520,26 +520,26 @@ unsigned int ProjectWindow::GetIconTextureWithResource(const Resource* resource)
         switch (resource->GetType())
         {
         case Resource::Type::texture:
-            return imageIcon->gpuID;
+            return imageIcon->GetTextureGpuId();
             break;
         case Resource::Type::model:
-            return modelIcon->gpuID;
+            return modelIcon->GetTextureGpuId();
             break;
         case Resource::Type::scene:
-            return sceneIcon->gpuID;
+            return sceneIcon->GetTextureGpuId();
             break;
         case Resource::Type::mesh:
-            return meshIcon->gpuID;
+            return meshIcon->GetTextureGpuId();
             break;
         case Resource::Type::animation:
-            return animIcon->gpuID;
+            return animIcon->GetTextureGpuId();
             break;
         default:
-            return fileIcon->gpuID;
+            return fileIcon->GetTextureGpuId();
             break;
         }
     }
-    else return folderIcon->gpuID;
+    else return folderIcon->GetTextureGpuId();
 
 }
 

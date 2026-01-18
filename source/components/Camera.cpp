@@ -41,7 +41,7 @@ void Camera::OnDisable()
 void Camera::Update()
 {
     UpdateTransform();
-    lens->SetActiveCamera(enabled);
+    lens->SetActiveCamera(GetEnabled());
 }
 
 void Camera::UpdateTransform()

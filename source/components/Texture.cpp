@@ -87,33 +87,6 @@ ResourceTexture* Texture::GetResource() const
     return resource;
 }
 
-unsigned int Texture::GetTextureID() const
-{
-    if (resource && resource->IsLoadedToMemory())
-    {
-        return resource->gpuID;
-    }
-    return 0;
-}
-
-unsigned int Texture::GetTextureWidth() const
-{
-    if (resource && resource->IsLoadedToMemory())
-    {
-        return resource->width;
-    }
-    return 0;
-}
-
-unsigned int Texture::GetTextureHeight() const
-{
-    if (resource && resource->IsLoadedToMemory())
-    {
-        return resource->height;
-    }
-    return 0;
-}
-
 void Texture::OnEditor()
 {
     if (ImGui::CollapsingHeader("Texture"))
@@ -121,7 +94,7 @@ void Texture::OnEditor()
         if (resource && resource->IsLoadedToMemory())
         {
             ImGui::Text("Texture:");
-            ImGui::Image(GetTextureID(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().x));
+            ImGui::Image(resource->GetTextureGpuId(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().x));
 
             if (ImGui::BeginDragDropTarget())
             {
@@ -160,7 +133,7 @@ void Texture::OnEditor()
             ImGui::TextWrapped(resource->GetAssetFile());
             ImGui::Text("Size:");
             ImGui::SameLine();
-            ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%dx%d", GetTextureWidth(), GetTextureHeight());
+            ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%dx%d", resource->GetWidth(), resource->GetHeight());
         }
         else
         {

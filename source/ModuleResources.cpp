@@ -372,7 +372,7 @@ bool ModuleResources::CreateResource(const std::string& assetPath, const std::st
 	if (ret != nullptr)
 	{
 		resources[uid] = ret;
-		ret->name = name == "" ? assetPath : name;
+		ret->name = name == "" ? GetFileName(assetPath).c_str() : name;
 		ret->assetPath = assetPath;
 		ret->libraryPath = libraryPath;
 		ret->internalResource = internal;

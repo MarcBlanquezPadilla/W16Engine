@@ -8,6 +8,8 @@
 struct aiMaterial;
 class ResourceTexture;
 
+//DEPRECATED
+
 class Texture : public Component, public ResourceUser
 {
 public:
@@ -29,10 +31,6 @@ public:
     void SetResource(UID uid);
    
     ResourceTexture* GetResource() const;
-
-    unsigned int GetTextureID() const;
-    unsigned int GetTextureWidth() const;
-    unsigned int GetTextureHeight() const;
 
     void OnResourceLost(UID resourceUID) override;
 

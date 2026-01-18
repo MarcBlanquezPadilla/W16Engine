@@ -14,15 +14,14 @@ struct StencilData;
 struct Vertex;
 class GameObject;
 class CameraLens;
-class Mesh;
+class MeshRenderer;
 
 #define CHECKERS_WIDTH 64
 #define CHECKERS_HEIGHT 64
 
 struct RenderObject
 {
-	Mesh* mesh;
-	unsigned int textToBind;
+	MeshRenderer* mesh;
 	glm::mat4 globalModelMatrix;
 };
 
@@ -70,6 +69,8 @@ public:
 	void ChangeWindowSize(int x, int y);
 
 	//RENDER
+	void AddMesh(MeshRenderer* mesh);
+	void RemoveMesh(MeshRenderer* mesh);
 	bool RenderScene(const CameraLens* camera);
 	void AddCamera(CameraLens* camera);
 	void RemoveCamera(CameraLens* camera);
@@ -108,7 +109,7 @@ private:
 	void DrawStencilList(const CameraLens* camera);
 	void DrawNormalsList(const CameraLens* camera);
 	void DrawMeshLinesList(const CameraLens* camera);
-	void BuildRenderListsRecursive(GameObject* gameObject, const CameraLens* camera);
+	void BuildRenderLists(const CameraLens* camera);
 
 private:
 
@@ -186,6 +187,7 @@ private:
 	std::vector<RenderObject> meshLinesList;
 	std::vector<RenderLine> linesList;
 
+	std::vector<MeshRenderer*> meshes;
 	std::vector<CameraLens*> activeCameras;
 	CameraLens* mainCamera;
 	int mainCameras;

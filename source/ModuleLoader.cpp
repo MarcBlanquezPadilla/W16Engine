@@ -9,7 +9,7 @@
 #include "ModuleEvents.h"
 
 #include "components/Component.h"
-#include "components/Mesh.h"
+#include "components/MeshRenderer.h"
 #include "components/Transform.h"
 #include "components/Texture.h"
 #include "geometry/Vertex.h"
@@ -239,8 +239,8 @@ void ModuleLoader::LoadBasic(int basic)
 	if (Engine::GetInstance().moduleResources->RequestResource(basic))
 	{
 		GameObject* gameObject = new GameObject(true, "Basic");
-		Mesh* mesh = (Mesh*)gameObject->AddComponent(ComponentType::Mesh);
-		mesh->SetResource(basic);
+		MeshRenderer* mesh = (MeshRenderer*)gameObject->AddComponent(ComponentType::MeshRenderer);
+		mesh->SetMeshResource(basic);
 
 		if (gameObject)
 		{
