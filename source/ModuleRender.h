@@ -116,6 +116,7 @@ private:
 	glm::vec4 debugColor;
 	glm::vec4 stencilColor;
 
+
 	//MODEL DRAW
 	unsigned int shaderProgram;
 	GLint modelMatrixLoc;
@@ -124,6 +125,7 @@ private:
 	GLint hasUVsLoc;
 	GLint hasBonesLoc = 0;
 	GLint finalBonesMatricesLoc= 0;
+	GLuint ssboBones;
 
 	//NORMAL DRAW
 	unsigned int normalShaderProgram;

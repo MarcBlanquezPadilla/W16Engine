@@ -35,24 +35,23 @@ public:
     void OnTransformChanged();
 
     const glm::vec3& GetLocalPosition();
-    const glm::vec3& GetGlobalPosition();
+    const glm::vec3 GetGlobalPosition();
     const glm::vec3& GetLocalEulerRotation();
     const glm::quat& GetLocalQuaterionRotation();
-    const glm::quat& GetGlobalQuaterionRotation();
+    const glm::quat GetGlobalQuaterionRotation();
     const glm::vec3& GetLocalScale();
-    const glm::vec3& GetGlobalScale();
+    const glm::vec3 GetGlobalScale();
 
     const glm::mat4& GetLocalMatrix();
     const glm::mat4& GetGlobalMatrix();
     void InvalidateGlobalMatrix();
-
 
     void OnEditor() override;
 
 public:
     
 
-private:
+private:    
     glm::vec3 position;
     glm::vec3 scale;
     glm::quat rotation;
@@ -62,4 +61,5 @@ private:
     glm::mat4 localMatrix;
     bool dirtyGlobalMatrix;
     bool dirtyLocalMatrix;
+
 };

@@ -49,18 +49,19 @@ void Transform::Load(Config& componentNode)
     SetLocalScale(componentNode.GetVector3("Scale"));
 }
 
-const glm::mat4& Transform::GetLocalMatrix()
-{
-    if (dirtyLocalMatrix)
-    {
-        glm::mat4 matTranslation = glm::translate(glm::mat4(1.0f), position);
-        glm::mat4 matRotation = glm::mat4_cast(rotation);
-        glm::mat4 matScale = glm::scale(glm::mat4(1.0f), scale);
+const glm::mat4& Transform::GetLocalMatrix() {
+    
+    if (dirtyLocalMatrix) {
+        localMatrix = glm::mat4_cast(rotation);
 
-        localMatrix = matTranslation * matRotation * matScale;
+        localMatrix[0] *= scale.x;
+        localMatrix[1] *= scale.y;
+        localMatrix[2] *= scale.z;
+
+        localMatrix[3] = glm::vec4(position, 1.0f);
+
         dirtyLocalMatrix = false;
     }
-
     return localMatrix;
 }
 
@@ -75,6 +76,7 @@ const glm::mat4& Transform::GetGlobalMatrix()
     
     return globalMatrix;
 }
+
 
 void Transform::InvalidateGlobalMatrix()
 {
@@ -199,29 +201,27 @@ void Transform::SetLocalMatrix(const glm::mat4& newLocalMatrix)
     InvalidateGlobalMatrix();
 }
 
-const glm::vec3& Transform::GetGlobalPosition()
+const glm::vec3 Transform::GetGlobalPosition()
 {
     glm::mat4 globalMatrix = GetGlobalMatrix();
 
     return glm::vec3(globalMatrix[3]);
 }
 
-const glm::quat& Transform::GetGlobalQuaterionRotation()
+const glm::quat Transform::GetGlobalQuaterionRotation()
 {
-    glm::mat4 globalMat = GetGlobalMatrix();
+    const glm::mat4& m = GetGlobalMatrix();
 
-    glm::vec3 scale;
-    glm::quat rotation;
-    glm::vec3 translation;
-    glm::vec3 skew;
-    glm::vec4 perspective;
+    glm::vec3 vX = glm::normalize(glm::vec3(m[0]));
+    glm::vec3 vY = glm::normalize(glm::vec3(m[1]));
+    glm::vec3 vZ = glm::normalize(glm::vec3(m[2]));
 
-    glm::decompose(globalMat, scale, rotation, translation, skew, perspective);
+    glm::mat3 rotationMat(vX, vY, vZ);
 
-    return rotation;
+    return glm::quat_cast(rotationMat);
 }
 
-const glm::vec3& Transform::GetGlobalScale()
+const glm::vec3 Transform::GetGlobalScale()
 {
     glm::mat4 globalMat = GetGlobalMatrix();
 

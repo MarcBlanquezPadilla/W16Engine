@@ -61,6 +61,11 @@ bool ModuleRender::Awake()
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
 
+	glGenBuffers(1, &ssboBones);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboBones);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssboBones);
+
 	gpu = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
 	glVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
 	glslVersion = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
@@ -338,7 +343,10 @@ void ModuleRender::DrawRenderList(const std::multimap<float, RenderObject>& map,
 		if (meshComp->HasSkinning())
 		{
 			const auto& matrices = meshComp->GetBoneMatrices();
-			glUniformMatrix4fv(finalBonesMatricesLoc, matrices.size(), GL_FALSE, glm::value_ptr(matrices[0]));
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboBones);
+			glBufferData(GL_SHADER_STORAGE_BUFFER, matrices.size() * sizeof(glm::mat4), matrices.data(), GL_DYNAMIC_DRAW);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssboBones);
+
 			glUniform1i(hasBonesLoc, true);
 		}
 		else
@@ -574,8 +582,10 @@ bool ModuleRender::CreateDefaultShader()
 		"uniform mat4 view; \n"
 		"uniform mat4 projection; \n"
 		"\n"
-		"const int MAX_BONES = 200;\n"
-		"uniform mat4 finalBonesMatrices[MAX_BONES];\n"
+		"layout(std430, binding = 0) readonly buffer BoneMatrices {\n"
+		"    mat4 finalBonesMatrices[];\n"
+		"};\n"
+		"\n"
 		"uniform bool hasBones;\n"
 		"\n"
 		"out vec3 localPos; \n"
@@ -584,19 +594,21 @@ bool ModuleRender::CreateDefaultShader()
 		"void main()\n"
 		"{\n"
 		"    vec4 totalPosition = vec4(0.0f);\n"
+		"    \n"
 		"    if (hasBones)\n"
 		"    {\n"
-		"       float weightSum = weights.x + weights.y + weights.z + weights.w;\n"
-		"       if (weightSum > 0.0f) {\n"
-		"           for(int i = 0 ; i < 4 ; i++)\n"
-		"           {\n"
-		"               if(boneIDs[i] == -1 || boneIDs[i] >= MAX_BONES) continue;\n"
-		"               vec4 localPosition = finalBonesMatrices[boneIDs[i]] * vec4(position, 1.0f);\n"
-		"               totalPosition += localPosition * (weights[i] / weightSum);\n"
-		"           }\n"
-		"       } else {\n"
-		"           totalPosition = vec4(position, 1.0f);\n"
-		"       }\n"
+		"        float weightSum = weights.x + weights.y + weights.z + weights.w;\n"
+		"        if (weightSum > 0.001f) {\n"
+		"            for(int i = 0 ; i < 4 ; i++)\n"
+		"            {\n"
+		"                if(boneIDs[i] == -1) continue;\n"
+		"\n"
+		"                vec4 localPosHueso = finalBonesMatrices[boneIDs[i]] * vec4(position, 1.0f);\n"
+		"                totalPosition += localPosHueso * (weights[i] / weightSum);\n"
+		"            }\n"
+		"        } else {\n"
+		"            totalPosition = vec4(position, 1.0f);\n"
+		"        }\n"
 		"    }\n"
 		"    else\n"
 		"    {\n"
@@ -658,7 +670,6 @@ bool ModuleRender::CreateDefaultShader()
 	projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projection");
 	hasUVsLoc = glGetUniformLocation(shaderProgram, "u_hasUVs");
 
-	// --- NUEVOS UNIFORMS ---
 	hasBonesLoc = glGetUniformLocation(shaderProgram, "hasBones");
 	finalBonesMatricesLoc = glGetUniformLocation(shaderProgram, "finalBonesMatrices");
 
@@ -676,8 +687,10 @@ bool ModuleRender::CreateNormalShader()
 		"\n"
 		"out VS_OUT { vec3 normal; } vs_out;\n"
 		"\n"
-		"const int MAX_BONES = 200;\n"
-		"uniform mat4 finalBonesMatrices[MAX_BONES];\n"
+		"layout(std430, binding = 0) readonly buffer BoneMatrices {\n"
+		"    mat4 finalBonesMatrices[];\n"
+		"};\n"
+		"\n"
 		"uniform bool hasBones;\n"
 		"\n"
 		"void main() {\n"
@@ -689,7 +702,7 @@ bool ModuleRender::CreateNormalShader()
 		"        float weightSum = weights.x + weights.y + weights.z + weights.w;\n"
 		"        if (weightSum > 0.0f) {\n"
 		"            for(int i = 0; i < 4; i++) {\n"
-		"                if(boneIDs[i] == -1 || boneIDs[i] >= MAX_BONES) continue;\n"
+		"                if(boneIDs[i] == -1) continue;\n"
 		"                boneTransform += finalBonesMatrices[boneIDs[i]] * (weights[i] / weightSum);\n"
 		"            }\n"
 		"            // Deformamos posición y normal\n"
@@ -757,7 +770,6 @@ bool ModuleRender::CreateOutlineShader()
 	const char* vertexShaderSource = "#version 460 core\n"
 		"layout (location = 0) in vec3 position;\n"
 		"layout (location = 2) in vec3 aNormal;\n"
-		// INPUTS NUEVOS
 		"layout (location = 3) in ivec4 boneIDs;\n"
 		"layout (location = 4) in vec4 weights;\n"
 		"\n"
@@ -766,9 +778,10 @@ bool ModuleRender::CreateOutlineShader()
 		"uniform mat4 projection;\n"
 		"uniform float u_outlineThickness = 0.03;\n"
 		"\n"
-		// UNIFORMS NUEVOS
-		"const int MAX_BONES = 200;\n"
-		"uniform mat4 finalBonesMatrices[MAX_BONES];\n"
+		"layout(std430, binding = 0) readonly buffer BoneMatrices {\n"
+		"    mat4 finalBonesMatrices[];\n"
+		"};\n"
+		"\n"
 		"uniform bool hasBones;\n"
 		"\n"
 		"void main()\n"
@@ -783,7 +796,7 @@ bool ModuleRender::CreateOutlineShader()
 		"        float weightSum = weights.x + weights.y + weights.z + weights.w;\n"
 		"        if (weightSum > 0.0f) {\n"
 		"            for(int i = 0; i < 4; i++) {\n"
-		"                if(boneIDs[i] == -1 || boneIDs[i] >= MAX_BONES) continue;\n"
+		"                if(boneIDs[i] == -1) continue;\n"
 		"                boneTransform += finalBonesMatrices[boneIDs[i]] * (weights[i] / weightSum);\n"
 		"            }\n"
 		"            totalLocalPos = boneTransform * vec4(position, 1.0f);\n"
@@ -902,7 +915,6 @@ bool ModuleRender::CreateMeshLinesShader()
 	unsigned int vShader = 0;
 	const char* vertexShaderSource = "#version 460 core\n"
 		"layout (location = 0) in vec3 position;\n"
-		// Inputs de huesos
 		"layout (location = 3) in ivec4 boneIDs;\n"
 		"layout (location = 4) in vec4 weights;\n"
 		"\n"
@@ -910,9 +922,10 @@ bool ModuleRender::CreateMeshLinesShader()
 		"uniform mat4 view; \n"
 		"uniform mat4 projection; \n"
 		"\n"
-		// Uniforms de huesos
-		"const int MAX_BONES = 200;\n"
-		"uniform mat4 finalBonesMatrices[MAX_BONES];\n"
+		"layout(std430, binding = 0) readonly buffer BoneMatrices {\n"
+		"    mat4 finalBonesMatrices[];\n"
+		"};\n"
+		"\n"
 		"uniform bool hasBones;\n"
 		"\n"
 		"void main()\n"
@@ -924,7 +937,7 @@ bool ModuleRender::CreateMeshLinesShader()
 		"        if (weightSum > 0.0f) {\n"
 		"            for(int i = 0 ; i < 4 ; i++)\n"
 		"            {\n"
-		"                if(boneIDs[i] == -1 || boneIDs[i] >= MAX_BONES) continue;\n"
+		"                if(boneIDs[i] == -1) continue;\n"
 		"                vec4 localPosition = finalBonesMatrices[boneIDs[i]] * vec4(position, 1.0f);\n"
 		"                totalPosition += localPosition * (weights[i] / weightSum);\n"
 		"            }\n"
@@ -991,8 +1004,10 @@ bool ModuleRender::CreatePickingShader()
 		"uniform mat4 view; \n"
 		"uniform mat4 projection; \n"
 		"\n"
-		"const int MAX_BONES = 200;\n"
-		"uniform mat4 finalBonesMatrices[MAX_BONES];\n"
+		"layout(std430, binding = 0) readonly buffer BoneMatrices {\n"
+		"    mat4 finalBonesMatrices[];\n"
+		"};\n"
+		"\n"
 		"uniform bool hasBones;\n"
 		"\n"
 		"out vec3 localPos; \n"
@@ -1007,7 +1022,7 @@ bool ModuleRender::CreatePickingShader()
 		"       if (weightSum > 0.0f) {\n"
 		"           for(int i = 0 ; i < 4 ; i++)\n"
 		"           {\n"
-		"               if(boneIDs[i] == -1 || boneIDs[i] >= MAX_BONES) continue;\n"
+		"                if(boneIDs[i] == -1) continue;\n"
 		"               vec4 localPosition = finalBonesMatrices[boneIDs[i]] * vec4(position, 1.0f);\n"
 		"               totalPosition += localPosition * (weights[i] / weightSum);\n"
 		"           }\n"
