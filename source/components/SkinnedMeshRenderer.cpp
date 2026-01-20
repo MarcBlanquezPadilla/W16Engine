@@ -2,8 +2,10 @@
 #include "../GameObject.h"
 #include "../Engine.h"
 #include "../ModuleResources.h"
+#include "../ModuleRender.h"
 #include "../ModuleEvents.h"
 #include "../resources/ResourceMesh.h"
+#include "../resources/ResourceTexture.h"
 #include "../components/Transform.h"
 #include "../utils/Config.h"
 #include "../utils/LOG.h"
@@ -26,6 +28,31 @@ void SkinnedMeshRenderer::Update()
         if (GetMeshResource()->bones.empty() || !boneGameObjects.empty())
             bonesLinked = true;
     }
+}
+
+void SkinnedMeshRenderer::CleanUp()
+{
+    Engine::GetInstance().moduleRender->RemoveMesh(this);
+    Engine::GetInstance().moduleEvents->Unsubscribe(Event::Type::GameObjectDestroyed, this);
+
+    if (meshResource)
+    {
+        Engine::GetInstance().moduleResources->ReleaseResource(meshResource->GetUID());
+        meshResource->RemoveReference(this);
+        meshResource = nullptr;
+        meshUID = 0;
+    }
+
+    if (textureResource)
+    {
+        Engine::GetInstance().moduleResources->ReleaseResource(textureResource->GetUID());
+        textureResource->RemoveReference(this);
+        textureResource = nullptr;
+        textureUID = 0;
+    }
+
+    Engine::GetInstance().moduleRender->DeleteSSBO(ssboGlobalMatrices);
+    Engine::GetInstance().moduleRender->DeleteSSBO(ssboOffsetMatrices);
 }
 
 void SkinnedMeshRenderer::SetMeshResource(UID uid)
@@ -52,39 +79,34 @@ void SkinnedMeshRenderer::SetMeshResource(UID uid)
     }
 }
 
-void SkinnedMeshRenderer::LinkBones()
-{
-    if (!meshResource) return;
+void SkinnedMeshRenderer::LinkBones() {
 
-    if (meshResource->bones.empty()) {
-        boneGameObjects.clear();
-        return;
-    }
+    if (!meshResource || meshResource->bones.empty()) return;
 
-    boneGameObjects.clear();
-    boneGameObjects.resize(meshResource->bones.size());
+    size_t numBones = meshResource->bones.size();
+    fastBones.clear();
+    fastBones.resize(numBones);
+    boneGlobalMatrices.resize(numBones);
+    boneGameObjects.resize(numBones);
 
     GameObject* root = owner;
-    for (int i = 0; root->parent != nullptr; i++) {
-        root = root->parent;
-    }
+    while (root->parent != nullptr) root = root->parent;
 
-    for (size_t i = 0; i < meshResource->bones.size(); ++i)
-    {
-        std::string boneName = meshResource->bones[i].name;
-        GameObject* foundBone = root->FindChild(boneName);
+    std::vector<glm::mat4> offsets(numBones);
 
-        if (foundBone)
-        {
+    for (size_t i = 0; i < numBones; ++i) {
+        GameObject* foundBone = root->FindChild(meshResource->bones[i].name);
+        if (foundBone) {
             boneGameObjects[i] = foundBone;
-        }
-        else
-        {
-            boneGameObjects[i] = nullptr;
-            LOG(LogType::LOG_WARNING, "Bone '%s' not found for mesh '%s'", boneName.c_str(), owner->name.c_str());
+            fastBones[i].globalMatrixPtr = &foundBone->transform->GetGlobalMatrix();
+            fastBones[i].offsetMatrix = meshResource->bones[i].offsetMatrix;
+            offsets[i] = fastBones[i].offsetMatrix;
         }
     }
-    LOG(LogType::LOG_INFO, "Skinning: Linked %d bones for mesh %s", boneGameObjects.size(), owner->name.c_str());
+
+    Engine::GetInstance().moduleRender->CreateSkinningSSBOs(ssboGlobalMatrices, ssboOffsetMatrices, offsets);
+
+    bonesLinked = true;
 }
 
  AABB SkinnedMeshRenderer::GetGlobalAABB()
@@ -109,44 +131,22 @@ void SkinnedMeshRenderer::OnEditor()
 
 void SkinnedMeshRenderer::UpdateSkinningMatrices()
 {
-    if (cachedBones) return;
+    if (!bonesLinked) return;
 
-    if (!meshResource || meshResource->bones.empty()) {
-        hasSkinningData = false;
-        return;
-    }
+    meshInverseTransform = glm::inverse(owner->transform->GetGlobalMatrix());
 
-    const auto& bonesGO = boneGameObjects;
-    size_t numBonesGO = bonesGO.size();
+    if (boneGlobalMatrices.size() != boneGameObjects.size())
+        boneGlobalMatrices.resize(boneGameObjects.size());
 
-    if (bonesGO.empty()) {
-        hasSkinningData = false;
-        return;
-    }
-
-    const auto& resourceBonesGO = meshResource->bones;
-    size_t numBonesResource = meshResource->bones.size();
-
-    if (cachedBoneMatrices.size() != numBonesResource) {
-        cachedBoneMatrices.resize(numBonesResource);
-    }
-
-    glm::mat4 globalMatrix = owner->transform->GetGlobalMatrix();
-    glm::mat4 meshInverseTransform = glm::inverse(globalMatrix);
-
-    for (size_t i = 0; i < numBonesResource; ++i)
+    for (size_t i = 0; i < boneGameObjects.size(); ++i)
     {
-        if (i < numBonesGO && bonesGO[i] != nullptr)
-        {
-            Transform* t = (Transform*)bonesGO[i]->transform;
-
-            cachedBoneMatrices[i] = meshInverseTransform * t->GetGlobalMatrix() * resourceBonesGO[i].offsetMatrix;
-        }
+        if (boneGameObjects[i])
+            boneGlobalMatrices[i] = boneGameObjects[i]->transform->GetGlobalMatrix();
         else
-        {
-            cachedBoneMatrices[i] = glm::mat4(1.0f);
-        }
+            boneGlobalMatrices[i] = glm::mat4(1.0f);
     }
+
+    Engine::GetInstance().moduleRender->UploadGlobalMatricesToGPU(ssboGlobalMatrices, boneGlobalMatrices);
 
     hasSkinningData = true;
 }

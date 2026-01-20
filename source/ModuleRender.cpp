@@ -15,6 +15,7 @@
 #include "GameObject.h"
 
 #include "components/MeshRenderer.h"
+#include "components/SkinnedMeshRenderer.h"
 
 #include "resources/ResourceMesh.h"
 #include "resources/ResourceTexture.h"
@@ -23,6 +24,8 @@
 #include "utils/Log.h"
 
 #include "geometry/Vertex.h"
+#include "glm/glm.hpp"
+#include <glm/gtc/type_ptr.hpp>
 
 
 ModuleRender::ModuleRender(bool startEnabled) : Module(startEnabled)
@@ -66,9 +69,18 @@ bool ModuleRender::Awake()
 	glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssboBones);
 
+	glGenBuffers(1, &uboMatrices);
+	glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, uboMatrices);
+
 	gpu = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
 	glVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
 	glslVersion = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+	//SHADERS
+	CreateSharedShadersCode();
 
 	//CREATE DEFAULT SHADER
 	if (!CreateDefaultShader())
@@ -339,13 +351,14 @@ void ModuleRender::DrawRenderList(const std::multimap<float, RenderObject>& map,
 		glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
 		glUniform1i(hasUVsLoc, true);
 
-
 		if (meshComp->HasSkinning())
 		{
-			const auto& matrices = meshComp->GetBoneMatrices();
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboBones);
-			glBufferData(GL_SHADER_STORAGE_BUFFER, matrices.size() * sizeof(glm::mat4), matrices.data(), GL_DYNAMIC_DRAW);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssboBones);
+			SkinnedMeshRenderer* skinnedMeshComp = (SkinnedMeshRenderer*)meshComp;
+
+			glUniformMatrix4fv(meshInverseLoc, 1, GL_FALSE, glm::value_ptr(skinnedMeshComp->GetMeshInverse()));
+
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, skinnedMeshComp->GetSSBOGlobal());
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, skinnedMeshComp->GetSSBOOffset());
 
 			glUniform1i(hasBonesLoc, true);
 		}
@@ -378,8 +391,6 @@ void ModuleRender::DrawLinesList(const CameraLens* camera)
 
 		glm::mat4 model = glm::mat4(1.0f);
 		glUniformMatrix4fv(lineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(lineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
-		glUniformMatrix4fv(lineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 
 		glUniform4fv(lineColorLoc, 1, glm::value_ptr(line.color));
 
@@ -411,15 +422,19 @@ void ModuleRender::DrawNormalsList(const CameraLens* camera)
 			glUseProgram(normalShaderProgram);
 			glUniformMatrix4fv(normalModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
 
-
 			glUniform4f(normalColorLoc, debugColor.r, debugColor.g, debugColor.b, debugColor.a);
 
 			MeshRenderer* meshComp = renderObject.mesh;
 
 			if (meshComp->HasSkinning())
 			{
-				const auto& matrices = meshComp->GetBoneMatrices();
-				glUniformMatrix4fv(normalFinalBonesMatricesLoc, matrices.size(), GL_FALSE, glm::value_ptr(matrices[0]));
+				SkinnedMeshRenderer* skinnedMeshComp = (SkinnedMeshRenderer*)meshComp;
+
+				glUniformMatrix4fv(normalMeshInverseLoc, 1, GL_FALSE, glm::value_ptr(skinnedMeshComp->GetMeshInverse()));
+
+				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, skinnedMeshComp->GetSSBOGlobal());
+				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, skinnedMeshComp->GetSSBOOffset());
+
 				glUniform1i(normalHasBonesLoc, true);
 			}
 			else
@@ -448,8 +463,6 @@ void ModuleRender::DrawStencilList(const CameraLens* camera)
 	{
 		glUseProgram(outlineShaderProgram);
 
-		glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
-		glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 		glUniformMatrix4fv(outlineModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
 		glUniform4f(outlineColorLoc, stencilColor.r, stencilColor.g, stencilColor.b, stencilColor.a);
 
@@ -457,14 +470,20 @@ void ModuleRender::DrawStencilList(const CameraLens* camera)
 
 		if (meshComp->HasSkinning())
 		{
-			const auto& matrices = meshComp->GetBoneMatrices();
-			glUniformMatrix4fv(outlineFinalBonesMatricesLoc, (GLsizei)matrices.size(), GL_FALSE, glm::value_ptr(matrices[0]));
+			SkinnedMeshRenderer* skinnedMeshComp = (SkinnedMeshRenderer*)meshComp;
+
+			glUniformMatrix4fv(outlineMeshInverseLoc, 1, GL_FALSE, glm::value_ptr(skinnedMeshComp->GetMeshInverse()));
+
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, skinnedMeshComp->GetSSBOGlobal());
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, skinnedMeshComp->GetSSBOOffset());
+
 			glUniform1i(outlineHasBonesLoc, true);
 		}
 		else
 		{
 			glUniform1i(outlineHasBonesLoc, false);
 		}
+
 		glBindVertexArray(renderObject.mesh->GetMeshResource()->stencilData.VAO);
 
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
@@ -510,15 +529,18 @@ void ModuleRender::DrawMeshLinesList(const CameraLens* camera)
 		glUseProgram(meshLinesShaderProgram);
 
 		glUniformMatrix4fv(meshLinesModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(renderObject.globalModelMatrix));
-		glUniformMatrix4fv(meshLinesViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
-		glUniformMatrix4fv(meshLinesProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 		glUniform4f(meshLinesColorLoc, debugColor.r, debugColor.g, debugColor.b, debugColor.a);
 
 		MeshRenderer* meshComp = renderObject.mesh;
 		if (meshComp->HasSkinning())
 		{
-			const auto& matrices = meshComp->GetBoneMatrices();
-			glUniformMatrix4fv(meshLinesFinalBonesMatricesLoc, matrices.size(), GL_FALSE, glm::value_ptr(matrices[0]));
+			SkinnedMeshRenderer* skinnedMeshComp = (SkinnedMeshRenderer*)meshComp;
+
+			glUniformMatrix4fv(meshLinesMeshInverseLoc, 1, GL_FALSE, glm::value_ptr(skinnedMeshComp->GetMeshInverse()));
+
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, skinnedMeshComp->GetSSBOGlobal());
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, skinnedMeshComp->GetSSBOOffset());
+
 			glUniform1i(meshLinesHasBonesLoc, true);
 		}
 		else
@@ -544,6 +566,39 @@ void ModuleRender::DrawMeshLinesList(const CameraLens* camera)
 #pragma endregion
 
 #pragma region Shaders
+
+void ModuleRender::CreateSharedShadersCode()
+{
+	shaderHeader =
+		"#version 460 core\n"
+		"layout(std140, binding = 0) uniform Matrices {\n"
+		"    mat4 view;\n"
+		"    mat4 projection;\n"
+		"};\n";
+
+	skinningDeclarations =
+		"layout(std430, binding = 0) readonly buffer BoneMatrices { mat4 gBones[]; };\n"
+		"layout(std430, binding = 1) readonly buffer OffsetMatrices { mat4 gOffsets[]; };\n"
+		"uniform mat4 meshInverse;\n"
+		"uniform bool hasBones;\n"
+		"uniform mat4 model;\n";
+
+	skinningFunction =
+		"mat4 GetSkinMatrix(ivec4 ids, vec4 weights) {\n"
+		"    if (!hasBones) return mat4(1.0);\n"
+		"    mat4 skinMat = mat4(0.0);\n"
+		"    float weightSum = weights.x + weights.y + weights.z + weights.w;\n"
+		"    if (weightSum < 0.001) return mat4(1.0);\n"
+		"    for(int i = 0; i < 4; i++) {\n"
+		"        if(ids[i] == -1) continue;\n"
+		"        // Calculamos la matriz de este hueso específico\n"
+		"        mat4 boneTransform = meshInverse * gBones[ids[i]] * gOffsets[ids[i]];\n"
+		"        // La sumamos pesada por su influencia (weight)\n"
+		"        skinMat += boneTransform * (weights[i] / weightSum);\n"
+		"    }\n"
+		"    return skinMat;\n"
+		"}\n";
+}
 
 bool ModuleRender::CreateShaderFromSources(unsigned int& shaderID, int type, const char* source, const int soruceLength)
 {
@@ -572,55 +627,28 @@ bool ModuleRender::CreateShaderFromSources(unsigned int& shaderID, int type, con
 bool ModuleRender::CreateDefaultShader()
 {
 	unsigned int vShader = 0;
-	const char* vertexShaderSource = "#version 460 core\n"
+	std::string vSource = shaderHeader + skinningDeclarations + skinningFunction +
 		"layout (location = 0) in vec3 position;\n"
 		"layout (location = 1) in vec2 aTexCoord;\n"
 		"layout (location = 3) in ivec4 boneIDs;\n"
 		"layout (location = 4) in vec4 weights;\n"
 		"\n"
-		"uniform mat4 model; \n"
-		"uniform mat4 view; \n"
-		"uniform mat4 projection; \n"
-		"\n"
-		"layout(std430, binding = 0) readonly buffer BoneMatrices {\n"
-		"    mat4 finalBonesMatrices[];\n"
-		"};\n"
-		"\n"
-		"uniform bool hasBones;\n"
-		"\n"
-		"out vec3 localPos; \n"
-		"out vec2 texCoord; \n"
-		"\n"
+		"out vec3 localPos;\n"
+		"out vec2 texCoord;\n\n"
 		"void main()\n"
 		"{\n"
-		"    vec4 totalPosition = vec4(0.0f);\n"
-		"    \n"
-		"    if (hasBones)\n"
-		"    {\n"
-		"        float weightSum = weights.x + weights.y + weights.z + weights.w;\n"
-		"        if (weightSum > 0.001f) {\n"
-		"            for(int i = 0 ; i < 4 ; i++)\n"
-		"            {\n"
-		"                if(boneIDs[i] == -1) continue;\n"
+		"    // Usamos la función de la librería compartida\n"
+		"    mat4 skinMat = GetSkinMatrix(boneIDs, weights);\n"
+		"    vec4 skinnedPos = skinMat * vec4(position, 1.0f);\n"
 		"\n"
-		"                vec4 localPosHueso = finalBonesMatrices[boneIDs[i]] * vec4(position, 1.0f);\n"
-		"                totalPosition += localPosHueso * (weights[i] / weightSum);\n"
-		"            }\n"
-		"        } else {\n"
-		"            totalPosition = vec4(position, 1.0f);\n"
-		"        }\n"
-		"    }\n"
-		"    else\n"
-		"    {\n"
-		"        totalPosition = vec4(position, 1.0f);\n"
-		"    }\n"
+		"    // Proyección final\n"
+		"    gl_Position = projection * view * model * skinnedPos;\n"
 		"\n"
-		"    gl_Position = projection * view * model * totalPosition;\n"
 		"    localPos = position;\n"
 		"    texCoord = aTexCoord;\n"
 		"}\n";
 
-	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
+	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vSource.c_str(), vSource.length()))
 		return false;
 
 	unsigned int fShader = 0;
@@ -629,11 +657,11 @@ bool ModuleRender::CreateDefaultShader()
 		"in vec2 texCoord;\n"
 		"out vec4 color;\n"
 		"uniform sampler2D texture1;\n"
-		"uniform bool u_hasUVs;\n"
+		"uniform bool hasUVs;\n"
 		"void main()\n"
 		"{\n"
 		"    vec2 uv = texCoord;\n"
-		"    if (!u_hasUVs)\n"
+		"    if (!hasUVs)\n"
 		"    {\n"
 		"        uv = localPos.xz * 0.5; \n"
 		"    }\n"
@@ -666,12 +694,9 @@ bool ModuleRender::CreateDefaultShader()
 	glDeleteShader(fShader);
 
 	modelMatrixLoc = glGetUniformLocation(shaderProgram, "model");
-	viewMatrixLoc = glGetUniformLocation(shaderProgram, "view");
-	projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projection");
-	hasUVsLoc = glGetUniformLocation(shaderProgram, "u_hasUVs");
-
+	hasUVsLoc = glGetUniformLocation(shaderProgram, "hasUVs");
 	hasBonesLoc = glGetUniformLocation(shaderProgram, "hasBones");
-	finalBonesMatricesLoc = glGetUniformLocation(shaderProgram, "finalBonesMatrices");
+	meshInverseLoc = glGetUniformLocation(shaderProgram, "meshInverse");
 
 	return true;
 }
@@ -679,7 +704,7 @@ bool ModuleRender::CreateDefaultShader()
 bool ModuleRender::CreateNormalShader()
 {
 	unsigned int vShader = 0;
-	const char* vertexSource = "#version 460 core\n"
+	std::string vSource = shaderHeader + skinningDeclarations + skinningFunction +
 		"layout (location = 0) in vec3 position;\n"
 		"layout (location = 2) in vec3 aNormal;\n"
 		"layout (location = 3) in ivec4 boneIDs;\n"
@@ -687,54 +712,38 @@ bool ModuleRender::CreateNormalShader()
 		"\n"
 		"out VS_OUT { vec3 normal; } vs_out;\n"
 		"\n"
-		"layout(std430, binding = 0) readonly buffer BoneMatrices {\n"
-		"    mat4 finalBonesMatrices[];\n"
-		"};\n"
-		"\n"
-		"uniform bool hasBones;\n"
-		"\n"
 		"void main() {\n"
-		"    vec4 totalLocalPos = vec4(position, 1.0f);\n"
-		"    vec3 totalNormal = aNormal;\n"
+		"    mat4 skinMat = GetSkinMatrix(boneIDs, weights);\n"
 		"\n"
-		"    if (hasBones) {\n"
-		"        mat4 boneTransform = mat4(0.0f);\n"
-		"        float weightSum = weights.x + weights.y + weights.z + weights.w;\n"
-		"        if (weightSum > 0.0f) {\n"
-		"            for(int i = 0; i < 4; i++) {\n"
-		"                if(boneIDs[i] == -1) continue;\n"
-		"                boneTransform += finalBonesMatrices[boneIDs[i]] * (weights[i] / weightSum);\n"
-		"            }\n"
-		"            // Deformamos posición y normal\n"
-		"            totalLocalPos = boneTransform * vec4(position, 1.0f);\n"
-		"            totalNormal = mat3(boneTransform) * aNormal;\n"
-		"        }\n"
-		"    }\n"
+		"    vec4 skinnedPos = skinMat * vec4(position, 1.0f);\n"
+		"    vec3 skinnedNormal = mat3(skinMat) * aNormal;\n"
 		"\n"
-		"    gl_Position = totalLocalPos;\n"
-		"    vs_out.normal = normalize(totalNormal);\n"
+		"    gl_Position = skinnedPos;\n"
+		"    vs_out.normal = normalize(skinnedNormal);\n"
 		"}\n";
-	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexSource, strlen(vertexSource))) return false;
+	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vSource.c_str(), vSource.length())) return false;
 
 	unsigned int gShader = 0;
-	const char* geometrySource = "#version 460 core\n"
+	std::string gSource = shaderHeader +
 		"layout (points) in;\n"
 		"layout (line_strip, max_vertices = 2) out;\n"
 		"in VS_OUT { vec3 normal; } gs_in[];\n"
 		"uniform mat4 model;\n"
-		"uniform mat4 view;\n"
-		"uniform mat4 projection;\n"
-		"const float LINE_LENGTH = 0.5;\n"
+		"const float LINE_LENGTH = 0.2;\n"
+		"\n"
 		"void main() {\n"
 		"   vec3 worldNormal = normalize(mat3(transpose(inverse(model))) * gs_in[0].normal);\n"
 		"   vec4 worldPos = model * gl_in[0].gl_Position;\n"
+		"\n"
 		"   gl_Position = projection * view * worldPos;\n"
 		"   EmitVertex();\n"
+		"\n"
 		"   gl_Position = projection * view * (worldPos + vec4(worldNormal * LINE_LENGTH, 0.0));\n"
 		"   EmitVertex();\n"
+		"\n"
 		"   EndPrimitive();\n"
 		"}\n";
-	if (!CreateShaderFromSources(gShader, GL_GEOMETRY_SHADER, geometrySource, strlen(geometrySource))) return false;
+	if (!CreateShaderFromSources(gShader, GL_GEOMETRY_SHADER, gSource.c_str(), gSource.length())) return false;
 
 
 	unsigned int fShader = 0;
@@ -755,11 +764,9 @@ bool ModuleRender::CreateNormalShader()
 	glDeleteShader(fShader);
 
 	normalModelMatrixLoc = glGetUniformLocation(normalShaderProgram, "model");
-	normalViewMatrixLoc = glGetUniformLocation(normalShaderProgram, "view");
-	normalProjectionMatrixLoc = glGetUniformLocation(normalShaderProgram, "projection");
 	normalColorLoc = glGetUniformLocation(normalShaderProgram, "lineColor");
 	normalHasBonesLoc = glGetUniformLocation(normalShaderProgram, "hasBones");
-	normalFinalBonesMatricesLoc = glGetUniformLocation(normalShaderProgram, "finalBonesMatrices");
+	normalMeshInverseLoc = glGetUniformLocation(normalShaderProgram, "meshInverse");
 
 	return true;
 }
@@ -767,61 +774,34 @@ bool ModuleRender::CreateNormalShader()
 bool ModuleRender::CreateOutlineShader()
 {
 	unsigned int vShader = 0;
-	const char* vertexShaderSource = "#version 460 core\n"
+	std::string vSource = shaderHeader + skinningDeclarations + skinningFunction +
 		"layout (location = 0) in vec3 position;\n"
 		"layout (location = 2) in vec3 aNormal;\n"
 		"layout (location = 3) in ivec4 boneIDs;\n"
 		"layout (location = 4) in vec4 weights;\n"
 		"\n"
-		"uniform mat4 model;\n"
-		"uniform mat4 view;\n"
-		"uniform mat4 projection;\n"
 		"uniform float u_outlineThickness = 0.03;\n"
 		"\n"
-		"layout(std430, binding = 0) readonly buffer BoneMatrices {\n"
-		"    mat4 finalBonesMatrices[];\n"
-		"};\n"
+		"void main() {\n"
+		"    mat4 skinMat = GetSkinMatrix(boneIDs, weights);\n"
+		"    vec4 skinnedPos = skinMat * vec4(position, 1.0);\n"
+		"    vec3 skinnedNormal = mat3(skinMat) * aNormal;\n"
 		"\n"
-		"uniform bool hasBones;\n"
+		"    vec3 worldNormal = normalize(mat3(model) * skinnedNormal);\n"
+		"    vec4 worldPos = model * skinnedPos;\n"
 		"\n"
-		"void main()\n"
-		"{\n"
-		"    vec4 totalLocalPos = vec4(position, 1.0f);\n"
-		"    vec3 totalNormal = aNormal;\n"
-		"\n"
-		"    // LÓGICA DE HUESOS (Si hay huesos, deformamos)\n"
-		"    if (hasBones)\n"
-		"    {\n"
-		"        mat4 boneTransform = mat4(0.0f);\n"
-		"        float weightSum = weights.x + weights.y + weights.z + weights.w;\n"
-		"        if (weightSum > 0.0f) {\n"
-		"            for(int i = 0; i < 4; i++) {\n"
-		"                if(boneIDs[i] == -1) continue;\n"
-		"                boneTransform += finalBonesMatrices[boneIDs[i]] * (weights[i] / weightSum);\n"
-		"            }\n"
-		"            totalLocalPos = boneTransform * vec4(position, 1.0f);\n"
-		"            totalNormal = mat3(boneTransform) * aNormal;\n"
-		"        }\n"
-		"    }\n"
-		"\n"
-		"    // LÓGICA DE INFLADO (Usando los datos deformados)\n"
-		"    vec3 scale = vec3(length(model[0].xyz), length(model[1].xyz), length(model[2].xyz));\n"
-		"    mat4 modelNoScale = model;\n"
-		"    modelNoScale[0].xyz /= scale.x;\n"
-		"    modelNoScale[1].xyz /= scale.y;\n"
-		"    modelNoScale[2].xyz /= scale.z;\n"
-		"\n"
-		"    vec3 worldNormal = normalize(mat3(modelNoScale) * totalNormal);\n"
-		"    vec4 worldPos = model * totalLocalPos;\n"
+		"    // Pasamos la posición al espacio de vista (View Space)\n"
 		"    vec4 viewPos = view * worldPos;\n"
-		"    float distance = length(viewPos.xyz);\n"
-		"    float dynamicThickness = u_outlineThickness * (distance * 0.1);\n"
-		"\n"
+		"    float dist = length(viewPos.xyz);\n"
+		"    \n"
+		"    float dynamicThickness = u_outlineThickness * (dist * 0.1);\n"
+		"    \n"
 		"    worldPos.xyz += worldNormal * dynamicThickness;\n"
+		"\n"
 		"    gl_Position = projection * view * worldPos;\n"
 		"}\n";
 
-	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
+	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vSource.c_str(), vSource.length()))
 		return false;
 
 	unsigned int fShader = 0;
@@ -850,11 +830,9 @@ bool ModuleRender::CreateOutlineShader()
 	glDeleteShader(fShader);
 
 	outlineModelMatrixLoc = glGetUniformLocation(outlineShaderProgram, "model");
-	outlineViewMatrixLoc = glGetUniformLocation(outlineShaderProgram, "view");
-	outlineProjectionMatrixLoc = glGetUniformLocation(outlineShaderProgram, "projection");
 	outlineColorLoc = glGetUniformLocation(outlineShaderProgram, "outlineColor");
 	outlineHasBonesLoc = glGetUniformLocation(outlineShaderProgram, "hasBones");
-	outlineFinalBonesMatricesLoc = glGetUniformLocation(outlineShaderProgram, "finalBonesMatrices");
+	outlineMeshInverseLoc = glGetUniformLocation(outlineShaderProgram, "meshInverse");
 
 	return true;
 }
@@ -863,8 +841,11 @@ bool ModuleRender::CreateLineShader()
 {
 	const char* vsSource = "#version 460 core\n"
 		"layout (location = 0) in vec3 position;\n"
-		"uniform mat4 view;\n"
-		"uniform mat4 projection;\n"
+		"layout(std140, binding = 0) uniform Matrices {\n"
+		"mat4 view;\n"
+		"mat4 projection;\n"
+		"};\n"
+		"\n"
 		"uniform mat4 model;\n"
 		"void main()\n"
 		"{\n"
@@ -889,8 +870,6 @@ bool ModuleRender::CreateLineShader()
 	glDeleteShader(fShader);
 
 	lineModelMatrixLoc = glGetUniformLocation(lineShaderProgram, "model");
-	lineViewMatrixLoc = glGetUniformLocation(lineShaderProgram, "view");
-	lineProjectionMatrixLoc = glGetUniformLocation(lineShaderProgram, "projection");
 	lineColorLoc = glGetUniformLocation(lineShaderProgram, "lineColor");
 
 	glGenVertexArrays(1, &lineVAO);
@@ -913,47 +892,22 @@ bool ModuleRender::CreateLineShader()
 bool ModuleRender::CreateMeshLinesShader()
 {
 	unsigned int vShader = 0;
-	const char* vertexShaderSource = "#version 460 core\n"
+	std::string vSource = shaderHeader + skinningDeclarations + skinningFunction +
 		"layout (location = 0) in vec3 position;\n"
 		"layout (location = 3) in ivec4 boneIDs;\n"
 		"layout (location = 4) in vec4 weights;\n"
 		"\n"
-		"uniform mat4 model; \n"
-		"uniform mat4 view; \n"
-		"uniform mat4 projection; \n"
-		"\n"
-		"layout(std430, binding = 0) readonly buffer BoneMatrices {\n"
-		"    mat4 finalBonesMatrices[];\n"
-		"};\n"
-		"\n"
-		"uniform bool hasBones;\n"
-		"\n"
 		"void main()\n"
 		"{\n"
-		"    vec4 totalPosition = vec4(0.0f);\n"
-		"    if (hasBones)\n"
-		"    {\n"
-		"        float weightSum = weights.x + weights.y + weights.z + weights.w;\n"
-		"        if (weightSum > 0.0f) {\n"
-		"            for(int i = 0 ; i < 4 ; i++)\n"
-		"            {\n"
-		"                if(boneIDs[i] == -1) continue;\n"
-		"                vec4 localPosition = finalBonesMatrices[boneIDs[i]] * vec4(position, 1.0f);\n"
-		"                totalPosition += localPosition * (weights[i] / weightSum);\n"
-		"            }\n"
-		"        } else {\n"
-		"            totalPosition = vec4(position, 1.0f);\n"
-		"        }\n"
-		"    }\n"
-		"    else\n"
-		"    {\n"
-		"        totalPosition = vec4(position, 1.0f);\n"
-		"    }\n"
+		"    // Obtenemos la matriz de skinning unificada\n"
+		"    mat4 skinMat = GetSkinMatrix(boneIDs, weights);\n"
+		"    vec4 skinnedPos = skinMat * vec4(position, 1.0f);\n"
 		"\n"
-		"    gl_Position = projection * view * model * totalPosition;\n"
+		"    // Proyección usando el UBO de cámara (binding 0)\n"
+		"    gl_Position = projection * view * model * skinnedPos;\n"
 		"}\n";
 
-	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
+	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vSource.c_str(), vSource.length()))
 		return false;
 
 	unsigned int fShader = 0;
@@ -982,11 +936,9 @@ bool ModuleRender::CreateMeshLinesShader()
 	glDeleteShader(fShader);
 
 	meshLinesModelMatrixLoc = glGetUniformLocation(meshLinesShaderProgram, "model");
-	meshLinesViewMatrixLoc = glGetUniformLocation(meshLinesShaderProgram, "view");
-	meshLinesProjectionMatrixLoc = glGetUniformLocation(meshLinesShaderProgram, "projection");
 	meshLinesColorLoc = glGetUniformLocation(meshLinesShaderProgram, "lineColor");
 	meshLinesHasBonesLoc = glGetUniformLocation(meshLinesShaderProgram, "hasBones");
-	meshLinesFinalBonesMatricesLoc = glGetUniformLocation(meshLinesShaderProgram, "finalBonesMatrices");
+	meshLinesMeshInverseLoc = glGetUniformLocation(meshLinesShaderProgram, "meshInverse");
 
 	return true;
 }
@@ -994,53 +946,29 @@ bool ModuleRender::CreateMeshLinesShader()
 bool ModuleRender::CreatePickingShader()
 {
 	unsigned int vShader = 0;
-	const char* vertexShaderSource = "#version 460 core\n"
+	std::string vSource = shaderHeader + skinningDeclarations + skinningFunction +
 		"layout (location = 0) in vec3 position;\n"
 		"layout (location = 1) in vec2 aTexCoord;\n"
 		"layout (location = 3) in ivec4 boneIDs;\n"
 		"layout (location = 4) in vec4 weights;\n"
 		"\n"
-		"uniform mat4 model; \n"
-		"uniform mat4 view; \n"
-		"uniform mat4 projection; \n"
-		"\n"
-		"layout(std430, binding = 0) readonly buffer BoneMatrices {\n"
-		"    mat4 finalBonesMatrices[];\n"
-		"};\n"
-		"\n"
-		"uniform bool hasBones;\n"
-		"\n"
-		"out vec3 localPos; \n"
-		"out vec2 texCoord; \n"
+		"out vec3 localPos;\n"
+		"out vec2 texCoord;\n"
 		"\n"
 		"void main()\n"
 		"{\n"
-		"    vec4 totalPosition = vec4(0.0f);\n"
-		"    if (hasBones)\n"
-		"    {\n"
-		"       float weightSum = weights.x + weights.y + weights.z + weights.w;\n"
-		"       if (weightSum > 0.0f) {\n"
-		"           for(int i = 0 ; i < 4 ; i++)\n"
-		"           {\n"
-		"                if(boneIDs[i] == -1) continue;\n"
-		"               vec4 localPosition = finalBonesMatrices[boneIDs[i]] * vec4(position, 1.0f);\n"
-		"               totalPosition += localPosition * (weights[i] / weightSum);\n"
-		"           }\n"
-		"       } else {\n"
-		"           totalPosition = vec4(position, 1.0f);\n"
-		"       }\n"
-		"    }\n"
-		"    else\n"
-		"    {\n"
-		"        totalPosition = vec4(position, 1.0f);\n"
-		"    }\n"
+		"    // Obtenemos la matriz de skinning unificada\n"
+		"    mat4 skinMat = GetSkinMatrix(boneIDs, weights);\n"
+		"    vec4 skinnedPos = skinMat * vec4(position, 1.0f);\n"
 		"\n"
-		"    gl_Position = projection * view * model * totalPosition;\n"
+		"    // Proyección usando el UBO (binding 0)\n"
+		"    gl_Position = projection * view * model * skinnedPos;\n"
+		"\n"
 		"    localPos = position;\n"
 		"    texCoord = aTexCoord;\n"
 		"}\n";
 
-	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vertexShaderSource, strlen(vertexShaderSource)))
+	if (!CreateShaderFromSources(vShader, GL_VERTEX_SHADER, vSource.c_str(), vSource.length()))
 		return false;
 
 	unsigned int fShader = 0;
@@ -1079,14 +1007,11 @@ bool ModuleRender::CreatePickingShader()
 	glDeleteShader(fShader);
 
 	pickingModelMatrixLoc = glGetUniformLocation(pickingShaderProgram, "model");
-	pickingViewMatrixLoc = glGetUniformLocation(pickingShaderProgram, "view");
-	pickingProjectionMatrixLoc = glGetUniformLocation(pickingShaderProgram, "projection");
-	pickingHasUVsLoc = glGetUniformLocation(pickingShaderProgram, "u_hasUVs");
-	
-	pickingColorLoc = glGetUniformLocation(pickingShaderProgram, "pickingColor");
-
+	pickingHasUVsLoc = glGetUniformLocation(pickingShaderProgram, "hasUVs");
 	pickingHasBonesLoc = glGetUniformLocation(pickingShaderProgram, "hasBones");
-	pickingFinalBonesMatricesLoc = glGetUniformLocation(pickingShaderProgram, "finalBonesMatrices");
+	pickingMeshInverseLoc = glGetUniformLocation(pickingShaderProgram, "meshInverse");
+
+	pickingColorLoc = glGetUniformLocation(pickingShaderProgram, "pickingColor");
 
 	return true;
 }
@@ -1094,44 +1019,16 @@ bool ModuleRender::CreatePickingShader()
 #pragma endregion
 
 #pragma region Matrix
-void ModuleRender::UpdateProjectionMatix(glm::mat4 pm)
-{
-	//UPDATE DEFAULT SHADER
-	glUseProgram(shaderProgram);
-	glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
-
-	//UPDATE NORMAL SHADER
-	glUseProgram(normalShaderProgram);
-	glUniformMatrix4fv(normalProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
-
-	// UPDATE OUTLINER SHADER
-	glUseProgram(outlineShaderProgram);
-	glUniformMatrix4fv(outlineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
-
-	glUseProgram(lineShaderProgram);
-	glUniformMatrix4fv(lineProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(pm));
-
-	glUseProgram(shaderProgram);
+void ModuleRender::UpdateProjectionMatix(glm::mat4 pm) {
+	glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(pm));
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-void ModuleRender::UpdateViewMatix(glm::mat4 vm)
-{
-	//UPDATE DEFAULT SHADER
-	glUseProgram(shaderProgram);
-	glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
-
-	//UPDATE NORMAL SHADER
-	glUseProgram(normalShaderProgram);
-	glUniformMatrix4fv(normalViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
-
-	// UPDATE OUTLINER SHADER
-	glUseProgram(outlineShaderProgram);
-	glUniformMatrix4fv(outlineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
-
-	glUseProgram(lineShaderProgram);
-	glUniformMatrix4fv(lineViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(vm));
-
-	glUseProgram(shaderProgram);
+void ModuleRender::UpdateViewMatix(glm::mat4 vm) {
+	glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(vm));
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 #pragma endregion
@@ -1240,7 +1137,6 @@ void ModuleRender::DeleteMeshFromGPU(MeshData& meshData)
 	meshData = MeshData();
 }
 
-
 void ModuleRender::DeleteSmoothedMeshFromGPU(StencilData& stencilData)
 {
 	LOG(LogType::LOG_INFO, "Mesh removed from GPU. VAO: %d, VBO: %d", stencilData.VAO, stencilData.VBO);
@@ -1248,7 +1144,6 @@ void ModuleRender::DeleteSmoothedMeshFromGPU(StencilData& stencilData)
 	if (stencilData.VAO != 0) glDeleteVertexArrays(1, &stencilData.VAO);
 	stencilData = StencilData();
 }
-
 
 unsigned int ModuleRender::UploadTextureToGPU(unsigned char* data, int width, int height)
 {
@@ -1279,6 +1174,40 @@ void ModuleRender::DeleteTextureFromGPU(unsigned int textureID)
 	{
 		glDeleteTextures(1, &textureID);
 		LOG(LogType::LOG_INFO, "Texture removed from GPU. ID: %u", textureID);
+	}
+}
+
+void ModuleRender::CreateSkinningSSBOs(unsigned int& ssboGlobal, unsigned int& ssboOffset, const std::vector<glm::mat4>& offsets)
+{
+	size_t numBones = offsets.size();
+
+	if (ssboOffset == 0) glGenBuffers(1, &ssboOffset);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboOffset);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, numBones * sizeof(glm::mat4), offsets.data(), GL_STATIC_DRAW);
+
+	if (ssboGlobal == 0) glGenBuffers(1, &ssboGlobal);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboGlobal);
+
+	glBufferData(GL_SHADER_STORAGE_BUFFER, numBones * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+void ModuleRender::UploadGlobalMatricesToGPU(unsigned int ssbo, const std::vector<glm::mat4>& globalMatrices)
+{
+	if (ssbo == 0) return;
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, globalMatrices.size() * sizeof(glm::mat4), globalMatrices.data());
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+void ModuleRender::DeleteSSBO(unsigned int& ssbo)
+{
+	if (ssbo != 0)
+	{
+		glDeleteBuffers(1, &ssbo);
+		ssbo = 0;
 	}
 }
 
@@ -1429,8 +1358,6 @@ UID ModuleRender::GetObjectInPixel(const CameraLens* camera, int x, int y)
 	glDisable(GL_BLEND);
 
 	glUseProgram(pickingShaderProgram);
-	glUniformMatrix4fv(pickingViewMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetViewMatrix()));
-	glUniformMatrix4fv(pickingProjectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 
 	for (MeshRenderer* mesh : meshes)
 	{
@@ -1452,12 +1379,19 @@ UID ModuleRender::GetObjectInPixel(const CameraLens* camera, int x, int y)
 		mesh->owner->GetGlobalMatrix(model);
 		glUniformMatrix4fv(pickingModelMatrixLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-		if (mesh->HasSkinning()) {
-			const auto& matrices = mesh->GetBoneMatrices();
-			glUniformMatrix4fv(pickingFinalBonesMatricesLoc, matrices.size(), GL_FALSE, glm::value_ptr(matrices[0]));
+		if (mesh->HasSkinning())
+		{
+			SkinnedMeshRenderer* skinnedMeshComp = (SkinnedMeshRenderer*)mesh;
+
+			glUniformMatrix4fv(pickingMeshInverseLoc, 1, GL_FALSE, glm::value_ptr(skinnedMeshComp->GetMeshInverse()));
+
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, skinnedMeshComp->GetSSBOGlobal());
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, skinnedMeshComp->GetSSBOOffset());
+
 			glUniform1i(pickingHasBonesLoc, true);
 		}
-		else {
+		else
+		{
 			glUniform1i(pickingHasBonesLoc, false);
 		}
 

@@ -67,15 +67,12 @@ bool ModuleScene::PostUpdate()
 	{
 		for (GameObject* go : objectsPendingToDelete)
 		{
-			// 1. Lo sacamos de todas las listas (usando la función que acabamos de arreglar)
 			RemoveGameObject(go);
 
-			// 2. Lo matamos de verdad (Memoria)
 			go->CleanUp();
 			delete go;
 		}
 
-		// Limpiamos la lista de pendientes
 		objectsPendingToDelete.clear();
 	}
 

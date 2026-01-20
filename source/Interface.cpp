@@ -631,3 +631,4 @@ void Interface::SetDraculaTheme()
 
 bool Interface::IsHierarchyFocused() { return hierarchy->isFocused; }
 bool Interface::IsSceneFocused() { return scene->isFocused; }
+bool Interface::IsSceneHovered() { return scene->isHovered; }

@@ -34,6 +34,7 @@ SceneWindow::~SceneWindow()
 void SceneWindow::Draw()
 {
 	isFocused = false;
+	isHovered = false;
 
 	if (!is_active) return;
 
@@ -52,6 +53,7 @@ void SceneWindow::Draw()
 	}
 
 	isFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+	isHovered = ImGui::IsWindowHovered(ImGuiFocusedFlags_RootAndChildWindows);
 
 	ImGui::PopStyleVar();
 
@@ -63,6 +65,7 @@ void SceneWindow::Draw()
 			ImGui::MenuItem("Camera", NULL, &Engine::GetInstance().moduleEditor->debugCamera);
 			ImGui::MenuItem("Mesh", NULL, &Engine::GetInstance().moduleEditor->debugMesh);
 			ImGui::MenuItem("Normals", NULL, &Engine::GetInstance().moduleEditor->debugNormal);
+			ImGui::MenuItem("Checker", NULL, &Engine::GetInstance().moduleEditor->debugChecker);
 			ImGui::MenuItem("AABB", NULL, &Engine::GetInstance().moduleEditor->debugAABB);
 			ImGui::MenuItem("Ray", NULL, &Engine::GetInstance().moduleEditor->debugRay);
 			ImGui::MenuItem("Tree", NULL, &Engine::GetInstance().moduleEditor->debugTree);

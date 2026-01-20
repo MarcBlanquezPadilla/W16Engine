@@ -59,6 +59,7 @@ public:
 	bool debugNormal;
 	bool debugGrid;
 	bool debugCamera;
+	bool debugChecker;
 
 	int gridSize;
 	int gridRows;

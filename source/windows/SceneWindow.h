@@ -12,4 +12,5 @@ public:
 
 public:
     bool isFocused;
+    bool isHovered;
 };

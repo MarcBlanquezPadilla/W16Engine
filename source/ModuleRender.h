@@ -50,6 +50,7 @@ public:
 	void UpdateProjectionMatix(glm::mat4 projectionMatrix);
 	void UpdateViewMatix(glm::mat4 viewMatrix);
 
+	void CreateSharedShadersCode();
 	static bool CreateShaderFromSources(unsigned int& shaderID, int type, const char* source, const int soruceLength);
 	
 	bool UploadMeshToGPU(MeshData& meshData, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
@@ -62,6 +63,10 @@ public:
 
 	unsigned int UploadTextureToGPU(unsigned char* data, int width, int height);
 	void DeleteTextureFromGPU(unsigned int textureID);
+
+	void CreateSkinningSSBOs(unsigned int& ssboGlobal, unsigned int& ssboOffset, const std::vector<glm::mat4>& offsets);
+	void UploadGlobalMatricesToGPU(unsigned int ssbo, const std::vector<glm::mat4>& globalMatrices);
+	void DeleteSSBO(unsigned int& ssbo);
 
 	void DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color);
 
@@ -116,41 +121,34 @@ private:
 	glm::vec4 debugColor;
 	glm::vec4 stencilColor;
 
+	//SHADERS
+	unsigned int uboMatrices;
+	unsigned int ssboBones;
 
 	//MODEL DRAW
 	unsigned int shaderProgram;
 	GLint modelMatrixLoc;
-	GLint viewMatrixLoc;
-	GLint projectionMatrixLoc;
 	GLint hasUVsLoc;
 	GLint hasBonesLoc = 0;
-	GLint finalBonesMatricesLoc= 0;
-	GLuint ssboBones;
+	GLint meshInverseLoc = 0;
 
 	//NORMAL DRAW
 	unsigned int normalShaderProgram;
 	GLint normalModelMatrixLoc;
-	GLint normalViewMatrixLoc;
-	GLint normalProjectionMatrixLoc;
 	GLint normalColorLoc;
 	GLint normalHasBonesLoc = 0;
-	GLint normalFinalBonesMatricesLoc = 0;
+	GLint normalMeshInverseLoc = 0;
 
 	//STENCIL DRAW
 	unsigned int outlineShaderProgram;
 	GLint outlineModelMatrixLoc;
-	GLint outlineViewMatrixLoc;
-	GLint outlineProjectionMatrixLoc;
 	GLint outlineColorLoc;
 	GLint outlineHasBonesLoc = 0;
-	GLint outlineFinalBonesMatricesLoc = 0;
-
+	GLint outlineMeshInverseLoc = 0;
 
 	//LINES DRAW
 	unsigned int lineShaderProgram;
 	GLint lineModelMatrixLoc;
-	GLint lineViewMatrixLoc;
-	GLint lineProjectionMatrixLoc;
 	GLint lineColorLoc;
 	unsigned int lineVAO = 0;
 	unsigned int lineVBO = 0;
@@ -158,21 +156,21 @@ private:
 	//MESH LINES DRAW
 	unsigned int meshLinesShaderProgram;
 	GLint meshLinesModelMatrixLoc;
-	GLint meshLinesViewMatrixLoc;
-	GLint meshLinesProjectionMatrixLoc;
 	GLint meshLinesColorLoc;
 	GLint meshLinesHasBonesLoc = 0;
-	GLint meshLinesFinalBonesMatricesLoc = 0;
+	GLint meshLinesMeshInverseLoc = 0;
 
 	//PICKING SHADER
 	unsigned int pickingShaderProgram;
 	GLint pickingModelMatrixLoc;
-	GLint pickingViewMatrixLoc;
-	GLint pickingProjectionMatrixLoc;
 	GLint pickingHasUVsLoc;
 	GLint pickingHasBonesLoc = 0;
-	GLint pickingFinalBonesMatricesLoc = 0;
 	GLint pickingColorLoc;
+	GLint pickingMeshInverseLoc = 0;
+
+	std::string shaderHeader;
+	std::string skinningDeclarations;
+	std::string skinningFunction;
 
 	unsigned int defaultTextureID;
 	unsigned int checkerTextureID;

@@ -79,7 +79,7 @@ bool EditorCamera::PreUpdate()
 {
 	bool ret = true;
 
-	lockCamera = ImGuizmo::IsUsing && !Engine::GetInstance().moduleEditor->GetInterface()->IsSceneFocused();
+	lockCamera = ImGuizmo::IsUsing && !Engine::GetInstance().moduleEditor->GetInterface()->IsSceneFocused() || !Engine::GetInstance().moduleEditor->GetInterface()->IsSceneHovered();
 
 	if (lockCamera)
 	{

@@ -59,6 +59,7 @@ bool ModuleEditor::Awake()
 	debugMesh = false;
 	debugAABB = false;
 	debugNormal = false;
+	debugChecker = false;
 	debugGrid = true;
 	debugCamera = true;
 
@@ -179,6 +180,9 @@ bool ModuleEditor::Update()
 
 			if (selectedMesh)
 			{
+				//DEBUG CHECKER
+				selectedMesh->drawChecker = debugChecker;
+
 				//DEBUG MESH
 				selectedMesh->drawMesh = debugMesh;
 
@@ -382,7 +386,7 @@ void ModuleEditor::SetSelected(GameObject* gameObject, bool eraseSelecteds)
 			if (go != nullptr)
 			{
 				MeshRenderer* mesh = (MeshRenderer*)go->GetComponent(ComponentType::MeshRenderer);
-				if (mesh) { mesh->drawStencil = false; mesh->drawNormals = false; mesh->drawMesh = false; }
+				if (mesh) { mesh->drawStencil = false; mesh->drawNormals = false; mesh->drawMesh = false; mesh->drawChecker = false; }
 			}
 		}
 		selectedGameObjects.clear();

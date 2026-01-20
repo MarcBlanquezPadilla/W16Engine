@@ -52,6 +52,7 @@ public:
 	//GETTERS
 	bool IsHierarchyFocused();
 	bool IsSceneFocused();
+	bool IsSceneHovered();
 
 private:
 	void SetDarkTheme();
