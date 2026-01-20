@@ -41,7 +41,7 @@ void ProjectWindow::Awake()
 
     //EVENTS
     Engine::GetInstance().moduleEvents->Subscribe(Event::Type::AssetsChanged, this);
-    Engine::GetInstance().moduleEvents->Subscribe(Event::Type::FileDropped, this);
+    Engine::GetInstance().moduleEvents->Subscribe(Event::Type::FileDropped, this); 
 }
 
 void ProjectWindow::CleanUp()
@@ -75,6 +75,17 @@ void ProjectWindow::Draw()
 
     isFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
 
+    static char searchBuffer[64] = "";
+    ImGui::SetNextItemWidth(-1.0f);
+    ImGui::InputTextWithHint("##Search", "Search", searchBuffer, 64);
+
+    query = searchBuffer;
+    searching = query.length() > 0;
+
+    if (searching) {
+        std::transform(query.begin(), query.end(), query.begin(), ::tolower);
+    }
+
     if (currentAsset)
     {
         ImGui::BeginChild("Subresources", ImVec2(0, 0), true);
@@ -106,8 +117,6 @@ void ProjectWindow::Draw()
         ImGui::Columns(1);
     }
 
-    
-
     //DELETE
     if (!ImGui::IsMouseDragging(0) && ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && selectedNodes.size() > 0 && Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_DELETE) == KEY_DOWN)
     {
@@ -131,14 +140,11 @@ void ProjectWindow::Draw()
                 }
                 windowChanged = true;
             }
-
-            
         }
 
         selectedNodes.clear();
         nodesToDelete.clear();
         currentAsset = nullptr;
-       
     }
 
     ImGui::End();
@@ -263,6 +269,16 @@ void ProjectWindow::DrawFolderContent()
     int i = 0;
     for (DirectoryNode* child : currentNode->children)
     {
+        if (searching)
+        {
+            std::string nameLower = child->name;
+            std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
+
+            if (nameLower.find(query) == std::string::npos) {
+                continue;
+            }
+        }
+
         ImGui::PushID(i++);
         
         ImGui::BeginGroup();
@@ -358,7 +374,6 @@ void ProjectWindow::DrawFolderContent()
                     currentAsset = child;
             }
         }
-
 
         if (ImGui::BeginPopupContextItem("ItemContext"))
         {
@@ -479,6 +494,16 @@ void ProjectWindow::DrawSubresources()
     int i = 0;
     for (const Resource* resource : currentAsset->subRecourses)
     {
+        if (searching)
+        {
+            std::string nameLower = resource->GetName();
+            std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
+
+            if (nameLower.find(query) == std::string::npos) {
+                continue;
+            }
+        }
+
         ImGui::PushID(i++);
 
         ImGui::BeginGroup();

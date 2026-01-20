@@ -88,4 +88,7 @@ private:
 private:
     DirectoryNode* renamingNode = nullptr;
     char renameBuffer[128];
+    char searchBuffer[64];
+    std::string query;
+    bool searching = false;
 };
