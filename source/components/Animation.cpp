@@ -26,7 +26,6 @@ void Animation::CleanUp()
     Engine::GetInstance().moduleEvents->Unsubscribe(Event::Type::GameObjectDestroyed, this);
 
     UnloadAnimation(currentAnimation);
-    UnloadAnimation(targetAnimation);
 }
 
 void Animation::AddAnimation(const std::string& name, uint32_t uid, std::string resourceName)
@@ -53,10 +52,6 @@ void Animation::RemoveAnimation(const std::string& name)
     {
         Stop();
     }
-    else if (targetAnimation.uid == uidToRemove)
-    {
-        Stop();
-    }
 
     animationsLibrary.erase(it);
 }
@@ -79,52 +74,36 @@ void Animation::Play(const std::string& name, float blendTime)
     auto it = animationsLibrary.find(name);
     if (it == animationsLibrary.end()) return;
 
-    AnimationData& data = it->second;
+    if (currentAnimation.uid == it->second.uid && !isBlending) return;
 
-    if (currentAnimation.uid == data.uid && !isBlending) return;
+    CaptureSnapshot();
+    UnloadAnimation(currentAnimation);
 
-    if (isBlending && targetAnimation.uid == data.uid) return;
-
-    AnimationInstance newInstance;
-    newInstance.uid = data.uid;
-    newInstance.loop = data.loop;
-    newInstance.speed = data.speed;
-    newInstance.currentTime = 0.0f;
-
-    newInstance.resource = (ResourceAnimation*)Engine::GetInstance().moduleResources->RequestResource(data.uid);
-    if (newInstance.resource) {
-        newInstance.resource->LoadToMemory();
-        newInstance.resource->AddReference(this);
+    currentAnimation.uid = it->second.uid;
+    currentAnimation.speed = it->second.speed;
+    currentAnimation.loop = it->second.loop;
+    currentAnimation.resource = (ResourceAnimation*)Engine::GetInstance().moduleResources->RequestResource(currentAnimation.uid);
+    if (currentAnimation.resource) {
+        currentAnimation.resource->LoadToMemory();
+        currentAnimation.resource->AddReference(this);
     }
 
-    if (blendTime <= 0.0f || !currentAnimation.resource || !playing)
-    {
-        UnloadAnimation(currentAnimation);
-        UnloadAnimation(targetAnimation);
+    currentAnimation.currentTime = 0.0f;
+    currentAnimation.ended = false;
 
-        currentAnimation = newInstance;
-        playing = true;
-        isBlending = false;
-        
-        targetAnimation = AnimationInstance();
-
-        EnsureSkeletonMatches(currentAnimation.resource);
-        UpdateChannelPointers();
-    }
-    else
-    {
-        if (currentAnimation.uid == newInstance.uid) return;
-
-        UnloadAnimation(targetAnimation);
-
-        targetAnimation = newInstance;
+    if (blendTime > 0.0f) {
         isBlending = true;
         currentBlendTime = 0.0f;
         blendDuration = blendTime;
-
-        EnsureSkeletonMatches(targetAnimation.resource);
-        UpdateChannelPointers();
     }
+    else {
+        isBlending = false;
+    }
+
+    playing = true;
+
+    EnsureSkeletonMatches(currentAnimation.resource);
+    UpdateChannelPointers();
 }
 
 void Animation::Stop()
@@ -134,7 +113,6 @@ void Animation::Stop()
     currentBlendTime = 0.0f;
     
     UnloadAnimation(currentAnimation);
-    UnloadAnimation(targetAnimation);
 
     ResetPose();
 }
@@ -161,11 +139,6 @@ void Animation::SetAnimationSpeed(const std::string& name, float newSpeed)
     {
         currentAnimation.speed = speed;
     }
-
-    if (targetAnimation.resource && targetAnimation.uid == data.uid)
-    {
-        targetAnimation.speed = speed;
-    }
 }
 
 void Animation::SetAnimationLoop(const std::string& name, bool loop)
@@ -179,11 +152,6 @@ void Animation::SetAnimationLoop(const std::string& name, bool loop)
     if (currentAnimation.resource && currentAnimation.uid == data.uid)
     {
         currentAnimation.loop = loop;
-    }
-
-    if (targetAnimation.resource && targetAnimation.uid == data.uid)
-    {
-        targetAnimation.loop = loop;
     }
 }
 
@@ -200,13 +168,32 @@ void Animation::UnloadAnimation(AnimationInstance& animation)
 
 void Animation::Update()
 {
-    //TEST PARA LA ENTREGA
-    
-    if (currentAnimation.uid != animationsLibrary["Attack"].uid || currentAnimation.ended)
+    auto attackIt = animationsLibrary.find("Attack");
+    auto walkIt = animationsLibrary.find("Walk");
+    auto idleIt = animationsLibrary.find("Idle");
+
+    UID attackUID = (attackIt != animationsLibrary.end()) ? attackIt->second.uid : 0;
+    UID walkUID = (walkIt != animationsLibrary.end()) ? walkIt->second.uid : 0;
+    UID idleUID = (idleIt != animationsLibrary.end()) ? idleIt->second.uid : 0;
+
+    bool isAttacking = (currentAnimation.uid == attackUID);
+    bool isWalking = (currentAnimation.uid == walkUID);
+    bool isIdle = (currentAnimation.uid == idleUID);
+
+    if (!isAttacking || currentAnimation.ended)
     {
-        if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_2) == KEY_DOWN) Play("Attack", 0.5f);
-        else if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_1) == KEY_REPEAT) Play("Walk", 0.5f);
-        else Play("Idle", 0.5f);
+        if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
+        {
+            Play("Attack", 0.2f);
+        }
+        else if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_1) == KEY_REPEAT)
+        {
+            if (!isWalking) Play("Walk", 0.5f);
+        }
+        else
+        {
+            if (!isIdle) Play("Idle", 0.5f);
+        }
     }
 
     if (!playing || !currentAnimation.resource) return;
@@ -215,53 +202,25 @@ void Animation::Update()
 
     currentAnimation.currentTime += dt * currentAnimation.resource->ticksPerSecond * currentAnimation.speed;
 
-    if (currentAnimation.currentTime >= currentAnimation.resource->duration)
-    {
+    if (currentAnimation.currentTime >= currentAnimation.resource->duration) {
         if (currentAnimation.loop)
-        {
             currentAnimation.currentTime = std::fmod(currentAnimation.currentTime, currentAnimation.resource->duration);
-        }
-        else
-        {
+        else {
             currentAnimation.currentTime = currentAnimation.resource->duration;
             currentAnimation.ended = true;
         }
     }
 
-    if (isBlending && targetAnimation.resource)
-    {
-        targetAnimation.currentTime += dt * targetAnimation.resource->ticksPerSecond * targetAnimation.speed;
-        
+
+    if (isBlending) {
         currentBlendTime += dt;
-
-        if (targetAnimation.currentTime >= targetAnimation.resource->duration)
-        {
-            if (targetAnimation.loop)
-            {
-                targetAnimation.currentTime = std::fmod(targetAnimation.currentTime, targetAnimation.resource->duration);
-            }
-            else
-            {
-                targetAnimation.currentTime = targetAnimation.resource->duration;
-            }
-        }
-
-        if (currentBlendTime >= blendDuration)
-        {
-            UnloadAnimation(currentAnimation);
-
-            currentAnimation = targetAnimation;
-
-            targetAnimation = AnimationInstance();
-
+        if (currentBlendTime >= blendDuration) {
             isBlending = false;
-            currentBlendTime = 0.0f;
-
-            UpdateChannelPointers();
+            snapshotPose.clear();
         }
     }
 
-    UpdateTransformations(nullptr, 0);
+    UpdateTransformations();
 }
 
 glm::vec3 Animation::GetPositionValue(const Channel& channel, float currentAnimTime)
@@ -313,61 +272,46 @@ glm::vec3 Animation::GetScaleValue(const Channel& channel, float currentAnimTime
     return glm::mix(key0, key1, factor);
 }
 
-void Animation::UpdateTransformations(const ResourceAnimation* ignored, float currentAnimTime)
+void Animation::UpdateTransformations()
 {
-    float factor = 0.0f;
-    if (isBlending)
-    {
-        factor = currentBlendTime / blendDuration;
-        if (factor > 1.0f) factor = 1.0f;
-    }
+    float factor = isBlending ? glm::clamp(currentBlendTime / blendDuration, 0.0f, 1.0f) : 1.0f;
 
-    for (const auto& link : skeletonCache)
-    {
+    for (size_t i = 0; i < skeletonCache.size(); ++i) {
+        auto& link = skeletonCache[i];
         if (!link.transform) continue;
 
-        glm::vec3 finalPos = link.transform->GetLocalPosition();
-        glm::quat finalRot = link.transform->GetLocalQuaterionRotation();
-        glm::vec3 finalScl = link.transform->GetLocalScale();
+        // DESTINO: Siempre es la currentAnimation (Channel A)
+        glm::vec3 targetPos = link.originalPos;
+        glm::quat targetRot = link.originalRot;
+        glm::vec3 targetScl = link.originalScl;
 
-        if (link.channelA)
-        {
-            finalPos = GetPositionValue(*link.channelA, currentAnimation.currentTime);
-            finalRot = GetRotationValue(*link.channelA, currentAnimation.currentTime);
-            finalScl = GetScaleValue(*link.channelA, currentAnimation.currentTime);
+        if (link.channelA) {
+            targetPos = GetPositionValue(*link.channelA, currentAnimation.currentTime);
+            targetRot = GetRotationValue(*link.channelA, currentAnimation.currentTime);
+            targetScl = GetScaleValue(*link.channelA, currentAnimation.currentTime);
         }
 
-        if (isBlending && link.channelB)
-        {
-            glm::vec3 posB = GetPositionValue(*link.channelB, targetAnimation.currentTime);
-            glm::quat rotB = GetRotationValue(*link.channelB, targetAnimation.currentTime);
-            glm::vec3 sclB = GetScaleValue(*link.channelB, targetAnimation.currentTime);
-
-            finalPos = glm::mix(finalPos, posB, factor);
-            finalRot = glm::slerp(finalRot, rotB, factor);
-            finalScl = glm::mix(finalScl, sclB, factor);
+        // MEZCLA: Foto -> Destino
+        if (isBlending && i < snapshotPose.size()) {
+            link.transform->SetLocalPosition(glm::mix(snapshotPose[i].pos, targetPos, factor));
+            link.transform->SetLocalQuaternionRotation(glm::slerp(snapshotPose[i].rot, targetRot, factor));
+            link.transform->SetLocalScale(glm::mix(snapshotPose[i].scl, targetScl, factor));
         }
-
-        link.transform->SetLocalPosition(finalPos);
-        link.transform->SetLocalQuaternionRotation(finalRot);
-        link.transform->SetLocalScale(finalScl);
+        else {
+            link.transform->SetLocalPosition(targetPos);
+            link.transform->SetLocalQuaternionRotation(targetRot);
+            link.transform->SetLocalScale(targetScl);
+        }
     }
 }
 
 void Animation::UpdateChannelPointers()
 {
+    if (!currentAnimation.resource) return;
+
     for (auto& link : skeletonCache)
     {
         link.channelA = FindChannel(currentAnimation.resource, link.boneName);
-
-        if (isBlending && targetAnimation.resource)
-        {
-            link.channelB = FindChannel(targetAnimation.resource, link.boneName);
-        }
-        else
-        {
-            link.channelB = nullptr;
-        }
     }
 }
 
@@ -598,10 +542,21 @@ void Animation::OnResourceLost(UID lostUID)
         currentAnimation.resource = nullptr;
         currentAnimation.uid = 0;
     }
-    if (targetAnimation.uid == lostUID)
+}
+
+void Animation::CaptureSnapshot()
+{
+    snapshotPose.clear();
+    for (const auto& link : skeletonCache)
     {
-        LOG(LogType::LOG_INFO, "Target animation resource deleted! Removing reference in Component.");
-        targetAnimation.resource = nullptr;
-        targetAnimation.uid = 0;
+        if (link.transform)
+        {
+            BoneSnapshot snap;
+            snap.pos = link.transform->GetLocalPosition();
+            snap.rot = link.transform->GetLocalQuaterionRotation();
+            snap.scl = link.transform->GetLocalScale();
+            snapshotPose.push_back(snap);
+        }
     }
+    isBlending = true;
 }

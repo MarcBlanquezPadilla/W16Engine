@@ -9,6 +9,12 @@
 class GameObject;
 class Transform;
 
+struct BoneSnapshot {
+    glm::vec3 pos;
+    glm::quat rot;
+    glm::vec3 scl;
+};
+
 struct BoneLink {
     std::string boneName;
     Transform* transform;
@@ -71,7 +77,6 @@ public:
     void OnEvent(const Event& event) override;
     void OnResourceLost(UID resourceUID) override;
 
-
 private:
 
     void EnsureSkeletonMatches(const ResourceAnimation* anim);
@@ -82,17 +87,18 @@ private:
     glm::quat GetRotationValue(const Channel& channel, float currentAnimTime);
     glm::vec3 GetScaleValue(const Channel& channel, float currentAnimTime);
 
-    void UpdateTransformations(const ResourceAnimation* animation, float currentAnimTime);
+    void UpdateTransformations();
+    void CaptureSnapshot();
 
 
 public:
     
     AnimationInstance currentAnimation;
-    AnimationInstance targetAnimation;
-
     std::map<std::string, AnimationData> animationsLibrary;
 
 private:
+
+    bool addAnimation = false;
 
     bool playing = false;
 
@@ -100,8 +106,7 @@ private:
     float blendDuration = 0.0f;
     float currentBlendTime = 0.0f;
 
+    std::vector<BoneSnapshot> snapshotPose;
     std::vector<BoneLink> skeletonCache;
     std::map<std::string, int> boneIndexMap;
-
-    bool addAnimation = false;
 };
