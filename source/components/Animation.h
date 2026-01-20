@@ -25,15 +25,16 @@ struct AnimationInstance {
     ResourceAnimation* resource = nullptr;
 
     float currentTime = 0.0f;
-    bool loop = true;
     float speed = 1.0f;
+    bool loop = true;
+    bool ended = false;
 };
 
 struct AnimationData {
     uint32_t uid = 0;
     std::string resourceName = " ";
-    bool loop = true;
     float speed = 1.0f;
+    bool loop = true;
 };
 
 class Animation : public Component, public ResourceUser, public EventListener
@@ -99,7 +100,6 @@ private:
     float blendDuration = 0.0f;
     float currentBlendTime = 0.0f;
 
-    // LA NUEVA CACHÉ
     std::vector<BoneLink> skeletonCache;
     std::map<std::string, int> boneIndexMap;
 

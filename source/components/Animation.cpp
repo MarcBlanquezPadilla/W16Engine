@@ -4,6 +4,7 @@
 #include "../Engine.h"
 #include "../ModuleResources.h"
 #include "../ModuleEvents.h"
+#include "../ModuleInput.h"
 #include "../utils/Time.h"
 #include "../utils/Log.h"
 #include "imgui.h"
@@ -80,6 +81,10 @@ void Animation::Play(const std::string& name, float blendTime)
 
     AnimationData& data = it->second;
 
+    if (currentAnimation.uid == data.uid && !isBlending) return;
+
+    if (isBlending && targetAnimation.uid == data.uid) return;
+
     AnimationInstance newInstance;
     newInstance.uid = data.uid;
     newInstance.loop = data.loop;
@@ -94,7 +99,6 @@ void Animation::Play(const std::string& name, float blendTime)
 
     if (blendTime <= 0.0f || !currentAnimation.resource || !playing)
     {
-
         UnloadAnimation(currentAnimation);
         UnloadAnimation(targetAnimation);
 
@@ -107,7 +111,6 @@ void Animation::Play(const std::string& name, float blendTime)
         EnsureSkeletonMatches(currentAnimation.resource);
         UpdateChannelPointers();
     }
-    // --- CASO 2: BLENDING ---
     else
     {
         if (currentAnimation.uid == newInstance.uid) return;
@@ -195,17 +198,21 @@ void Animation::UnloadAnimation(AnimationInstance& animation)
     animation.uid = 0;
 }
 
-// EL CORAZÓN DEL SISTEMA
 void Animation::Update()
 {
-    // Si no estamos reproduciendo o no hay recurso base, no hacemos nada
+    //TEST PARA LA ENTREGA
+    
+    if (currentAnimation.uid != animationsLibrary["Attack"].uid || currentAnimation.ended)
+    {
+        if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_2) == KEY_DOWN) Play("Attack", 0.5f);
+        else if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_1) == KEY_REPEAT) Play("Walk", 0.5f);
+        else Play("Idle", 0.5f);
+    }
+
     if (!playing || !currentAnimation.resource) return;
 
     float dt = Time::deltaTime;
 
-    // =============================================================
-    // 1. AVANZAR ANIMACIÓN ACTUAL (SOURCE / A)
-    // =============================================================
     currentAnimation.currentTime += dt * currentAnimation.resource->ticksPerSecond * currentAnimation.speed;
 
     if (currentAnimation.currentTime >= currentAnimation.resource->duration)
@@ -217,6 +224,7 @@ void Animation::Update()
         else
         {
             currentAnimation.currentTime = currentAnimation.resource->duration;
+            currentAnimation.ended = true;
         }
     }
 
@@ -224,7 +232,6 @@ void Animation::Update()
     {
         targetAnimation.currentTime += dt * targetAnimation.resource->ticksPerSecond * targetAnimation.speed;
         
-        // Lógica de mezcla
         currentBlendTime += dt;
 
         if (targetAnimation.currentTime >= targetAnimation.resource->duration)
@@ -239,21 +246,14 @@ void Animation::Update()
             }
         }
 
-        // =============================================================
-        // 3. FIN DE LA TRANSICIÓN (SWAP)
-        // =============================================================
         if (currentBlendTime >= blendDuration)
         {
-            // A. Limpiar A
             UnloadAnimation(currentAnimation);
 
-            // B. Promocionar B -> A (Copiamos toda la struct)
             currentAnimation = targetAnimation;
 
-            // C. Resetear B (Target)
             targetAnimation = AnimationInstance();
 
-            // D. Resetear flags de mezcla
             isBlending = false;
             currentBlendTime = 0.0f;
 
@@ -261,36 +261,21 @@ void Animation::Update()
         }
     }
 
-    // =============================================================
-    // 4. APLICAR TRANSFORMACIONES
-    // =============================================================
-    // Ya no necesitamos pasar argumentos, la función lee 'currentTime', 'targetTime', etc.
     UpdateTransformations(nullptr, 0);
 }
 
 glm::vec3 Animation::GetPositionValue(const Channel& channel, float currentAnimTime)
 {
-    // 1. CALCULO DIRECTO DEL ÍNDICE (O(1))
-    // Convertimos el tiempo (float) directamente a entero (int).
-    // Ej: 15.7 -> 15
     int frameIndex = (int)currentAnimTime;
 
-    // 2. SEGURIDAD RÁPIDA (Solo comprobamos bordes)
     int numKeys = channel.positionKeys.size();
 
-    // Si nos salimos por arriba, devolvemos la última
     if (frameIndex >= numKeys - 1) return channel.positionKeys.back();
-    // Si es negativo (raro), la primera
     if (frameIndex < 0) return channel.positionKeys[0];
 
-    // 3. INTERPOLACIÓN (Suavizado entre frames)
-    // Aunque esté baked a 30FPS, si el juego va a 60FPS necesitamos interpolar
-    // para que no se vea a saltos.
     const auto& key0 = channel.positionKeys[frameIndex];
     const auto& key1 = channel.positionKeys[frameIndex + 1];
 
-    // El factor es simplemente la parte decimal del tiempo
-    // Ej: Tiempo 15.7 -> frame 15, factor 0.7
     float factor = currentAnimTime - (float)frameIndex;
 
     return glm::mix(key0, key1, factor);
@@ -309,7 +294,6 @@ glm::quat Animation::GetRotationValue(const Channel& channel, float currentAnimT
 
     float factor = currentAnimTime - (float)frameIndex;
 
-    // AQUÍ SÍ USAMOS SLERP (Para evitar glitches de rotación)
     return glm::slerp(key0, key1, factor);
 }
 
@@ -329,10 +313,6 @@ glm::vec3 Animation::GetScaleValue(const Channel& channel, float currentAnimTime
     return glm::mix(key0, key1, factor);
 }
 
-// =============================================================
-// UPDATE LIMPIO (Sin Strings, Sin Mapas)
-// =============================================================
-
 void Animation::UpdateTransformations(const ResourceAnimation* ignored, float currentAnimTime)
 {
     float factor = 0.0f;
@@ -346,12 +326,10 @@ void Animation::UpdateTransformations(const ResourceAnimation* ignored, float cu
     {
         if (!link.transform) continue;
 
-        // VALORES DEFAULT
         glm::vec3 finalPos = link.transform->GetLocalPosition();
         glm::quat finalRot = link.transform->GetLocalQuaterionRotation();
         glm::vec3 finalScl = link.transform->GetLocalScale();
 
-        // APORTACIÓN A
         if (link.channelA)
         {
             finalPos = GetPositionValue(*link.channelA, currentAnimation.currentTime);
@@ -359,7 +337,6 @@ void Animation::UpdateTransformations(const ResourceAnimation* ignored, float cu
             finalScl = GetScaleValue(*link.channelA, currentAnimation.currentTime);
         }
 
-        // BLEND CON B
         if (isBlending && link.channelB)
         {
             glm::vec3 posB = GetPositionValue(*link.channelB, targetAnimation.currentTime);
@@ -379,13 +356,10 @@ void Animation::UpdateTransformations(const ResourceAnimation* ignored, float cu
 
 void Animation::UpdateChannelPointers()
 {
-    // Iteramos sobre NUESTRA caché (todos los huesos que hemos descubierto hasta ahora)
     for (auto& link : skeletonCache)
     {
-        // 1. Enlazamos Animación A (Current)
         link.channelA = FindChannel(currentAnimation.resource, link.boneName);
 
-        // 2. Enlazamos Animación B (Target)
         if (isBlending && targetAnimation.resource)
         {
             link.channelB = FindChannel(targetAnimation.resource, link.boneName);
@@ -414,17 +388,14 @@ void Animation::EnsureSkeletonMatches(const ResourceAnimation* anim)
                 newLink.channelA = nullptr;
                 newLink.channelB = nullptr;
 
-                // --- NUEVO: Capturamos la T-Pose aquí ---
                 Transform* t = newLink.transform;
                 newLink.originalPos = t->GetLocalPosition();
                 newLink.originalRot = t->GetLocalQuaterionRotation();
                 newLink.originalScl = t->GetLocalScale();
-                // ----------------------------------------
 
                 skeletonCache.push_back(newLink);
                 boneIndexMap[channel.name] = skeletonCache.size() - 1;
             }
-            // ... logs de error ...
         }
     }
 }
@@ -496,6 +467,7 @@ void Animation::OnEditor()
                     {
                         Play(it->first, 0.5f);
                     }
+                    ImGui::Indent();
                 }
 
                 ImGui::TreePop();
@@ -575,17 +547,21 @@ void Animation::Save(Config& componentNode)
 void Animation::Load(Config& componentNode)
 {
     Config animationNode = componentNode.GetChild("Animation");
-    UID animationUID = animationNode.GetUInt("UID");
-    if (animationUID!=0)
+    while (animationNode.IsValid())
     {
-        std::string animationName = animationNode.GetString("name");
-        const Resource* resource = Engine::GetInstance().moduleResources->PeekResource(animationUID);
-        if (resource)
+        UID animationUID = animationNode.GetUInt("UID");
+        if (animationUID != 0)
         {
-            AddAnimation(animationName, animationUID, resource->GetName());
-            animationsLibrary[animationName].loop = animationNode.GetBool("loop");
-            animationsLibrary[animationName].speed = animationNode.GetFloat("speed");
+            std::string animationName = animationNode.GetString("name");
+            const Resource* resource = Engine::GetInstance().moduleResources->PeekResource(animationUID);
+            if (resource)
+            {
+                AddAnimation(animationName, animationUID, resource->GetName());
+                animationsLibrary[animationName].loop = animationNode.GetBool("loop");
+                animationsLibrary[animationName].speed = animationNode.GetFloat("speed");
+            }
         }
+        animationNode = animationNode.GetNextSibling("Animation");
     }
 }
 
