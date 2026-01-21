@@ -79,6 +79,7 @@ void Animation::Play(const std::string& name, float blendTime)
     CaptureSnapshot();
     UnloadAnimation(currentAnimation);
 
+    currentAnimation.name = it->first;
     currentAnimation.uid = it->second.uid;
     currentAnimation.speed = it->second.speed;
     currentAnimation.loop = it->second.loop;
@@ -88,8 +89,8 @@ void Animation::Play(const std::string& name, float blendTime)
         currentAnimation.resource->AddReference(this);
     }
 
-    currentAnimation.currentTime = 0.0f;
-    currentAnimation.ended = false;
+    currentTime = 0.0f;
+    ended = false;
 
     if (blendTime > 0.0f) {
         isBlending = true;
@@ -180,7 +181,7 @@ void Animation::Update()
     bool isWalking = (currentAnimation.uid == walkUID);
     bool isIdle = (currentAnimation.uid == idleUID);
 
-    if (!isAttacking || currentAnimation.ended)
+    if (!isAttacking || ended)
     {
         if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
         {
@@ -200,14 +201,14 @@ void Animation::Update()
 
     float dt = Time::deltaTime;
 
-    currentAnimation.currentTime += dt * currentAnimation.resource->ticksPerSecond * currentAnimation.speed;
+    currentTime += dt * currentAnimation.resource->ticksPerSecond * currentAnimation.speed;
 
-    if (currentAnimation.currentTime >= currentAnimation.resource->duration) {
+    if (currentTime >= currentAnimation.resource->duration) {
         if (currentAnimation.loop)
-            currentAnimation.currentTime = std::fmod(currentAnimation.currentTime, currentAnimation.resource->duration);
+            currentTime = std::fmod(currentTime, currentAnimation.resource->duration);
         else {
-            currentAnimation.currentTime = currentAnimation.resource->duration;
-            currentAnimation.ended = true;
+            currentTime = currentAnimation.resource->duration;
+            ended = true;
         }
     }
 
@@ -280,18 +281,16 @@ void Animation::UpdateTransformations()
         auto& link = skeletonCache[i];
         if (!link.transform) continue;
 
-        // DESTINO: Siempre es la currentAnimation (Channel A)
         glm::vec3 targetPos = link.originalPos;
         glm::quat targetRot = link.originalRot;
         glm::vec3 targetScl = link.originalScl;
 
         if (link.channelA) {
-            targetPos = GetPositionValue(*link.channelA, currentAnimation.currentTime);
-            targetRot = GetRotationValue(*link.channelA, currentAnimation.currentTime);
-            targetScl = GetScaleValue(*link.channelA, currentAnimation.currentTime);
+            targetPos = GetPositionValue(*link.channelA, currentTime);
+            targetRot = GetRotationValue(*link.channelA, currentTime);
+            targetScl = GetScaleValue(*link.channelA, currentTime);
         }
 
-        // MEZCLA: Foto -> Destino
         if (isBlending && i < snapshotPose.size()) {
             link.transform->SetLocalPosition(glm::mix(snapshotPose[i].pos, targetPos, factor));
             link.transform->SetLocalQuaternionRotation(glm::slerp(snapshotPose[i].rot, targetRot, factor));

@@ -28,12 +28,11 @@ struct BoneLink {
 
 struct AnimationInstance {
     UID uid = 0;
+    std::string name = "";
     ResourceAnimation* resource = nullptr;
 
-    float currentTime = 0.0f;
     float speed = 1.0f;
     bool loop = true;
-    bool ended = false;
 };
 
 struct AnimationData {
@@ -101,8 +100,10 @@ private:
     bool addAnimation = false;
 
     bool playing = false;
-
+    bool ended = false;
     bool isBlending = false;
+    
+    float currentTime;
     float blendDuration = 0.0f;
     float currentBlendTime = 0.0f;
 
