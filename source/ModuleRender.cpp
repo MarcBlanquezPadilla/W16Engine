@@ -1347,9 +1347,15 @@ UID ModuleRender::GetObjectInPixel(const CameraLens* camera, int x, int y)
 {
 	if (!camera) return 0;
 
+	GLint last_viewport[4]; glGetIntegerv(GL_VIEWPORT, last_viewport);
+	GLint last_fbo; glGetIntegerv(GL_FRAMEBUFFER_BINDING, &last_fbo);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, (camera->fboID != 0) ? camera->fboID : 0);
 	glViewport(0, 0, (camera->fboID != 0) ? camera->textureWidth : Engine::GetInstance().moduleWindow->width,
 		(camera->fboID != 0) ? camera->textureHeight : Engine::GetInstance().moduleWindow->height);
+
+	UpdateViewMatix(camera->GetViewMatrix());
+	UpdateProjectionMatix(camera->GetProjectionMatrix());
 
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1409,6 +1415,9 @@ UID ModuleRender::GetObjectInPixel(const CameraLens* camera, int x, int y)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(0);
 	glEnable(GL_BLEND);
+
+	glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
+	glBindFramebuffer(GL_FRAMEBUFFER, last_fbo);
 
 	return pickedID;
 }
