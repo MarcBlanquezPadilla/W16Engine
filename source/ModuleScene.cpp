@@ -1,6 +1,7 @@
 #include "ModuleScene.h"
 #include "GameObject.h"
 #include "ModuleEvents.h"
+#include "ModuleLoader.h"
 #include "Engine.h"
 
 #include "utils/Log.h"
@@ -31,12 +32,15 @@ bool ModuleScene::Awake()
 	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::StaticTransformChanged, this);
 	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::StaticChanged, this);
 
+
 	return ret;
 }
 
 bool ModuleScene::Start()
 {
 	bool ret = true;
+
+	Engine::GetInstance().moduleLoader->CleanAndLoadScene("Assets/TestAnimations.wscene");
 
 	return ret;
 }
