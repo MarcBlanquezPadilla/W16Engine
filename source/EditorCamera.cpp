@@ -68,6 +68,9 @@ bool EditorCamera::Awake()
 	mouseCaptured = false;
 	lockCamera = true;
 
+	viewChanged = true;
+	windowChanged = true;
+
 	//EVENTS
 	Engine::GetInstance().moduleEvents->Subscribe(Event::Type::WindowResize, this);
 
@@ -81,11 +84,36 @@ bool EditorCamera::PreUpdate()
 
 	lockCamera = ImGuizmo::IsUsing && !Engine::GetInstance().moduleEditor->GetInterface()->IsSceneFocused() || !Engine::GetInstance().moduleEditor->GetInterface()->IsSceneHovered();
 
-	if (lockCamera)
+	if (!lockCamera)
 	{
-		return ret;
+		MoveCamera();
 	}
 
+	//UPDATE MATRIX
+	if (viewChanged)
+	{
+		cameraLens->LookAt(position, position + forward, up);
+		viewChanged = false;
+	}
+
+	if (windowChanged)
+	{
+		float aspectRatio = 1.77f;
+
+		if (cameraLens->textureHeight > 0)
+		{
+			aspectRatio = (float)cameraLens->textureWidth / (float)cameraLens->textureHeight;
+		}
+
+		cameraLens->SetPerspective(fieldOfView, aspectRatio, 0.1f, 1000.0f);
+		windowChanged = false;
+	}
+
+	return ret;
+}
+
+void EditorCamera::MoveCamera()
+{
 	std::vector<GameObject*> gameObjects = Engine::GetInstance().moduleEditor->GetSelectedGameObjects();
 
 	bool shouldBeRelative = (
@@ -228,28 +256,6 @@ bool EditorCamera::PreUpdate()
 		}
 		windowChanged = true;
 	}
-
-	//UPDATE MATRIX
-	if (viewChanged)
-	{
-		cameraLens->LookAt(position, position + forward, up);
-		viewChanged = false;
-	}
-
-	if (windowChanged)
-	{
-		float aspectRatio = 1.77f;
-
-		if (cameraLens->textureHeight > 0)
-		{
-			aspectRatio = (float)cameraLens->textureWidth / (float)cameraLens->textureHeight;
-		}
-
-		cameraLens->SetPerspective(fieldOfView, aspectRatio, 0.1f, 1000.0f);
-		windowChanged = false;
-	}
-
-	return ret;
 }
 
 void EditorCamera::CalcMouseVectors()

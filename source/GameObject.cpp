@@ -68,15 +68,8 @@ bool GameObject::CleanUp()
 		pair.second->CleanUp();
 		delete pair.second;
 	}
+	
 	components.clear();
-
-	for (GameObject* child : childs)
-	{
-		if (child != nullptr) {
-			child->parent = nullptr;
-		}
-	}
-
 	childs.clear();
 
 	return true;

@@ -36,6 +36,7 @@ public:
 
 private:
 	void CalcMouseVectors();
+	void MoveCamera();
 
 public: 
 	bool windowChanged;
