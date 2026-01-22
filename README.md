@@ -1,107 +1,79 @@
 # W16 ENGINE
 
-W16 ENGINE is a custom 3D game engine developed in C++ from scratch. It features a modular architecture inspired by Unity and includes a full suite of tools for interactive scene visualization, resource management, and game development.
+**W16 ENGINE** is a custom 3D game engine developed in C++ from scratch. This project was created for the **Game Engines** course at [CITM - UPC](https://www.citm.upc.edu/).
+
+The engine focuses on modularity, performance optimization, and providing a user-friendly interface for scene composition and resource management.
 
 **Powered by:** Torrats Games
 
-## Technology Stack
-
-Built using industry-standard libraries:
-* **Core:** SDL3
-* **Graphics & Math:** Glad, GLM
-* **Asset Management:** Assimp (Models), DevIL (Textures)
-* **UI:** ImGUI, ImGuizmo
+---
 
 ## Development Team
 
-| Name | GitHub Profile |
-| :--- | :--- |
-| **Marc Blánquez** | [GitHub Profile](https://github.com/MarcBlanquezPadilla) |
-| **Martí Mira** | [GitHub Profile](https://github.com/algars15) |
-| **Arnau Balasch** | [GitHub Profile](https://github.com/Balar05) |
+![foto torrats](https://github.com/user-attachments/assets/152b3955-b6a8-4cd1-baef-afb7fbf1cd3f)
 
-**Repository:** [W16 Engine on GitHub](https://github.com/MarcBlanquezPadilla/W16Engine)
+| Member | Role & Work Performed |
+| :--- | :--- |
+| **Marc Blánquez** | Developed the foundational bone logic, mesh-bone hierarchies, and infinite bone support. He implemented high-performance **GPU Skinning**, animation optimizations, and low-level shader/stencil management. |
+| **Martí Mira** | Architected the Resource Management system (Meta-files) and the Resource Explorer. He developed asset/texture importing pipelines, asset movement logic, and optimized spatial partitioning. |
+| **Arnau Balasch** |Designed the engine's interface (ImGui), including the GameObject hierarchy and Project Window search. He developed the scene serialization system (supporting animation save/load) and core camera systems. |
+
+**GitHub Links:** [Marc Blánquez](https://github.com/MarcBlanquezPadilla) | [Martí Mira](https://github.com/algars15) | [Arnau Balasch](https://github.com/Balar05)
 
 ---
 
-## Key Features
+## Core Systems
 
-### Core Systems
-* **Modular Architecture:** Hierarchy-based system managing GameObjects and Components.
-* **Event System:** Robust internal messaging system for engine events.
-* **Time Management:** Precise delta-time calculation and game clock management.
-* **Scene Serialization:** Full support to Save and Load scenes, preserving the state of all GameObjects.
+The engine is built on a modular architecture inspired by industry standards:
 
-### Rendering & Optimization
-* **Spatial Partitioning:** Implemented Octree for optimized spatial queries and rendering.
-* **Frustum Culling:** Performance optimization to only render objects within the camera's view.
-* **Advanced Materials:** Support for transparent textures and stencil buffer operations.
-* **Multiple Cameras:** Support for switching between Editor Camera and Game Camera components.
-
-### Asset Management
-* **Smart Resource System:** Custom .meta file generation for asset tracking and file hashing.
-* **Project Window:** Integrated file browser to manage assets directly within the editor.
-* **3D Asset Loading:** Support for FBX models (via Assimp) and textures (PNG/DDS via DevIL).
-
-### Editor Tools
-* **Mouse Picking:** Select objects directly in the 3D scene using raycasting.
-* **Multi-Selection:** Select multiple objects simultaneously via standard input shortcuts.
-* **Guizmos:** Integrated translation, rotation, and scaling tools directly in the scene view.
+* **Component-Based Architecture:** Every entity is a `GameObject` that can be extended with components such as `Transform`, `Camera`, and the `AnimationController`.
+* **Resource Management (Meta System):** A smart system that tracks assets using `.meta` files, handling automatic imports and file hashing to detect external changes.
+* **Color-Coding Mouse Picking:** Object selection is handled by encoding each GameObject's Unique ID (UID) into a specific RGB color. The scene is rendered to a hidden texture; upon clicking, the engine reads the pixel color to retrieve the selected object's UID.
+* **Scene Serialization:** Full support for saving and loading scenes in a custom format, preserving the hierarchy and the state of all components, including animation data.
+* **Advanced Project Window:** A resource explorer with integrated search functionality. It allows for deep inspection of complex assets; double-clicking a model enables users to explore internal sub-resources like meshes, animations, and textures.
+* **Skinned Mesh Renderer (SMR):** A unified component that replaces separate Mesh and Texture components for skeletal models. Similar to Unity's SMR, it binds the mesh to a skeletal hierarchy, ensuring bone transforms drive mesh deformation.
+* **Updated Render Module:** The core rendering pipeline has been refactored to support skeletal mesh data and specialized animation shaders.
 
 ---
 
-## How to Use
+## High-Level System: Skeletal Animation
 
-### Running the Engine
-1. Run the executable W16Engine.exe.
-2. The engine loads with a default scene or the last saved state.
+For this release, we have implemented a high-level **Skeletal Animation System** that allows for real-time mesh deformation using bone hierarchies.
 
-### Controls & Interaction
+### Technical Details:
+* **Hybrid Pipeline:** The skeletal hierarchy and bone transforms are calculated on the CPU, while the vertex skinning (mesh deformation) is processed on the GPU via shaders for maximum efficiency.
+* **Vertex Skinning:** Real-time calculation of vertex positions based on bone weights and transforms stored in the mesh data.
+* **Animation Blending & Transitions:** Smooth switching between states is achieved through **Snapshot Transitions**. The engine captures a snapshot of the current skeletal pose and interpolates it with the target animation over time.
+* **Interactive Demo:** We have integrated a character into the city scene with the following logic:
+    * **Idle State:** The character automatically plays an idle loop upon loading.
+    * **Walk Cycle (Key '1'):** Holding the **'1'** key triggers a walking animation loop. The character seamlessly transitions back to idle when released.
+    * **Attack Action (Key '2'):** Pressing the **'2'** key triggers an attack animation, which can be initiated from both Idle and Walk states.
 
-#### General Interaction
-| Action | Input / Method |
-| :--- | :--- |
-| **Select Object** | Left Click (Mouse Picking) |
-| **Multi-Selection** | Hold Ctrl + Click |
-| **Gizmo Operation** | Use the visual gizmos to Translate, Rotate, or Scale |
-| **Orbit Object** | Alt + Left Click |
-| **Focus Object** | Select GameObject + F |
+### Visual Demonstration
 
-#### Camera Controls
-| Action | Input (Mouse/Keyboard) |
-| :--- | :--- |
-| **Free Look** | Hold Right Click + Move Mouse |
-| **Free Movement** | Hold Right Click + W, A, S, D |
-| **Zoom** | Mouse Wheel |
-| **Sprint** | Hold Shift while moving |
-
-#### GameObject Management
-| Action | Method |
-| :--- | :--- |
-| **Import Model** | Drag & drop .fbx file from Project/PC to Scene |
-| **Create Basic Shape** | Right-click in the Hierarchy window |
-| **Apply Texture** | Drag & drop texture file onto a selected Mesh |
-| **Parenting** | Drag & drop GameObjects within the Hierarchy |
-| **Modify Transform** | Change values manually in the Inspector |
-| **Toggle Normals** | Check the debug box in the Inspector |
-| **Checkered Texture** | Toggle the debug button in the Inspector |
+| Animations | Animator Component | Mesh Renderer |
+| :---: | :---: | :---: |
+| ![Animations GIF](https://github.com/user-attachments/assets/bed553ab-e79b-4108-861a-f597722e7560) | ![Animator Component GIF](https://github.com/user-attachments/assets/2edc8fbc-d913-4169-8d51-6f2ac1cc62d7) | ![Mesh Renderer GIF](https://github.com/user-attachments/assets/1ccf23ab-36c0-4a48-a60c-bf9f5a81bab1) |
 
 ---
 
-## Engine Structure
+## Scene Creation
 
-### GameObjects & Components
-Every entity in the scene is a GameObject containing the following components:
-* **Transform:** Handles position, rotation, and scale logic (supports parent-child hierarchy).
-* **Mesh:** Geometry data loaded via Assimp.
-* **Texture:** Material data loaded via DevIL.
-* **Camera:** Defines the viewport and projection settings for rendering.
+Watch the following 1-minute video showing the process of creating a scene and configuring the animation system within the W16 Engine:
 
-### Editor Windows
-* **Scene View:** The main 3D workspace with debug drawing (AABB, Octree debugs).
-* **Game View:** Represents what the player sees through the active game camera.
-* **Project:** A file explorer for the Assets folder, allowing file manipulation and import management.
-* **Inspector:** Real-time modification of component values and resource reassignment.
-* **Hierarchy:** Tree view of the scene objects, supporting parenting and reordering.
-* **Console:** Displays logs, errors, and system status.
-* **Configuration:** Shows real-time FPS graph, memory consumption, and settings.
+[**Scene Creation Video**](https://youtu.be/70icB58xoKs)
+*Click to watch the video on YouTube.*
+
+---
+
+## Repository & Downloads
+
+* **Repository:** [W16 Engine on GitHub](https://github.com/MarcBlanquezPadilla/W16Engine)
+* **Project Branch:** [main](https://github.com/MarcBlanquezPadilla/W16Engine/tree/main)
+* **Latest Release:** [Download W16 Engine v1.0](https://github.com/MarcBlanquezPadilla/W16Engine/releases)
+
+---
+
+## 📜 License
+
+This software is distributed under the **MIT License**. See the `LICENSE` file for more details.
