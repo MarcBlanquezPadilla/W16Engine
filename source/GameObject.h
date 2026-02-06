@@ -2,6 +2,7 @@
 #include "Module.h"
 #include "components/Component.h"
 #include <map>
+#include <list>
 #include <vector>
 #include <string>
 #include "glm/glm.hpp"
@@ -23,6 +24,7 @@ public:
 	bool OnDisable();
 
 	bool Update();
+	bool FixedUpdate();
 
 	bool CleanUp();
 	bool CleanUpRecursive();
@@ -36,6 +38,7 @@ public:
 	bool IsDescendant(GameObject* potentialParent);
 	GameObject* FindChild(const std::string& findName);
 
+	//SAVE & LOAD
 	void Save(Config& gameObjectNode);
 	void Load(Config& gameObjectNode);
 
@@ -49,14 +52,21 @@ public:
 	//COMPONENTS
 	Component* AddComponent(ComponentType type);
 	Component* GetComponent(ComponentType type);
+	Component* GetComponentInChildren(ComponentType type);
+	void GetComponentsInChildren(ComponentType type, std::vector<Component*>& outlist);
+	Component* GetComponentInParent(ComponentType type);
+	void GetComponentsInParent(ComponentType type, std::vector<Component*>& outlist);
+	bool TryGetComponent(ComponentType type, Component*& component);
 	void RemoveComponent(ComponentType type);
 	void DeletePendingComponents();
+	void OnComponentAdded(Component* component);
 
 	bool GetGlobalMatrix(glm::mat4& globalMatrix);
 	bool TryGetGlobalAABB(AABB& globalAABB);
-	bool TryGetComponent(ComponentType type, Component*& component);
 
 	void Destroy();
+
+	void OnEditor();
 
 public:
 	std::string name;

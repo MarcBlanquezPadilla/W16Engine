@@ -1,0 +1,77 @@
+#pragma once
+#include "Component.h"
+#include <PxPhysicsAPI.h>
+#include <glm/glm.hpp>
+
+class GameObject;
+class Rigidbody;
+
+class Collider : public Component
+{
+public:
+    
+    enum class ColliderType
+    {
+        BOX_COLLIDER,
+        SPHERE_COLLIDER,
+        CAPSULE_COLLIDER
+    };
+
+    Collider(GameObject* owner);
+
+    virtual ~Collider() override;
+
+    void Start() override;
+    void OnEnable() override;
+    void OnDisable() override;
+
+
+    virtual physx::PxGeometry* GetGeometry() = 0;
+    virtual ColliderType GetColliderType() = 0;
+    
+    void GetMaterialValues(float& staticF, float& dynamicF, float& rest) const {
+        staticF = staticFriction;
+        dynamicF = dynamicFriction;
+        rest = restitution;
+    }
+
+    virtual ComponentType GetType() override { return ComponentType::Collider; };
+    virtual bool IsType(ComponentType type) override = 0;
+    bool IsIncompatible(ComponentType type) override {
+        return type == ComponentType::Collider ||
+            type == ComponentType::BoxCollider ||
+            type == ComponentType::SphereCollider;
+    };
+    
+
+
+    virtual void Save(Config& componentNode) override {};
+    void SaveBase(Config& componentNode);
+    virtual void Load(Config& componentNode) override {};
+    void LoadBase(Config& componentNode) ;
+    virtual void OnEditor() override = 0;
+    void OnEditorBase();
+    
+    void SetCenter(glm::vec3 center);
+    void SetTrigger(bool trigger);
+    void SetStaticFriction(float staticFriction);
+    void SetDynamicFriction(float dynamicFriction);
+    void SetRestitution(float restitution);
+
+    const glm::vec3& GetCenter() { return center; }
+    const bool IsTrigger() { return isTrigger; };
+    const float GetStaticFriction() { return staticFriction; };
+    const float GetDynamicFriction() { return dynamicFriction; };
+    const float GetRestitution() { return restitution; };
+
+protected:
+
+    Rigidbody* attachedRigidbody = nullptr;
+
+    glm::vec3 center = { 0, 0, 0 };
+   
+    bool isTrigger = false;
+    float staticFriction = 0.5f;
+    float dynamicFriction = 0.5f;
+    float restitution = 0.6f;
+};

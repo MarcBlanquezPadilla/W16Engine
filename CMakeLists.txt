@@ -13,9 +13,12 @@ find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(ImGuizmo CONFIG REQUIRED)
 find_package(pugixml CONFIG REQUIRED)
+find_package(unofficial-omniverse-physx-sdk CONFIG REQUIRED)
 
-add_executable(W16Engine
-	source/Global.h
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+set(W16_ENGINE_SOURCES
+    source/Global.h
 	source/application.cpp 
 	source/Engine.cpp 
 	source/Engine.h 
@@ -32,12 +35,12 @@ add_executable(W16Engine
 	source/ModuleScene.h
 	source/ModuleEvents.cpp
 	source/ModuleEvents.h
+	source/ModulePhysics.h
+	source/ModulePhysics.cpp
 	source/ModuleResources.cpp
 	source/ModuleResources.h
 	source/ModuleTime.cpp
 	source/ModuleTime.h
-	source/Vector2D.cpp
-	source/Vector2D.h
 	source/ModuleRender.cpp
 	source/ModuleRender.h
 	source/EditorCamera.cpp
@@ -61,6 +64,16 @@ add_executable(W16Engine
 	source/components/Camera.h
 	source/components/Animation.cpp
 	source/components/Animation.h
+	source/components/Rigidbody.h
+	source/components/Rigidbody.cpp
+	source/components/Collider.h
+	source/components/Collider.cpp
+	source/components/BoxCollider.h
+	source/components/BoxCollider.cpp
+	source/components/SphereCollider.h
+	source/components/SphereCollider.cpp
+	source/components/CapsuleCollider.h
+	source/components/CapsuleCollider.cpp
 	source/windows/UIWindow.h
 	source/windows/ConfigWindow.cpp
 	source/windows/ConfigWindow.h
@@ -127,6 +140,10 @@ add_executable(W16Engine
 	source/importers/ImporterModel.cpp
 )
 
+add_executable(W16Engine ${W16_ENGINE_SOURCES})
+
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/source" PREFIX "Source Files" FILES ${W16_ENGINE_SOURCES})
+
 target_link_libraries(W16Engine PRIVATE 
 	SDL3::SDL3
 	glad::glad
@@ -137,6 +154,7 @@ target_link_libraries(W16Engine PRIVATE
 	imgui::imgui
 	imguizmo::imguizmo
 	pugixml::pugixml
+	unofficial::omniverse-physx-sdk::sdk
 )
 
 install(DIRECTORY Assets

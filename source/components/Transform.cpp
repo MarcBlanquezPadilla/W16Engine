@@ -16,6 +16,8 @@
 
 Transform::Transform(GameObject* owner) : Component(owner)
 {
+    name = "Transform";
+
     position = glm::vec3(0.0f, 0.0f, 0.0f);
     scale = glm::vec3(1.0f, 1.0f, 1.0f);
     rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
@@ -156,29 +158,26 @@ void Transform::OnTransformChanged()
 
 void Transform::OnEditor()
 {
-    if (ImGui::CollapsingHeader("Transform"))
+    //ATRIBUTES
+    ImGui::Text("Position");
+    glm::vec3 current_position = GetLocalPosition();
+    if (ImGui::InputFloat3("##Pos", &current_position.x))
     {
-        //ATRIBUTES
-        ImGui::Text("Position");
-        glm::vec3 current_position = GetLocalPosition();
-        if (ImGui::InputFloat3("##Pos", &current_position.x))
-        {
-            SetLocalPosition(current_position);
-        }
+        SetLocalPosition(current_position);
+    }
 
-        ImGui::Text("Rotation");
-        glm::vec3 current_euler_degrees = GetLocalEulerRotation();
-        if (ImGui::InputFloat3("##Rot", &current_euler_degrees.x))
-        {
-            SetLocalEulerRotation(current_euler_degrees);
-        }
+    ImGui::Text("Rotation");
+    glm::vec3 current_euler_degrees = GetLocalEulerRotation();
+    if (ImGui::InputFloat3("##Rot", &current_euler_degrees.x))
+    {
+        SetLocalEulerRotation(current_euler_degrees);
+    }
 
-        ImGui::Text("Scale");
-        glm::vec3 current_scale = GetLocalScale();
-        if (ImGui::InputFloat3("##Scale", &current_scale.x))
-        {
-            SetLocalScale(current_scale);
-        }
+    ImGui::Text("Scale");
+    glm::vec3 current_scale = GetLocalScale();
+    if (ImGui::InputFloat3("##Scale", &current_scale.x))
+    {
+        SetLocalScale(current_scale);
     }
 }
 

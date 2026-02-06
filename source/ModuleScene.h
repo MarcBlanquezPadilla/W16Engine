@@ -25,6 +25,7 @@ public:
 
 	bool PreUpdate();
 	bool Update();
+	bool FixedUpdate();
 	bool PostUpdate();
 
 	bool NewScene();

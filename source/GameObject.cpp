@@ -8,9 +8,14 @@
 #include "components/Transform.h"
 #include "components/Camera.h"
 #include "components/Animation.h"
+#include "components/Rigidbody.h"
+#include "components/BoxCollider.h"
+#include "components/SphereCollider.h"
+#include "components/CapsuleCollider.h"
 #include "utils/Log.h"
 #include "utils/AABB.h"
 #include "utils/Config.h"
+#include "imgui.h"
 
 #include <random>
 
@@ -59,6 +64,27 @@ bool GameObject::Update()
 	return ret;
 }
 
+bool GameObject::FixedUpdate()
+{
+	bool ret = true;
+
+	auto it = components.begin();
+	while (it != components.end())
+	{
+		Component* component = it->second;
+
+		if (component->GetEnabled())
+		{
+			component->FixedUpdate();
+		}
+		++it;
+	}
+
+	return ret;
+}
+
+
+
 bool GameObject::CleanUp()
 {
 	Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::GameObjectDestroyed, this));
@@ -98,10 +124,13 @@ bool GameObject::CleanUpRecursive()
 
 Component* GameObject::AddComponent(ComponentType type)
 {
-	if (components.count(type) > 0)
+	for (auto const& pair : components)
 	{
-		LOG(LogType::LOG_ERROR, "This GameObject already has a component of this type.");
-		return components[type];
+		if (pair.second->IsIncompatible(type))
+		{
+			LOG(LogType::LOG_ERROR, "Could not add component: Conflict with component %s", pair.second->name.c_str());
+			return nullptr;
+		}
 	}
 
 	Component* component = nullptr;
@@ -125,14 +154,27 @@ Component* GameObject::AddComponent(ComponentType type)
 	case ComponentType::Animation:
 		component = new Animation(this);
 		break;
+	case ComponentType::Rigidbody:
+		component = new Rigidbody(this);
+		break;
+	case ComponentType::BoxCollider:
+		component = new BoxCollider(this);
+		break;
+	case ComponentType::SphereCollider:
+		component = new SphereCollider(this);
+		break;
+	case ComponentType::CapsuleCollider:
+		component = new CapsuleCollider(this);
+		break;
 	}
-
+	
 	if (component != nullptr)
 	{
 		components[type] = component;
 		component->owner = this;
 		component->Start();
 		component->OnEnable();
+		OnComponentAdded(component);
 	}
 	return component;
 }
@@ -147,7 +189,7 @@ void GameObject::RemoveComponent(ComponentType type)
 
 Component* GameObject::GetComponent(ComponentType type)
 {
-	for (auto pair : components)
+	for (auto& pair : components)
 	{
 		if (pair.second->IsType(type))
 		{
@@ -155,6 +197,59 @@ Component* GameObject::GetComponent(ComponentType type)
 		}
 	}
 	return nullptr;
+}
+
+Component* GameObject::GetComponentInChildren(ComponentType type)
+{
+	Component* component = GetComponent(type);
+
+	if (component) return component;
+
+	for (GameObject* child : childs)
+	{
+		if (child)
+		{
+			component = child->GetComponentInChildren(type);
+			if (component) return component;
+		}
+	}
+
+	return nullptr;
+}
+
+void GameObject::GetComponentsInChildren(ComponentType type, std::vector<Component*>& outList)
+{
+	Component* component = GetComponent(type);
+	if (component) outList.push_back(component);
+
+	for (GameObject* child : childs)
+	{
+		if (child) child->GetComponentsInChildren(type, outList);
+	}
+}
+
+Component* GameObject::GetComponentInParent(ComponentType type)
+{
+	Component* component = GetComponent(type);
+	if (component) return component;
+
+	if (parent != nullptr)
+	{
+		return parent->GetComponentInParent(type);
+	}
+
+	return nullptr;
+}
+
+void GameObject::GetComponentsInParent(ComponentType type, std::vector<Component*>& outList)
+{
+	Component* component = GetComponent(type);
+	if (component) outList.push_back(component);
+
+	if (parent != nullptr)
+	{
+		parent->GetComponentsInParent(type, outList);
+	}
 }
 
 bool GameObject::TryGetComponent(ComponentType type, Component*& outComponent)
@@ -182,6 +277,14 @@ void GameObject::DeletePendingComponents()
 	}
 
 	componentsToDestroy.clear();
+}
+
+void GameObject::OnComponentAdded(Component* component)
+{
+	for (auto& pair : components)
+	{
+		pair.second->OnComponentAdded(component);
+	}
 }
 
 void GameObject::AddChild(GameObject* gameObject)
@@ -518,4 +621,110 @@ void GameObject::SetParent(GameObject* newParent)
 void GameObject::Destroy()
 {
 	Engine::GetInstance().moduleScene->DestroyGameObject(this);
+}
+
+void GameObject::OnEditor()
+{
+	char name_buffer[256];
+	sprintf_s(name_buffer, "%s", name.c_str());
+
+	if (ImGui::InputText("Name", name_buffer, sizeof(name_buffer)))
+	{
+		name = name_buffer;
+	}
+
+	bool isEnabled = GetEnabled();
+	if (ImGui::Checkbox("Enabled", &isEnabled))
+	{
+		SetEnabled(isEnabled);
+	}
+
+	ImGui::SameLine();
+
+	bool isStatic = GetStatic();
+	if (ImGui::Checkbox("Static", &isStatic))
+	{
+		SetStatic(isStatic);
+	}
+
+	for (auto const& pair : components)
+	{
+		Component* comp = pair.second;
+		if (!comp) continue;
+
+		ImGui::PushID(comp);
+
+		if (ImGui::CollapsingHeader(comp->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::BeginGroup();
+
+			ImGui::Indent(10.0f);
+			ImGui::Spacing();
+
+			comp->OnEditor();
+
+			ImGui::Spacing();
+			ImGui::Unindent(10.0f);
+
+			ImGui::EndGroup();
+		}
+		if (ImGui::BeginPopupContextItem("ComponentOptions"))
+		{
+			if (ImGui::MenuItem("Remove Component")) {
+				RemoveComponent(pair.first);
+			}
+			ImGui::EndPopup();
+		}
+
+		ImGui::PopID();
+	}
+	
+	ImGui::Spacing();
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+	ImGui::Spacing();
+
+	float buttonWidth = ImGui::GetContentRegionAvail().x * 0.6f;
+	float centerPos = (ImGui::GetContentRegionAvail().x - buttonWidth) * 0.5f;
+	ImGui::SetCursorPosX(ImGui::GetCursorPosX() + centerPos);
+
+	if (ImGui::Button("Add Component", ImVec2(buttonWidth, 0)))
+	{
+		ImGui::OpenPopup("AddComponentPopup");
+	}
+
+	if (ImGui::BeginPopup("AddComponentPopup"))
+	{
+		if (GetComponent(ComponentType::MeshRenderer) == nullptr)
+		{
+			if (ImGui::MenuItem("Mesh Renderer")) { AddComponent(ComponentType::MeshRenderer); ImGui::CloseCurrentPopup(); }
+		}
+		if (GetComponent(ComponentType::Animation) == nullptr)
+		{
+			if (ImGui::MenuItem("Animation")) { AddComponent(ComponentType::Animation); ImGui::CloseCurrentPopup(); }
+		}
+		if (GetComponent(ComponentType::Rigidbody) == nullptr)
+		{
+			if (ImGui::MenuItem("Rigidbody")) { AddComponent(ComponentType::Rigidbody); ImGui::CloseCurrentPopup(); }
+		}
+		if (GetComponent(ComponentType::Collider) == nullptr)
+		{
+			if (ImGui::MenuItem("Box Collider")) { AddComponent(ComponentType::BoxCollider); ImGui::CloseCurrentPopup(); }
+		}
+		if (GetComponent(ComponentType::Collider) == nullptr)
+		{
+			if (ImGui::MenuItem("Sphere Collider")) { AddComponent(ComponentType::SphereCollider); ImGui::CloseCurrentPopup(); }
+		}
+		if (GetComponent(ComponentType::Collider) == nullptr)
+		{
+			if (ImGui::MenuItem("Capsule Collider")) { AddComponent(ComponentType::CapsuleCollider); ImGui::CloseCurrentPopup(); }
+		}
+		if (GetComponent(ComponentType::Camera) == nullptr)
+		{
+			if (ImGui::MenuItem("Camera")) { AddComponent(ComponentType::Camera); ImGui::CloseCurrentPopup(); }
+		}
+
+		ImGui::EndPopup();
+	}
 }

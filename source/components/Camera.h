@@ -13,6 +13,7 @@ public:
 
     ComponentType GetType() override { return ComponentType::Camera; };
     bool IsType(ComponentType type) override { return type == ComponentType::Camera; };
+    bool IsIncompatible(ComponentType type) override { return type == ComponentType::Camera; };
 
     void Start() override;
     void OnEnable() override;

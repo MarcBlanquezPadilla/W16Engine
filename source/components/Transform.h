@@ -17,6 +17,7 @@ public:
     
     ComponentType GetType() override { return ComponentType::Transform; };
     bool IsType(ComponentType type) override { return type == ComponentType::Transform; };
+    bool IsIncompatible(ComponentType type) override { return type == ComponentType::Transform; };
 
     void Save(Config& componentNode) override;
     void Load(Config& componentNode) override;

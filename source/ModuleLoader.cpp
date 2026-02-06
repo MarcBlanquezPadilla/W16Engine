@@ -11,7 +11,6 @@
 #include "components/Component.h"
 #include "components/MeshRenderer.h"
 #include "components/Transform.h"
-#include "components/Texture.h"
 #include "geometry/Vertex.h"
 #include "utils/Log.h"
 #include "utils/FileUtils.h"

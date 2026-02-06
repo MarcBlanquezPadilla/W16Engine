@@ -8,7 +8,17 @@ enum class ComponentType {
     MeshRenderer,
     SkinnedMeshRenderer,
     Camera,
-    Animation
+    Animation,
+    Rigidbody,
+    Collider,
+    BoxCollider,
+    SphereCollider,
+    CapsuleCollider
+};
+
+enum class ComponentRole
+{
+
 };
 
 class Component
@@ -26,12 +36,16 @@ public:
     virtual void OnDisable() {}
 
     virtual void Update() {}
+    
+    virtual void FixedUpdate() {}
 
     virtual void CleanUp() {}
     
     virtual ComponentType GetType() = 0;
     
     virtual bool IsType(ComponentType type) = 0;
+    
+    virtual bool IsIncompatible(ComponentType type) = 0;
 
     virtual void Save(Config& componentNode) {}
 
@@ -43,7 +57,11 @@ public:
     
     const bool& GetEnabled() { return enabled; }
 
+    virtual void OnComponentAdded(Component* component) {}
+
+
 public:
+    std::string name;
     GameObject* owner;
 
 private:

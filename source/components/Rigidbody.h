@@ -1,0 +1,104 @@
+#pragma once
+#include "Component.h"
+#include "../EventListener.h"
+#include <PxPhysicsAPI.h>
+
+class GameObject;
+class Collider;
+
+class Rigidbody : public Component, EventListener
+{
+public:
+
+    enum ForceMode
+    {
+        ACCELERATION,
+        FORCE,
+        IMPULSE,
+        VELOCITY_CHANGE
+    };
+
+    enum Type
+    {
+        STATIC,
+        DYNAMIC,
+        KINEMATIC
+    };
+
+    Rigidbody(GameObject* owner);
+
+    virtual ~Rigidbody() override;
+
+    void OnEnable() override;
+    void FixedUpdate() override;
+    void Update() override;
+    void OnDisable() override;
+
+    void CleanUp() override;
+    
+    ComponentType GetType() override { return ComponentType::Rigidbody; };
+    bool IsType(ComponentType type) override { return type == ComponentType::Rigidbody; };
+    bool IsIncompatible(ComponentType type) override { return type == ComponentType::Rigidbody; };
+
+    physx::PxRigidActor* GetActor() { return actor; }
+    void CollectColliders(GameObject* obj, std::vector<Collider*>& list);
+
+    void Save(Config& componentNode) override;
+    void Load(Config& componentNode) override;
+
+    void OnEditor() override;
+    void OnEvent(const Event& event) override;
+
+    void SetType(Type bodyType);
+    
+    void CreateBody();
+
+    void EnableSimulation(bool enable);
+    void SyncPropertiesToPhysics();
+
+    //FISICS
+    void WakeUp();
+    void PutToSleep();
+    bool IsSleeping();
+
+    //CONSTRAINTS
+
+    void FreezePosition(bool x, bool y, bool z);
+    void FreezeRotation(bool x, bool y, bool z);
+    void SetConstraints(bool moveX, bool moveY, bool moveZ, bool rotateX, bool rotateY, bool rotateZ);
+    void GetConstraints(bool& moveX, bool& moveY, bool& moveZ, bool& rotateX, bool& rotateY, bool& rotateZ);
+
+
+    void AddForce(const glm::vec3& force, ForceMode mode = FORCE);
+    void AddTorque(const glm::vec3& torque, ForceMode mode = FORCE);
+    void SetLinearVelocity(const glm::vec3& velocity);
+    glm::vec3 GetLinearVelocity() const;
+
+    const float GetMass() { return mass; }
+    const float GetLinearDamping() { return linearDamping; }
+    const float GetAngularDamping() { return angularDamping; }
+    const bool IsUsingGravity() { return useGravity; }
+    const bool IsUsingCCD() { return useContiniusCollisionDetection; }
+
+    void SetMass(float mass);
+    void SetLinearDamping(float linearDamping);
+    void SetAngularDamping(float angularDamping);
+    void SetUseGravity(bool useGravity);
+    void SetUseCCD(bool useCCD);
+
+private:    
+    
+    physx::PxRigidDynamic* GetDynamic() { return actor ? actor->is<physx::PxRigidDynamic>() : nullptr; }
+    
+    physx::PxRigidActor* actor = nullptr;
+    
+    Type type = STATIC;
+    float mass = 1.0f;
+    float linearDamping = 0.0f;
+    float angularDamping = 0.0f;
+    bool useGravity = true;
+    bool useContiniusCollisionDetection = false;
+
+    bool freezePosX = false, freezePosY = false, freezePosZ = false;
+    bool freezeRotX = false, freezeRotY = false, freezeRotZ = false;
+};

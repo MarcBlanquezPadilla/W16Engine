@@ -24,6 +24,7 @@ class ModuleEditor;
 class ModuleLoader;
 class ModuleEvents;
 class ModuleResources;
+class ModulePhysics;
 
 
 class Engine
@@ -40,6 +41,8 @@ public:
 	bool PreUpdate();
 
 	bool Update();
+	
+	bool FixedUpdate();
 
 	bool PostUpdate();
 
@@ -62,6 +65,7 @@ public:
 	ModuleTime* moduleTime;
 	ModuleWindow* moduleWindow;
 	ModuleInput* moduleInput;
+	ModulePhysics* modulePhysics;
 	ModuleRender* moduleRender;
 	ModuleScene* moduleScene;
 	ModuleEditor* moduleEditor;

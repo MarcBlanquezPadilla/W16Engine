@@ -10,7 +10,7 @@
 
 Camera::Camera(GameObject* owner) : Component(owner)
 {
-
+    name = "Camera";
 }
 
 Camera::~Camera()
@@ -73,44 +73,41 @@ void Camera::CleanUp()
 
 void Camera::OnEditor()
 {
-    if (ImGui::CollapsingHeader("Camera"))
+    float fov = lens->GetFov();
+    if (ImGui::DragFloat("FOV", &fov, 0.1f, 1.0f, 160.0f))
     {
-        float fov = lens->GetFov();
-        if (ImGui::DragFloat("FOV", &fov, 0.1f, 1.0f, 160.0f))
-        {
-            lens->SetFov(fov);
-        }
-
-        float zNear = lens->GetNearPlane();
-        if (ImGui::DragFloat("Near Plane", &zNear, 0.1f, 0.01f, 1000.0f))
-        {
-            lens->SetNearPlane(zNear);
-        }
-
-        float zFar = lens->GetFarPlane();
-        if (ImGui::DragFloat("Far Plane", &zFar, 1.0f, 0.1f, 10000.0f))
-        {
-            lens->SetFarPlane(zFar);
-        }
-
-        int depth = lens->depth;
-        if (ImGui::InputInt("Depth", &depth))
-        {
-            lens->depth = glm::clamp(depth, 0, 100000);
-        }
-
-        ImGui::Text("FBO:");
-        ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%dx", lens->fboID);
-
-        ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-        viewportSize.y = viewportSize.x / lens->GetAspectRatio();
-        ImVec2 winPos = ImGui::GetCursorScreenPos();
-        unsigned int textureID = lens->textureID;
-        
-        ImGui::Separator();
-        ImGui::Image((ImTextureID)(intptr_t)textureID, viewportSize, ImVec2(0, 1), ImVec2(1, 0));
+        lens->SetFov(fov);
     }
+
+    float zNear = lens->GetNearPlane();
+    if (ImGui::DragFloat("Near Plane", &zNear, 0.1f, 0.01f, 1000.0f))
+    {
+        lens->SetNearPlane(zNear);
+    }
+
+    float zFar = lens->GetFarPlane();
+    if (ImGui::DragFloat("Far Plane", &zFar, 1.0f, 0.1f, 10000.0f))
+    {
+        lens->SetFarPlane(zFar);
+    }
+
+    int depth = lens->depth;
+    if (ImGui::InputInt("Depth", &depth))
+    {
+        lens->depth = glm::clamp(depth, 0, 100000);
+    }
+
+    ImGui::Text("FBO:");
+    ImGui::SameLine();
+    ImGui::TextColored(ImVec4(0.0f, 0.7f, 0.9f, 1.0f), "%dx", lens->fboID);
+
+    ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+    viewportSize.y = viewportSize.x / lens->GetAspectRatio();
+    ImVec2 winPos = ImGui::GetCursorScreenPos();
+    unsigned int textureID = lens->textureID;
+        
+    ImGui::Separator();
+    ImGui::Image((ImTextureID)(intptr_t)textureID, viewportSize, ImVec2(0, 1), ImVec2(1, 0));
 }
 
 void Camera::OnEvent(const Event& event)

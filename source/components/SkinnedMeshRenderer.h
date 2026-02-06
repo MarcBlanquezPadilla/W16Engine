@@ -10,7 +10,7 @@ public:
 
     ComponentType GetType() override { return ComponentType::SkinnedMeshRenderer; }
     bool IsType(ComponentType type) override { return type == ComponentType::SkinnedMeshRenderer || type == ComponentType::MeshRenderer;};
-
+    bool IsIncompatible(ComponentType type) override { return type == ComponentType::SkinnedMeshRenderer || type == ComponentType::MeshRenderer;};
 
     AABB GetGlobalAABB() override;
 

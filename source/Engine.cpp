@@ -5,6 +5,7 @@
 #include "ModuleRender.h"
 #include "ModuleScene.h"
 #include "ModuleEditor.h"
+#include "ModulePhysics.h"
 #include "ModuleLoader.h"
 #include "ModuleEvents.h"
 #include "ModuleResources.h"
@@ -22,6 +23,7 @@ Engine::Engine() {
     moduleEvents = new ModuleEvents(true);
     moduleWindow = new ModuleWindow(true);
     moduleInput = new ModuleInput(true);
+    modulePhysics = new ModulePhysics(true);
     moduleRender = new ModuleRender(true);
     moduleResources = new ModuleResources(true);
     moduleScene = new ModuleScene(true);
@@ -33,6 +35,7 @@ Engine::Engine() {
     AddModule(moduleEvents);
     AddModule(moduleWindow);
     AddModule(moduleInput);
+    AddModule(modulePhysics);
     AddModule(moduleRender);
 
     //DATA MODULES
@@ -118,6 +121,23 @@ bool Engine::Update() {
         quit = true;
 
     if (quit) ret = false;
+
+    return ret;
+}
+
+bool Engine::FixedUpdate() {
+
+    bool ret = true;
+
+    for (Module* module : moduleList) {
+
+        ret = module->FixedUpdate();
+        if (!ret) {
+
+            LOG(LogType::LOG_ERROR, "%s failed in Fixed Update!", module->name.c_str());
+            return false;
+        }
+    }
 
     return ret;
 }

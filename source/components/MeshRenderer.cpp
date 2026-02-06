@@ -14,6 +14,7 @@
 
 MeshRenderer::MeshRenderer(GameObject* owner) : Component(owner)
 {
+    name = "Mesh Renderer";
     Engine::GetInstance().moduleEvents->Subscribe(Event::Type::GameObjectDestroyed, this);
     Engine::GetInstance().moduleRender->AddMesh(this);
 }
@@ -137,12 +138,9 @@ void MeshRenderer::SetTextureResource(UID uid)
 
 void MeshRenderer::OnEditor()
 {
-    if (ImGui::CollapsingHeader("Mesh Renderer"))
-    {
-        OnEditorMesh();
-        ImGui::Separator();
-        OnEditorTexture();
-    }
+    OnEditorMesh();
+    ImGui::Separator();
+    OnEditorTexture();
 }
 
 void MeshRenderer::OnEditorMesh()

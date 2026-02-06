@@ -99,10 +99,15 @@ struct Event
     {
         Ray* ray;
     };
+    struct Bool
+    {
+        bool boolean;
+    };
 
     union Data
     {
         UnsignedIntData unsignedInt;
+        Bool boolean;
         Point2dData point;
         StringData string;
         TwoStringData strings;
@@ -116,6 +121,9 @@ struct Event
 
     Event(Type t, unsigned int ui) : type(t) {
         data.unsignedInt.unsignedInt = ui;
+    }
+    Event(Type t,bool boolean) : type(t) {
+        data.boolean.boolean = boolean;
     }
 
     Event(Type t, int w, int h) : type(t) {

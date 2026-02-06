@@ -1,4 +1,6 @@
 #include "ModuleTime.h"
+#include "ModuleEvents.h"
+#include "Engine.h"
 #include "utils/Timer.h"
 #include "utils/Time.h"
 
@@ -75,6 +77,7 @@ void ModuleTime::Play()
 	
 	Time::time = 0.0f;
 	Time::deltaTime = 0.0f;
+	Engine::GetInstance().moduleEvents->PublishImmediate(Event::Type::Play);
 }
 
 void ModuleTime::Stop()
@@ -85,6 +88,7 @@ void ModuleTime::Stop()
 
     Time::time = 0.0f;
     Time::deltaTime = 0.0f;
+	Engine::GetInstance().moduleEvents->PublishImmediate(Event::Type::Stop);
 }
 
 void ModuleTime::Pause()
@@ -94,6 +98,7 @@ void ModuleTime::Pause()
 	isPaused = !isPaused;
 
 	Time::timeScale = (isPaused) ? 0.0f : 1.0f;
+	Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::Pause, isPaused));
 }
 
 void ModuleTime::Step()

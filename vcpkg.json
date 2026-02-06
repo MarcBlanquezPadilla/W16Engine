@@ -13,6 +13,7 @@
         "sdl3-binding"
       ]
     },
-    "imguizmo"
+    "imguizmo",
+    "physx"
   ]
 }

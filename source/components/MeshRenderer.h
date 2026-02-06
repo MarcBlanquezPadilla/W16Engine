@@ -21,6 +21,7 @@ public:
 
     virtual ComponentType GetType() override { return ComponentType::MeshRenderer; }
     bool IsType(ComponentType type) override { return type == ComponentType::MeshRenderer; };
+    bool IsIncompatible(ComponentType type) override { return type == ComponentType::MeshRenderer || type == ComponentType::SkinnedMeshRenderer;; };
     void Save(Config& componentNode) override;
     void Load(Config& componentNode) override;
 

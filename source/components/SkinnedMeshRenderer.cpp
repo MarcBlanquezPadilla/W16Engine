@@ -13,6 +13,7 @@
 
 SkinnedMeshRenderer::SkinnedMeshRenderer(GameObject* owner) : MeshRenderer(owner)
 {
+    name = "Skinned Mesh Renderer";
     Engine::GetInstance().moduleEvents->Subscribe(Event::Type::GameObjectDestroyed, this);
     bonesLinked = false;
 }
@@ -120,13 +121,9 @@ void SkinnedMeshRenderer::LinkBones() {
 
 void SkinnedMeshRenderer::OnEditor()
 {
-
-    if (ImGui::CollapsingHeader("Skinned Mesh Renderer"))
-    {
-        OnEditorMesh();
-        ImGui::Separator();
-        OnEditorTexture();
-    }
+    OnEditorMesh();
+    ImGui::Separator();
+    OnEditorTexture();
 }
 
 void SkinnedMeshRenderer::UpdateSkinningMatrices()

@@ -3,9 +3,9 @@
 #include "Module.h"
 #include "SDL3/SDL.h"
 #include "SDL3/SDL_rect.h"
-#include "Vector2D.h"
 #include <vector>
 #include <functional>
+#include "glm/glm.hpp"
 
 #define MAX_KEYS SDL_SCANCODE_COUNT
 #define NUM_MOUSE_BUTTONS 5
@@ -56,9 +56,9 @@ public:
 
 	bool GetWindowEvent(EventWindow ev);
 
-	Vector2D GetMousePosition();
+	glm::vec2 GetMousePosition();
 	
-	Vector2D GetMouseMotion();
+	glm::vec2 GetMouseMotion();
 	
 	float GetMouseWheelY();
 

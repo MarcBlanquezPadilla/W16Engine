@@ -13,6 +13,7 @@
 
 Animation::Animation(GameObject* owner) : Component(owner)
 {
+    name = "Animation";
     Engine::GetInstance().moduleEvents->Subscribe(Event::Type::GameObjectDestroyed, this);
 }
 
@@ -355,122 +356,119 @@ const Channel* Animation::FindChannel(const ResourceAnimation* anim, const std::
 
 void Animation::OnEditor()
 {
-    if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen))
+    ImGui::Separator();
+    ImGui::Text("Library:");
+
+    int i = 0;
+    for (auto it = animationsLibrary.begin(); it != animationsLibrary.end(); )
     {
-        ImGui::Separator();
-        ImGui::Text("Library:");
+        ImGui::PushID(it->first.c_str());
 
-        int i = 0;
-        for (auto it = animationsLibrary.begin(); it != animationsLibrary.end(); )
-        {
-            ImGui::PushID(it->first.c_str());
+        bool deleteRequested = false;
 
-            bool deleteRequested = false;
-
-            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_SpanAvailWidth;
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_SpanAvailWidth;
             
-            bool isNodeOpen = ImGui::TreeNodeEx(it->first.c_str(), flags);
+        bool isNodeOpen = ImGui::TreeNodeEx(it->first.c_str(), flags);
 
-            ImGui::SameLine();
+        ImGui::SameLine();
 
-            float buttonWidth = 20.0f;
-            float availableWidth = ImGui::GetContentRegionAvail().x;
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + availableWidth - buttonWidth);
+        float buttonWidth = 20.0f;
+        float availableWidth = ImGui::GetContentRegionAvail().x;
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + availableWidth - buttonWidth);
 
-            if (ImGui::SmallButton("X"))
-            {
-                deleteRequested = true;
-            }
-
-            if (isNodeOpen)
-            {
-                if (!deleteRequested)
-                {
-                    ImGui::Unindent();
-                    ImGui::Text("Name: %s", it->second.resourceName.c_str());
-
-
-                    ImGui::Text("Speed");
-                    ImGui::SameLine();
-                    float speed = it->second.speed;
-                    if (ImGui::InputFloat("##Speed", &speed))
-                    {
-                        SetAnimationSpeed(it->first, speed);
-                    }
-
-                    ImGui::Text("Loop");
-                    ImGui::SameLine();
-                    bool loop = it->second.loop;
-                    if (ImGui::Checkbox("##Loop", &loop))
-                    {
-                        SetAnimationLoop(it->first, loop);
-                    }
-
-                    if (ImGui::Button("Play", ImVec2(-1, 0)))
-                    {
-                        Play(it->first, 0.5f);
-                    }
-                    ImGui::Indent();
-                }
-
-                ImGui::TreePop();
-            }
-
-            ImGui::PopID();
-
-            if (deleteRequested)
-            {
-                auto nextIt = it;
-                ++nextIt;
-
-                RemoveAnimation(it->first);
-
-                it = nextIt;
-            }
-            else
-            {
-                ++it;
-            }
-            i++;
+        if (ImGui::SmallButton("X"))
+        {
+            deleteRequested = true;
         }
 
-        if (i == 0)
+        if (isNodeOpen)
         {
-            ImGui::SameLine();
-            ImGui::Text("empty");
+            if (!deleteRequested)
+            {
+                ImGui::Unindent();
+                ImGui::Text("Name: %s", it->second.resourceName.c_str());
+
+
+                ImGui::Text("Speed");
+                ImGui::SameLine();
+                float speed = it->second.speed;
+                if (ImGui::InputFloat("##Speed", &speed))
+                {
+                    SetAnimationSpeed(it->first, speed);
+                }
+
+                ImGui::Text("Loop");
+                ImGui::SameLine();
+                bool loop = it->second.loop;
+                if (ImGui::Checkbox("##Loop", &loop))
+                {
+                    SetAnimationLoop(it->first, loop);
+                }
+
+                if (ImGui::Button("Play", ImVec2(-1, 0)))
+                {
+                    Play(it->first, 0.5f);
+                }
+                ImGui::Indent();
+            }
+
+            ImGui::TreePop();
         }
 
-        ImGui::Separator();
+        ImGui::PopID();
 
-        static char nameBuffer[64] = "New Animation";
-        int availableWidth = ImGui::GetContentRegionAvail().x;
-
-        if (addAnimation)
+        if (deleteRequested)
         {
-            ImGui::InputText(" ", nameBuffer, 64);
-            ImGui::Button("Drop animation", ImVec2(availableWidth, 20));
-            if (ImGui::BeginDragDropTarget())
-            {
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(RESOURCE_DRAG))
-                {
-                    UID droppedUID = *(UID*)payload->Data;
+            auto nextIt = it;
+            ++nextIt;
 
-                    const Resource* res = Engine::GetInstance().moduleResources->PeekResource(droppedUID);
-                    if (res && res->GetType() == Resource::Type::animation)
-                    {
-                        AddAnimation(nameBuffer, droppedUID, res->GetName());
-                        addAnimation = false;
-                    }
-                }
-                ImGui::EndDragDropTarget();
-            }
+            RemoveAnimation(it->first);
+
+            it = nextIt;
         }
         else
         {
-            if (ImGui::Button("Add animation", ImVec2(availableWidth, 20)))
+            ++it;
+        }
+        i++;
+    }
+
+    if (i == 0)
+    {
+        ImGui::SameLine();
+        ImGui::Text("empty");
+    }
+
+    ImGui::Separator();
+
+    static char nameBuffer[64] = "New Animation";
+    int availableWidth = ImGui::GetContentRegionAvail().x;
+
+    if (addAnimation)
+    {
+        ImGui::InputText(" ", nameBuffer, 64);
+        ImGui::Button("Drop animation", ImVec2(availableWidth, 20));
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(RESOURCE_DRAG))
             {
-                addAnimation = true;
+                UID droppedUID = *(UID*)payload->Data;
+
+                const Resource* res = Engine::GetInstance().moduleResources->PeekResource(droppedUID);
+                if (res && res->GetType() == Resource::Type::animation)
+                {
+                    AddAnimation(nameBuffer, droppedUID, res->GetName());
+                    addAnimation = false;
+                }
             }
+            ImGui::EndDragDropTarget();
+        }
+    }
+    else
+    {
+        if (ImGui::Button("Add animation", ImVec2(availableWidth, 20)))
+        {
+            addAnimation = true;
         }
     }
 }

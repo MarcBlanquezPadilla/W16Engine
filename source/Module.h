@@ -31,6 +31,11 @@ public:
 		return true;
 	}
 
+	virtual bool FixedUpdate()
+	{
+		return true;
+	}
+
 	virtual bool PostUpdate()
 	{
 		return true;

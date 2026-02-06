@@ -65,6 +65,19 @@ bool ModuleScene::Update()
 	return ret;
 }
 
+bool ModuleScene::FixedUpdate()
+{
+	bool ret = true;
+
+	//GAME OBJECTS
+	for (auto pair : allGameObjects)
+	{
+		pair.second->FixedUpdate();
+	}
+
+	return ret;
+}
+
 bool ModuleScene::PostUpdate()
 {
 	if (!objectsPendingToDelete.empty())

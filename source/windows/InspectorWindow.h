@@ -10,7 +10,4 @@ public:
     virtual ~InspectorWindow();
 
     void Draw() override;
-
-private:
-    void DrawGameObjectInfo(GameObject* gameObject);
 };

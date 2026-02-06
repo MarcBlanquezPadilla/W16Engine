@@ -1,0 +1,2391 @@
+<?xml version="1.0"?>
+<Data>
+	<Scene>
+		<GameObjects>
+			<GameObject Name="street2.FBX" UID="2347046116" Enabled="true" Static="false">
+				<Components>
+					<Component type="1" enabled="true">
+						<Position x="0" y="0" z="0" />
+						<Rotation w="1" x="0" y="0" z="0" />
+						<Scale x="1" y="1" z="1" />
+					</Component>
+				</Components>
+				<Childs>
+					<GameObject Name="City_building_041_$AssimpFbx$_Translation" UID="2000905484" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="30.6952782" y="2.12107295e-07" z="-21.6126461" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_041_$AssimpFbx$_PreRotation" UID="920137607" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_041_$AssimpFbx$_Rotation" UID="412971627" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="0.707106769" x="0" y="0" z="0.707106769" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_041" UID="980607546" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="3364100836" TextureUID="3316676890" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_040_$AssimpFbx$_Translation" UID="691059424" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-34.6794815" y="-9.38345181e-07" z="30.6438885" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_040_$AssimpFbx$_PreRotation" UID="3675259196" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_040_$AssimpFbx$_Rotation" UID="15870287" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="0.707106709" x="0" y="0" z="-0.707106829" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_040" UID="1783129489" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="3912419453" TextureUID="1410155613" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_039_$AssimpFbx$_Translation" UID="888104401" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-42.8072395" y="-9.38345181e-07" z="30.6438885" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_039_$AssimpFbx$_PreRotation" UID="2623257326" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_039_$AssimpFbx$_Rotation" UID="675477417" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="0.707106709" x="0" y="0" z="-0.707106829" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_039" UID="2696419632" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="1064802486" TextureUID="1410155613" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_038_$AssimpFbx$_Translation" UID="1768714494" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-41.6490021" y="0" z="16.4953938" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_038_$AssimpFbx$_PreRotation" UID="1350826739" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_038_$AssimpFbx$_Rotation" UID="2144908681" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="0.707106709" x="0" y="0" z="-0.707106829" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_038" UID="3887218337" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="2473794299" TextureUID="14142079" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_037_$AssimpFbx$_Translation" UID="723280266" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-20.3176937" y="0" z="16.1636086" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_037_$AssimpFbx$_PreRotation" UID="409646869" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_037_$AssimpFbx$_Rotation" UID="609119229" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="3.13916473e-07" x="0" y="0" z="1" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_037" UID="3495212937" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="2795279575" TextureUID="14142079" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_036_$AssimpFbx$_Translation" UID="3445824337" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-31.2163315" y="5.01460704e-07" z="-33.2015762" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_036_$AssimpFbx$_PreRotation" UID="2584254077" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_036_$AssimpFbx$_Rotation" UID="1944731564" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="0.707106709" x="0" y="0" z="-0.707106829" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_036" UID="633451367" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="2539116762" TextureUID="2187146335" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_035_$AssimpFbx$_Translation" UID="682904531" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="13.38799" y="-9.38345181e-07" z="40.8025169" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_035_$AssimpFbx$_PreRotation" UID="2413834632" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_035" UID="471034664" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="1" x="0" y="0" z="0" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+											<Component type="2" enabled="true" MeshUID="3556949425" TextureUID="1410155613" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+										</Components>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_034_$AssimpFbx$_Translation" UID="1914616993" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="16.0495167" y="0" z="16.6968842" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_034_$AssimpFbx$_PreRotation" UID="2860098694" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_034_$AssimpFbx$_Rotation" UID="3516739137" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="0.707107008" x="0" y="0" z="-0.707106531" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_034" UID="3976720448" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="2425634462" TextureUID="14142079" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_033_$AssimpFbx$_Translation" UID="492255613" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-32.361496" y="5.01460704e-07" z="-42.3704224" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_033_$AssimpFbx$_PreRotation" UID="1307891746" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_033" UID="4111644207" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="1" x="0" y="0" z="0" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+											<Component type="2" enabled="true" MeshUID="818065566" TextureUID="2187146335" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+										</Components>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_032_$AssimpFbx$_Translation" UID="11621302" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-29.4784031" y="0" z="-21.0140991" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_032_$AssimpFbx$_PreRotation" UID="213250907" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_032" UID="1077301039" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="1" x="0" y="0" z="0" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+											<Component type="2" enabled="true" MeshUID="63120231" TextureUID="243206606" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+										</Components>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_031_$AssimpFbx$_Translation" UID="1852934777" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-34.6794815" y="-9.38345181e-07" z="41.8355637" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_031_$AssimpFbx$_PreRotation" UID="624860922" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_031_$AssimpFbx$_Rotation" UID="1560569480" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="0.707106709" x="0" y="0" z="-0.707106829" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_031" UID="1657141282" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="58320682" TextureUID="1410155613" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_030_$AssimpFbx$_Translation" UID="2672599143" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-42.8072395" y="-9.38345181e-07" z="41.8355637" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_030_$AssimpFbx$_PreRotation" UID="2064855609" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_030_$AssimpFbx$_Rotation" UID="2397803166" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="0.707106709" x="0" y="0" z="-0.707106829" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_030" UID="4016669171" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="3068695749" TextureUID="1410155613" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="Object010_$AssimpFbx$_Translation" UID="4104218138" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-20.6048737" y="-0.475959837" z="-4.06674242" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="Object010_$AssimpFbx$_PreRotation" UID="2806559485" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="Object010_$AssimpFbx$_GeometricTranslation" UID="3245422562" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="18.1015205" y="11.7341032" z="0.475959837" />
+												<Rotation w="1" x="0" y="0" z="0" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="Object010" UID="23449805" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="4030389096" TextureUID="0" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_028_$AssimpFbx$_Translation" UID="1570590977" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="13.38799" y="-9.38345181e-07" z="33.7550392" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_028_$AssimpFbx$_PreRotation" UID="461217305" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_028" UID="3347620930" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="1" x="0" y="0" z="0" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+											<Component type="2" enabled="true" MeshUID="845864866" TextureUID="1410155613" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+										</Components>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_026_$AssimpFbx$_Translation" UID="3806714277" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="31.5118885" y="0" z="16.4460163" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_026_$AssimpFbx$_PreRotation" UID="2078351164" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_026_$AssimpFbx$_Rotation" UID="492050188" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="4.37113883e-08" x="0" y="0" z="1" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_026" UID="2959144592" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="165862692" TextureUID="14142079" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_024_$AssimpFbx$_Translation" UID="4262610043" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-20.5727711" y="-0.0691944584" z="-43.0608292" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_024_$AssimpFbx$_PreRotation" UID="3284538389" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_024_$AssimpFbx$_Rotation" UID="902911783" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="4.37113883e-08" x="0" y="0" z="1" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_024" UID="1956095805" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="3605763549" TextureUID="1785292978" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_023_$AssimpFbx$_Translation" UID="993818025" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="42.1306419" y="-1.51068787e-06" z="-37.4932861" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_023_$AssimpFbx$_PreRotation" UID="1628879916" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_023" UID="486100352" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="1" x="0" y="0" z="0" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+											<Component type="2" enabled="true" MeshUID="447789353" TextureUID="2180851791" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+										</Components>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_022_$AssimpFbx$_Translation" UID="2661067675" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-20.8313236" y="0" z="27.4264889" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_022_$AssimpFbx$_PreRotation" UID="847059497" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_022_$AssimpFbx$_Rotation" UID="3431699585" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="3.13916473e-07" x="0" y="0" z="1" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_022" UID="450296325" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="4039715567" TextureUID="14142079" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_017_$AssimpFbx$_Translation" UID="4093997771" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="44.2600822" y="8.55386418e-07" z="39.1537209" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_017_$AssimpFbx$_PreRotation" UID="4026981247" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_017_$AssimpFbx$_Rotation" UID="2130370099" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="0.707106769" x="0" y="0" z="0.707106769" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_017" UID="3940544414" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="3065555993" TextureUID="215156801" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_016_$AssimpFbx$_Translation" UID="3786917568" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="34.2704239" y="8.55386418e-07" z="41.9727478" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_016_$AssimpFbx$_PreRotation" UID="1137930599" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_016_$AssimpFbx$_Rotation" UID="597613126" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="1.94707184e-07" x="0" y="0" z="1" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_016" UID="4235898827" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="3141310073" TextureUID="215156801" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_014_$AssimpFbx$_Translation" UID="2312029810" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-19.4397068" y="0" z="-32.0617294" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_014_$AssimpFbx$_PreRotation" UID="3790249163" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_014_$AssimpFbx$_Rotation" UID="2850053252" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="1.94707184e-07" x="0" y="0" z="1" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_014" UID="4249398248" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="633883465" TextureUID="243206606" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_013_$AssimpFbx$_Translation" UID="2697161049" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-42.2880554" y="5.01460704e-07" z="-33.2015762" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_013_$AssimpFbx$_PreRotation" UID="2715545878" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_013_$AssimpFbx$_Rotation" UID="417148915" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="0.707106769" x="0" y="0" z="0.707106769" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_013" UID="2423205224" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="1185169972" TextureUID="2187146335" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_011_$AssimpFbx$_Translation" UID="3227957692" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="30.1345406" y="-1.51068787e-06" z="-37.4932861" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_011_$AssimpFbx$_PreRotation" UID="1421033697" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_011" UID="2891809139" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="1" x="0" y="0" z="0" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+											<Component type="2" enabled="true" MeshUID="321635826" TextureUID="2180851791" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+										</Components>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_010_$AssimpFbx$_Translation" UID="3856634697" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="25.1540108" y="8.55386418e-07" z="39.1537209" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_010_$AssimpFbx$_PreRotation" UID="3260255505" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_010_$AssimpFbx$_Rotation" UID="2091934458" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="0.707106769" x="0" y="0" z="0.707106769" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_010" UID="2466085722" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="1125305570" TextureUID="215156801" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="Plane001_$AssimpFbx$_Translation" UID="493366601" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-0.0286026001" y="0" z="-0.0260320902" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="Plane001_$AssimpFbx$_PreRotation" UID="2456072670" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="Plane001_$AssimpFbx$_Scaling" UID="2373648121" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="1" x="0" y="0" z="0" />
+												<Scale x="0.996635258" y="0.97061646" z="0.996635258" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="Plane001" UID="1370745735" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="193564765" TextureUID="0" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="Line002_$AssimpFbx$_Translation" UID="1811132934" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-2.15977192" y="0" z="-1.85383821" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="Line002_$AssimpFbx$_PreRotation" UID="1243443668" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="Line002_$AssimpFbx$_Rotation" UID="2540586822" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="0.707106769" x="0" y="0" z="-0.707106769" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="Line002" UID="2558544659" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="1213490002" TextureUID="0" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_008_$AssimpFbx$_Translation" UID="1518810997" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="40.9799957" y="-2.0522466e-06" z="-18.2708244" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_008_$AssimpFbx$_PreRotation" UID="4179716942" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_008_$AssimpFbx$_Rotation" UID="2370818351" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="0.707106769" x="0" y="0" z="0.707106769" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="City_building_008" UID="3103356291" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="1" x="0" y="0" z="0" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+													<Component type="2" enabled="true" MeshUID="3536003191" TextureUID="1785292978" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+												</Components>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_007_$AssimpFbx$_Translation" UID="3822120501" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="16.0104923" y="-1.51068787e-06" z="-37.4932861" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_007_$AssimpFbx$_PreRotation" UID="4114484200" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_007" UID="3704536145" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="1" x="0" y="0" z="0" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+											<Component type="2" enabled="true" MeshUID="3690019793" TextureUID="2180851791" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+										</Components>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_001_$AssimpFbx$_Translation" UID="609609723" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="17.7071648" y="2.12107295e-07" z="-20.0532761" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_001_$AssimpFbx$_PreRotation" UID="80272733" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_001" UID="4118380525" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0.000288009644" y="0" z="2.63113407e-08" />
+												<Rotation w="1" x="0" y="0" z="0" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+											<Component type="2" enabled="true" MeshUID="1759837379" TextureUID="3316676890" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+										</Components>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+					<GameObject Name="City_building_004_$AssimpFbx$_Translation" UID="3087903962" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="-41.4758911" y="0" z="-21.0140991" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="City_building_004_$AssimpFbx$_PreRotation" UID="3072889113" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0" y="0" z="0" />
+										<Rotation w="0.707106769" x="-0.707106769" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="City_building_004" UID="1936142492" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="1" x="0" y="0" z="0" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+											<Component type="2" enabled="true" MeshUID="2613456651" TextureUID="243206606" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+										</Components>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+				</Childs>
+			</GameObject>
+			<GameObject Name="Mutant.fbx" UID="2940239107" Enabled="true" Static="false">
+				<Components>
+					<Component type="1" enabled="true">
+						<Position x="0" y="0.069975853" z="0" />
+						<Rotation w="1" x="0" y="0" z="0" />
+						<Scale x="1" y="1" z="1" />
+					</Component>
+					<Component type="5" enabled="true">
+						<Animation name="Attack" UID="814746753" loop="false" speed="1" />
+						<Animation name="Idle" UID="1016876503" loop="true" speed="1" />
+						<Animation name="Walk" UID="3099632582" loop="true" speed="1" />
+					</Component>
+					<Component type="6" enabled="true" Type="0" />
+					<Component type="10" enabled="true" Trigger="false" DynamicFriction="0.5" StaticFriction="0.5" Restitution="0.600000024" Radius="0.5" Height="1">
+						<Center x="0" y="1" z="0" />
+					</Component>
+				</Components>
+				<Childs>
+					<GameObject Name="MutantMesh" UID="3908986403" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="0" y="0" z="0" />
+								<Rotation w="1" x="0" y="0" z="0" />
+								<Scale x="1" y="1" z="1" />
+							</Component>
+							<Component type="3" enabled="true" MeshUID="2423635588" TextureUID="48752510" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+						</Components>
+					</GameObject>
+					<GameObject Name="mixamorig:Hips" UID="2395947340" Enabled="true" Static="false">
+						<Components>
+							<Component type="1" enabled="true">
+								<Position x="0.00575731555" y="0.848300695" z="-0.0129355257" />
+								<Rotation w="0.929278612" x="-0.0369231291" y="-0.367327839" z="-0.0121735781" />
+								<Scale x="0.99999994" y="0.99999994" z="1" />
+							</Component>
+						</Components>
+						<Childs>
+							<GameObject Name="mixamorig:Spine_$AssimpFbx$_Translation" UID="2956336072" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="1.78175753e-07" y="0.107638627" z="0.0124351643" />
+										<Rotation w="1" x="0" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="mixamorig:Spine_$AssimpFbx$_PreRotation" UID="1828886806" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="0.999961853" x="0.00870710518" y="0.000100034798" z="0.000724493992" />
+												<Scale x="1" y="0.99999994" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="mixamorig:Spine_$AssimpFbx$_Rotation" UID="1406940939" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="0.99785763" x="0.0505067594" y="0.0402410179" z="-0.0104829315" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+												</Components>
+												<Childs>
+													<GameObject Name="mixamorig:Spine" UID="131725560" Enabled="true" Static="false">
+														<Components>
+															<Component type="1" enabled="true">
+																<Position x="0" y="0" z="0" />
+																<Rotation w="1" x="0" y="0" z="0" />
+																<Scale x="1" y="1" z="1" />
+															</Component>
+														</Components>
+														<Childs>
+															<GameObject Name="mixamorig:Spine1_$AssimpFbx$_Translation" UID="633560793" Enabled="true" Static="false">
+																<Components>
+																	<Component type="1" enabled="true">
+																		<Position x="8.3266725e-19" y="0.130633339" z="-1.42108544e-16" />
+																		<Rotation w="1" x="0" y="0" z="0" />
+																		<Scale x="1" y="1" z="1" />
+																	</Component>
+																</Components>
+																<Childs>
+																	<GameObject Name="mixamorig:Spine1_$AssimpFbx$_PreRotation" UID="3944087545" Enabled="true" Static="false">
+																		<Components>
+																			<Component type="1" enabled="true">
+																				<Position x="0" y="0" z="0" />
+																				<Rotation w="0.999034882" x="-0.0439238586" y="1.01415608e-05" z="9.93269859e-05" />
+																				<Scale x="1" y="1" z="1" />
+																			</Component>
+																		</Components>
+																		<Childs>
+																			<GameObject Name="mixamorig:Spine1_$AssimpFbx$_Rotation" UID="1875243992" Enabled="true" Static="false">
+																				<Components>
+																					<Component type="1" enabled="true">
+																						<Position x="0" y="0" z="0" />
+																						<Rotation w="0.99144578" x="0.100771964" y="0.0819551125" z="-0.0127922501" />
+																						<Scale x="1" y="1" z="1" />
+																					</Component>
+																				</Components>
+																				<Childs>
+																					<GameObject Name="mixamorig:Spine1" UID="640459675" Enabled="true" Static="false">
+																						<Components>
+																							<Component type="1" enabled="true">
+																								<Position x="0" y="0" z="0" />
+																								<Rotation w="1" x="0" y="0" z="0" />
+																								<Scale x="1" y="1" z="1" />
+																							</Component>
+																						</Components>
+																						<Childs>
+																							<GameObject Name="mixamorig:Spine2_$AssimpFbx$_Translation" UID="2955090167" Enabled="true" Static="false">
+																								<Components>
+																									<Component type="1" enabled="true">
+																										<Position x="-1.47104543e-17" y="0.130205467" z="-2.48689959e-16" />
+																										<Rotation w="1" x="0" y="0" z="0" />
+																										<Scale x="1" y="1" z="1" />
+																									</Component>
+																								</Components>
+																								<Childs>
+																									<GameObject Name="mixamorig:Spine2_$AssimpFbx$_PreRotation" UID="3113606759" Enabled="true" Static="false">
+																										<Components>
+																											<Component type="1" enabled="true">
+																												<Position x="0" y="0" z="0" />
+																												<Rotation w="0.999379098" x="0.0352234803" y="-7.73013453e-05" z="-0.000828418124" />
+																												<Scale x="1" y="0.999999881" z="1" />
+																											</Component>
+																										</Components>
+																										<Childs>
+																											<GameObject Name="mixamorig:Spine2_$AssimpFbx$_Rotation" UID="1841073930" Enabled="true" Static="false">
+																												<Components>
+																													<Component type="1" enabled="true">
+																														<Position x="0" y="0" z="0" />
+																														<Rotation w="0.99144578" x="0.100634344" y="0.0810173452" z="-0.0185518786" />
+																														<Scale x="1" y="1" z="1" />
+																													</Component>
+																												</Components>
+																												<Childs>
+																													<GameObject Name="mixamorig:Spine2" UID="225827881" Enabled="true" Static="false">
+																														<Components>
+																															<Component type="1" enabled="true">
+																																<Position x="0" y="0" z="0" />
+																																<Rotation w="1" x="0" y="0" z="0" />
+																																<Scale x="1" y="1" z="1" />
+																															</Component>
+																														</Components>
+																														<Childs>
+																															<GameObject Name="mixamorig:Neck" UID="3310373771" Enabled="true" Static="false">
+																																<Components>
+																																	<Component type="1" enabled="true">
+																																		<Position x="-0.000119271186" y="0.24670653" z="0.0202810131" />
+																																		<Rotation w="0.999230385" x="-0.0375602469" y="-0.0110990973" z="0.0021804329" />
+																																		<Scale x="1" y="1" z="1" />
+																																	</Component>
+																																</Components>
+																																<Childs>
+																																	<GameObject Name="mixamorig:Head" UID="812796955" Enabled="true" Static="false">
+																																		<Components>
+																																			<Component type="1" enabled="true">
+																																				<Position x="-2.08166812e-19" y="0.0881732181" z="0.0610261559" />
+																																				<Rotation w="0.98263067" x="-0.0544691235" y="0.176923186" z="-0.0129708387" />
+																																				<Scale x="1" y="1" z="1" />
+																																			</Component>
+																																		</Components>
+																																		<Childs>
+																																			<GameObject Name="mixamorig:HeadTop_End" UID="2021491647" Enabled="true" Static="false">
+																																				<Components>
+																																					<Component type="1" enabled="true">
+																																						<Position x="1.10659992e-09" y="0.204939425" z="-0.00282503688" />
+																																						<Rotation w="1" x="0" y="0" z="0" />
+																																						<Scale x="1" y="1" z="1" />
+																																					</Component>
+																																				</Components>
+																																			</GameObject>
+																																		</Childs>
+																																	</GameObject>
+																																</Childs>
+																															</GameObject>
+																															<GameObject Name="mixamorig:LeftShoulder_$AssimpFbx$_Translation" UID="1404297333" Enabled="true" Static="false">
+																																<Components>
+																																	<Component type="1" enabled="true">
+																																		<Position x="0.0955356732" y="0.16065383" z="-0.0522783175" />
+																																		<Rotation w="1" x="0" y="0" z="0" />
+																																		<Scale x="1" y="1" z="1" />
+																																	</Component>
+																																</Components>
+																																<Childs>
+																																	<GameObject Name="mixamorig:LeftShoulder_$AssimpFbx$_PreRotation" UID="3501277262" Enabled="true" Static="false">
+																																		<Components>
+																																			<Component type="1" enabled="true">
+																																				<Position x="0" y="0" z="0" />
+																																				<Rotation w="0.514087319" x="0.458212078" y="0.541287482" z="-0.482456028" />
+																																				<Scale x="0.99999994" y="0.99999994" z="0.99999994" />
+																																			</Component>
+																																		</Components>
+																																		<Childs>
+																																			<GameObject Name="mixamorig:LeftShoulder_$AssimpFbx$_Rotation" UID="2620702629" Enabled="true" Static="false">
+																																				<Components>
+																																					<Component type="1" enabled="true">
+																																						<Position x="0" y="0" z="0" />
+																																						<Rotation w="0.997540474" x="0.0680208206" y="0.0153788859" z="0.00704546133" />
+																																						<Scale x="1" y="1" z="1" />
+																																					</Component>
+																																				</Components>
+																																				<Childs>
+																																					<GameObject Name="mixamorig:LeftShoulder" UID="1299900452" Enabled="true" Static="false">
+																																						<Components>
+																																							<Component type="1" enabled="true">
+																																								<Position x="0" y="0" z="0" />
+																																								<Rotation w="1" x="0" y="0" z="0" />
+																																								<Scale x="1" y="1" z="1" />
+																																							</Component>
+																																						</Components>
+																																						<Childs>
+																																							<GameObject Name="mixamorig:LeftArm_$AssimpFbx$_Translation" UID="590595476" Enabled="true" Static="false">
+																																								<Components>
+																																									<Component type="1" enabled="true">
+																																										<Position x="-2.38697938e-17" y="0.180355072" z="-2.84217088e-16" />
+																																										<Rotation w="1" x="0" y="0" z="0" />
+																																										<Scale x="1" y="1" z="1" />
+																																									</Component>
+																																								</Components>
+																																								<Childs>
+																																									<GameObject Name="mixamorig:LeftArm_$AssimpFbx$_PreRotation" UID="2037184404" Enabled="true" Static="false">
+																																										<Components>
+																																											<Component type="1" enabled="true">
+																																												<Position x="0" y="0" z="0" />
+																																												<Rotation w="0.998351038" x="0.0573739894" y="0.000106984415" z="-0.00186155434" />
+																																												<Scale x="0.999999881" y="1" z="1" />
+																																											</Component>
+																																										</Components>
+																																										<Childs>
+																																											<GameObject Name="mixamorig:LeftArm_$AssimpFbx$_Rotation" UID="3301373911" Enabled="true" Static="false">
+																																												<Components>
+																																													<Component type="1" enabled="true">
+																																														<Position x="0" y="0" z="0" />
+																																														<Rotation w="0.841606617" x="0.525612593" y="-0.102093898" z="0.0707567409" />
+																																														<Scale x="1" y="1" z="1" />
+																																													</Component>
+																																												</Components>
+																																												<Childs>
+																																													<GameObject Name="mixamorig:LeftArm" UID="2902472819" Enabled="true" Static="false">
+																																														<Components>
+																																															<Component type="1" enabled="true">
+																																																<Position x="0" y="0" z="0" />
+																																																<Rotation w="1" x="0" y="0" z="0" />
+																																																<Scale x="1" y="1" z="1" />
+																																															</Component>
+																																														</Components>
+																																														<Childs>
+																																															<GameObject Name="mixamorig:LeftForeArm_$AssimpFbx$_Translation" UID="1956435606" Enabled="true" Static="false">
+																																																<Components>
+																																																	<Component type="1" enabled="true">
+																																																		<Position x="1.3322676e-17" y="0.264150947" z="-5.68434176e-16" />
+																																																		<Rotation w="1" x="0" y="0" z="0" />
+																																																		<Scale x="1" y="1" z="1" />
+																																																	</Component>
+																																																</Components>
+																																																<Childs>
+																																																	<GameObject Name="mixamorig:LeftForeArm_$AssimpFbx$_PreRotation" UID="957539788" Enabled="true" Static="false">
+																																																		<Components>
+																																																			<Component type="1" enabled="true">
+																																																				<Position x="0" y="0" z="0" />
+																																																				<Rotation w="0.999618232" x="-8.28839256e-06" y="-1.42991226e-07" z="0.0276288744" />
+																																																				<Scale x="1" y="1" z="1" />
+																																																			</Component>
+																																																		</Components>
+																																																		<Childs>
+																																																			<GameObject Name="mixamorig:LeftForeArm_$AssimpFbx$_Rotation" UID="3962993711" Enabled="true" Static="false">
+																																																				<Components>
+																																																					<Component type="1" enabled="true">
+																																																						<Position x="0" y="0" z="0" />
+																																																						<Rotation w="0.923248768" x="-0.0108388346" y="0.0581869856" z="0.379616261" />
+																																																						<Scale x="1" y="1" z="1" />
+																																																					</Component>
+																																																				</Components>
+																																																				<Childs>
+																																																					<GameObject Name="mixamorig:LeftForeArm" UID="1532576961" Enabled="true" Static="false">
+																																																						<Components>
+																																																							<Component type="1" enabled="true">
+																																																								<Position x="0" y="0" z="0" />
+																																																								<Rotation w="1" x="0" y="0" z="0" />
+																																																								<Scale x="1" y="1" z="1" />
+																																																							</Component>
+																																																						</Components>
+																																																						<Childs>
+																																																							<GameObject Name="mixamorig:LeftHand" UID="756457398" Enabled="true" Static="false">
+																																																								<Components>
+																																																									<Component type="1" enabled="true">
+																																																										<Position x="-1.02140514e-16" y="0.267534316" z="-2.84217088e-16" />
+																																																										<Rotation w="1" x="0" y="0" z="0" />
+																																																										<Scale x="1" y="1" z="1" />
+																																																									</Component>
+																																																								</Components>
+																																																							</GameObject>
+																																																						</Childs>
+																																																					</GameObject>
+																																																				</Childs>
+																																																			</GameObject>
+																																																		</Childs>
+																																																	</GameObject>
+																																																</Childs>
+																																															</GameObject>
+																																														</Childs>
+																																													</GameObject>
+																																												</Childs>
+																																											</GameObject>
+																																										</Childs>
+																																									</GameObject>
+																																								</Childs>
+																																							</GameObject>
+																																						</Childs>
+																																					</GameObject>
+																																				</Childs>
+																																			</GameObject>
+																																		</Childs>
+																																	</GameObject>
+																																</Childs>
+																															</GameObject>
+																															<GameObject Name="mixamorig:RightShoulder_$AssimpFbx$_Translation" UID="2105061081" Enabled="true" Static="false">
+																																<Components>
+																																	<Component type="1" enabled="true">
+																																		<Position x="-0.0955356732" y="0.16065383" z="-0.0522783175" />
+																																		<Rotation w="1" x="0" y="0" z="0" />
+																																		<Scale x="1" y="1" z="1" />
+																																	</Component>
+																																</Components>
+																																<Childs>
+																																	<GameObject Name="mixamorig:RightShoulder_$AssimpFbx$_PreRotation" UID="3866907607" Enabled="true" Static="false">
+																																		<Components>
+																																			<Component type="1" enabled="true">
+																																				<Position x="0" y="0" z="0" />
+																																				<Rotation w="0.51414448" x="0.458020091" y="-0.541474879" z="0.482367098" />
+																																				<Scale x="1" y="1" z="1" />
+																																			</Component>
+																																		</Components>
+																																		<Childs>
+																																			<GameObject Name="mixamorig:RightShoulder_$AssimpFbx$_Rotation" UID="4179856034" Enabled="true" Static="false">
+																																				<Components>
+																																					<Component type="1" enabled="true">
+																																						<Position x="0" y="0" z="0" />
+																																						<Rotation w="0.992790401" x="0.0849781111" y="-0.0143234264" z="-0.0833106562" />
+																																						<Scale x="1" y="1" z="1" />
+																																					</Component>
+																																				</Components>
+																																				<Childs>
+																																					<GameObject Name="mixamorig:RightShoulder" UID="190443874" Enabled="true" Static="false">
+																																						<Components>
+																																							<Component type="1" enabled="true">
+																																								<Position x="0" y="0" z="0" />
+																																								<Rotation w="1" x="0" y="0" z="0" />
+																																								<Scale x="1" y="1" z="1" />
+																																							</Component>
+																																						</Components>
+																																						<Childs>
+																																							<GameObject Name="mixamorig:RightArm_$AssimpFbx$_Translation" UID="902454445" Enabled="true" Static="false">
+																																								<Components>
+																																									<Component type="1" enabled="true">
+																																										<Position x="1.54320999e-16" y="0.179550573" z="1.42108539e-15" />
+																																										<Rotation w="1" x="0" y="0" z="0" />
+																																										<Scale x="1" y="1" z="1" />
+																																									</Component>
+																																								</Components>
+																																								<Childs>
+																																									<GameObject Name="mixamorig:RightArm_$AssimpFbx$_PreRotation" UID="1041596656" Enabled="true" Static="false">
+																																										<Components>
+																																											<Component type="1" enabled="true">
+																																												<Position x="0" y="0" z="0" />
+																																												<Rotation w="0.998335898" x="0.0576405115" y="-0.000100704339" z="0.00174466625" />
+																																												<Scale x="1" y="1" z="0.99999994" />
+																																											</Component>
+																																										</Components>
+																																										<Childs>
+																																											<GameObject Name="mixamorig:RightArm_$AssimpFbx$_Rotation" UID="162314828" Enabled="true" Static="false">
+																																												<Components>
+																																													<Component type="1" enabled="true">
+																																														<Position x="0" y="0" z="0" />
+																																														<Rotation w="0.850313425" x="0.493281603" y="0.0833581313" z="0.163375944" />
+																																														<Scale x="1" y="1" z="1" />
+																																													</Component>
+																																												</Components>
+																																												<Childs>
+																																													<GameObject Name="mixamorig:RightArm" UID="468479430" Enabled="true" Static="false">
+																																														<Components>
+																																															<Component type="1" enabled="true">
+																																																<Position x="0" y="0" z="0" />
+																																																<Rotation w="1" x="0" y="0" z="0" />
+																																																<Scale x="1" y="1" z="1" />
+																																															</Component>
+																																														</Components>
+																																														<Childs>
+																																															<GameObject Name="mixamorig:RightForeArm_$AssimpFbx$_Translation" UID="1184332377" Enabled="true" Static="false">
+																																																<Components>
+																																																	<Component type="1" enabled="true">
+																																																		<Position x="3.83026922e-16" y="0.264150947" z="1.98951967e-15" />
+																																																		<Rotation w="1" x="0" y="0" z="0" />
+																																																		<Scale x="1" y="1" z="1" />
+																																																	</Component>
+																																																</Components>
+																																																<Childs>
+																																																	<GameObject Name="mixamorig:RightForeArm_$AssimpFbx$_PreRotation" UID="4183476194" Enabled="true" Static="false">
+																																																		<Components>
+																																																			<Component type="1" enabled="true">
+																																																				<Position x="0" y="0" z="0" />
+																																																				<Rotation w="0.999618232" x="-1.17526397e-05" y="2.90727797e-08" z="-0.0276288744" />
+																																																				<Scale x="1" y="1" z="1" />
+																																																			</Component>
+																																																		</Components>
+																																																		<Childs>
+																																																			<GameObject Name="mixamorig:RightForeArm_$AssimpFbx$_Rotation" UID="3101018222" Enabled="true" Static="false">
+																																																				<Components>
+																																																					<Component type="1" enabled="true">
+																																																						<Position x="0" y="0" z="0" />
+																																																						<Rotation w="0.941181779" x="0.043888703" y="0.0303420927" z="-0.333661497" />
+																																																						<Scale x="1" y="1" z="1" />
+																																																					</Component>
+																																																				</Components>
+																																																				<Childs>
+																																																					<GameObject Name="mixamorig:RightForeArm" UID="3539226315" Enabled="true" Static="false">
+																																																						<Components>
+																																																							<Component type="1" enabled="true">
+																																																								<Position x="0" y="0" z="0" />
+																																																								<Rotation w="1" x="0" y="0" z="0" />
+																																																								<Scale x="1" y="1" z="1" />
+																																																							</Component>
+																																																						</Components>
+																																																						<Childs>
+																																																							<GameObject Name="mixamorig:RightHand" UID="3901364313" Enabled="true" Static="false">
+																																																								<Components>
+																																																									<Component type="1" enabled="true">
+																																																										<Position x="-3.50164335e-14" y="0.267534316" z="-8.64588403e-13" />
+																																																										<Rotation w="0.977912247" x="0.111492008" y="-0.135108337" z="0.114030182" />
+																																																										<Scale x="0.99999994" y="0.99999994" z="1" />
+																																																									</Component>
+																																																								</Components>
+																																																								<Childs>
+																																																									<GameObject Name="mixamorig:RightHandIndex1_$AssimpFbx$_Translation" UID="16215329" Enabled="true" Static="false">
+																																																										<Components>
+																																																											<Component type="1" enabled="true">
+																																																												<Position x="0.0865423754" y="0.184477776" z="-0.0147964684" />
+																																																												<Rotation w="1" x="0" y="0" z="0" />
+																																																												<Scale x="1" y="1" z="1" />
+																																																											</Component>
+																																																										</Components>
+																																																										<Childs>
+																																																											<GameObject Name="mixamorig:RightHandIndex1_$AssimpFbx$_PreRotation" UID="3120837211" Enabled="true" Static="false">
+																																																												<Components>
+																																																													<Component type="1" enabled="true">
+																																																														<Position x="0" y="0" z="0" />
+																																																														<Rotation w="1" x="6.55900885e-06" y="1.38644111e-07" z="2.97220367e-07" />
+																																																														<Scale x="1" y="1" z="1" />
+																																																													</Component>
+																																																												</Components>
+																																																												<Childs>
+																																																													<GameObject Name="mixamorig:RightHandIndex1_$AssimpFbx$_Rotation" UID="725730472" Enabled="true" Static="false">
+																																																														<Components>
+																																																															<Component type="1" enabled="true">
+																																																																<Position x="0" y="0" z="0" />
+																																																																<Rotation w="0.977458775" x="0.00441360334" y="0.00103960535" z="-0.211077601" />
+																																																																<Scale x="1" y="1" z="1" />
+																																																															</Component>
+																																																														</Components>
+																																																														<Childs>
+																																																															<GameObject Name="mixamorig:RightHandIndex1" UID="3758118522" Enabled="true" Static="false">
+																																																																<Components>
+																																																																	<Component type="1" enabled="true">
+																																																																		<Position x="0" y="0" z="0" />
+																																																																		<Rotation w="1" x="0" y="0" z="0" />
+																																																																		<Scale x="1" y="1" z="1" />
+																																																																	</Component>
+																																																																</Components>
+																																																																<Childs>
+																																																																	<GameObject Name="mixamorig:RightHandIndex2" UID="1392399222" Enabled="true" Static="false">
+																																																																		<Components>
+																																																																			<Component type="1" enabled="true">
+																																																																				<Position x="-2.78337358e-13" y="0.0751438141" z="1.04591886e-13" />
+																																																																				<Rotation w="0.989043534" x="0.147561893" y="0.000236125648" z="-0.00428129453" />
+																																																																				<Scale x="1" y="1" z="1" />
+																																																																			</Component>
+																																																																		</Components>
+																																																																		<Childs>
+																																																																			<GameObject Name="mixamorig:RightHandIndex3_$AssimpFbx$_Translation" UID="4077839650" Enabled="true" Static="false">
+																																																																				<Components>
+																																																																					<Component type="1" enabled="true">
+																																																																						<Position x="-5.57554003e-13" y="0.0748938769" z="8.52651232e-15" />
+																																																																						<Rotation w="1" x="0" y="0" z="0" />
+																																																																						<Scale x="1" y="1" z="1" />
+																																																																					</Component>
+																																																																				</Components>
+																																																																				<Childs>
+																																																																					<GameObject Name="mixamorig:RightHandIndex3_$AssimpFbx$_PreRotation" UID="797054929" Enabled="true" Static="false">
+																																																																						<Components>
+																																																																							<Component type="1" enabled="true">
+																																																																								<Position x="0" y="0" z="0" />
+																																																																								<Rotation w="0.998857498" x="0.0452762917" y="-0.000692453817" z="-0.0152764879" />
+																																																																								<Scale x="1" y="0.99999994" z="0.999999881" />
+																																																																							</Component>
+																																																																						</Components>
+																																																																						<Childs>
+																																																																							<GameObject Name="mixamorig:RightHandIndex3_$AssimpFbx$_Rotation" UID="1185590762" Enabled="true" Static="false">
+																																																																								<Components>
+																																																																									<Component type="1" enabled="true">
+																																																																										<Position x="0" y="0" z="0" />
+																																																																										<Rotation w="0.998857617" x="-0.0452660099" y="4.19574455e-08" z="0.0153076667" />
+																																																																										<Scale x="1" y="1" z="1" />
+																																																																									</Component>
+																																																																								</Components>
+																																																																								<Childs>
+																																																																									<GameObject Name="mixamorig:RightHandIndex3" UID="1444604210" Enabled="true" Static="false">
+																																																																										<Components>
+																																																																											<Component type="1" enabled="true">
+																																																																												<Position x="0" y="0" z="0" />
+																																																																												<Rotation w="1" x="0" y="0" z="0" />
+																																																																												<Scale x="1" y="1" z="1" />
+																																																																											</Component>
+																																																																										</Components>
+																																																																										<Childs>
+																																																																											<GameObject Name="mixamorig:RightHandIndex4" UID="2684024923" Enabled="true" Static="false">
+																																																																												<Components>
+																																																																													<Component type="1" enabled="true">
+																																																																														<Position x="-8.06510403e-13" y="0.0676970705" z="8.52651232e-15" />
+																																																																														<Rotation w="1" x="0" y="0" z="0" />
+																																																																														<Scale x="1" y="1" z="1" />
+																																																																													</Component>
+																																																																												</Components>
+																																																																											</GameObject>
+																																																																										</Childs>
+																																																																									</GameObject>
+																																																																								</Childs>
+																																																																							</GameObject>
+																																																																						</Childs>
+																																																																					</GameObject>
+																																																																				</Childs>
+																																																																			</GameObject>
+																																																																		</Childs>
+																																																																	</GameObject>
+																																																																</Childs>
+																																																															</GameObject>
+																																																														</Childs>
+																																																													</GameObject>
+																																																												</Childs>
+																																																											</GameObject>
+																																																										</Childs>
+																																																									</GameObject>
+																																																									<GameObject Name="mixamorig:RightHandPinky1_$AssimpFbx$_Translation" UID="4151813098" Enabled="true" Static="false">
+																																																										<Components>
+																																																											<Component type="1" enabled="true">
+																																																												<Position x="-0.100030899" y="0.175077543" z="0.00477967085" />
+																																																												<Rotation w="1" x="0" y="0" z="0" />
+																																																												<Scale x="1" y="1" z="1" />
+																																																											</Component>
+																																																										</Components>
+																																																										<Childs>
+																																																											<GameObject Name="mixamorig:RightHandPinky1_$AssimpFbx$_PreRotation" UID="1977900331" Enabled="true" Static="false">
+																																																												<Components>
+																																																													<Component type="1" enabled="true">
+																																																														<Position x="0" y="0" z="0" />
+																																																														<Rotation w="0.707107186" x="4.43473073e-06" y="0.707106352" z="4.85620012e-06" />
+																																																														<Scale x="0.99999994" y="1" z="0.99999994" />
+																																																													</Component>
+																																																												</Components>
+																																																												<Childs>
+																																																													<GameObject Name="mixamorig:RightHandPinky1_$AssimpFbx$_Rotation" UID="1486161211" Enabled="true" Static="false">
+																																																														<Components>
+																																																															<Component type="1" enabled="true">
+																																																																<Position x="0" y="0" z="0" />
+																																																																<Rotation w="0.97355628" x="0.140984207" y="-0.0548883751" z="0.171169072" />
+																																																																<Scale x="1" y="1" z="1" />
+																																																															</Component>
+																																																														</Components>
+																																																														<Childs>
+																																																															<GameObject Name="mixamorig:RightHandPinky1" UID="2148296218" Enabled="true" Static="false">
+																																																																<Components>
+																																																																	<Component type="1" enabled="true">
+																																																																		<Position x="0" y="0" z="0" />
+																																																																		<Rotation w="1" x="0" y="0" z="0" />
+																																																																		<Scale x="1" y="1" z="1" />
+																																																																	</Component>
+																																																																</Components>
+																																																																<Childs>
+																																																																	<GameObject Name="mixamorig:RightHandPinky2" UID="3587335502" Enabled="true" Static="false">
+																																																																		<Components>
+																																																																			<Component type="1" enabled="true">
+																																																																				<Position x="-9.89075494e-14" y="0.0704421997" z="1.74082963e-15" />
+																																																																				<Rotation w="0.934413314" x="0.101822756" y="-0.0122033125" z="0.341108471" />
+																																																																				<Scale x="0.99999994" y="0.99999994" z="1" />
+																																																																			</Component>
+																																																																		</Components>
+																																																																		<Childs>
+																																																																			<GameObject Name="mixamorig:RightHandPinky3" UID="2467827067" Enabled="true" Static="false">
+																																																																				<Components>
+																																																																					<Component type="1" enabled="true">
+																																																																						<Position x="-5.96855879e-15" y="0.0707890317" z="7.28306298e-16" />
+																																																																						<Rotation w="0.99448204" x="-0.00266651716" y="2.48462548e-08" z="0.104873762" />
+																																																																						<Scale x="0.99999994" y="1" z="0.99999994" />
+																																																																					</Component>
+																																																																				</Components>
+																																																																				<Childs>
+																																																																					<GameObject Name="mixamorig:RightHandPinky4" UID="1171380491" Enabled="true" Static="false">
+																																																																						<Components>
+																																																																							<Component type="1" enabled="true">
+																																																																								<Position x="-7.38964418e-15" y="0.0709295645" z="8.52651264e-16" />
+																																																																								<Rotation w="1" x="0" y="0" z="0" />
+																																																																								<Scale x="1" y="1" z="1" />
+																																																																							</Component>
+																																																																						</Components>
+																																																																					</GameObject>
+																																																																				</Childs>
+																																																																			</GameObject>
+																																																																		</Childs>
+																																																																	</GameObject>
+																																																																</Childs>
+																																																															</GameObject>
+																																																														</Childs>
+																																																													</GameObject>
+																																																												</Childs>
+																																																											</GameObject>
+																																																										</Childs>
+																																																									</GameObject>
+																																																									<GameObject Name="mixamorig:RightHandThumb1_$AssimpFbx$_Translation" UID="2843560229" Enabled="true" Static="false">
+																																																										<Components>
+																																																											<Component type="1" enabled="true">
+																																																												<Position x="0.0616347454" y="0.0249229316" z="0.0444638282" />
+																																																												<Rotation w="1" x="0" y="0" z="0" />
+																																																												<Scale x="1" y="1" z="1" />
+																																																											</Component>
+																																																										</Components>
+																																																										<Childs>
+																																																											<GameObject Name="mixamorig:RightHandThumb1_$AssimpFbx$_PreRotation" UID="3662324680" Enabled="true" Static="false">
+																																																												<Components>
+																																																													<Component type="1" enabled="true">
+																																																														<Position x="0" y="0" z="0" />
+																																																														<Rotation w="0.902182221" x="0.21345681" y="-0.0358737782" z="-0.373117298" />
+																																																														<Scale x="1" y="0.99999994" z="0.99999994" />
+																																																													</Component>
+																																																												</Components>
+																																																												<Childs>
+																																																													<GameObject Name="mixamorig:RightHandThumb1_$AssimpFbx$_Rotation" UID="2712363105" Enabled="true" Static="false">
+																																																														<Components>
+																																																															<Component type="1" enabled="true">
+																																																																<Position x="0" y="0" z="0" />
+																																																																<Rotation w="0.991870046" x="-0.0532688648" y="0.0821401477" z="-0.0812974945" />
+																																																																<Scale x="1" y="1" z="1" />
+																																																															</Component>
+																																																														</Components>
+																																																														<Childs>
+																																																															<GameObject Name="mixamorig:RightHandThumb1" UID="1120357882" Enabled="true" Static="false">
+																																																																<Components>
+																																																																	<Component type="1" enabled="true">
+																																																																		<Position x="0" y="0" z="0" />
+																																																																		<Rotation w="1" x="0" y="0" z="0" />
+																																																																		<Scale x="1" y="1" z="1" />
+																																																																	</Component>
+																																																																</Components>
+																																																																<Childs>
+																																																																	<GameObject Name="mixamorig:RightHandThumb2_$AssimpFbx$_Translation" UID="1942201368" Enabled="true" Static="false">
+																																																																		<Components>
+																																																																			<Component type="1" enabled="true">
+																																																																				<Position x="3.55271347e-16" y="0.104730032" z="5.40012472e-15" />
+																																																																				<Rotation w="1" x="0" y="0" z="0" />
+																																																																				<Scale x="1" y="1" z="1" />
+																																																																			</Component>
+																																																																		</Components>
+																																																																		<Childs>
+																																																																			<GameObject Name="mixamorig:RightHandThumb2_$AssimpFbx$_PreRotation" UID="522615472" Enabled="true" Static="false">
+																																																																				<Components>
+																																																																					<Component type="1" enabled="true">
+																																																																						<Position x="0" y="0" z="0" />
+																																																																						<Rotation w="0.992436349" x="-0.0393084586" y="-0.00696080597" z="0.116088413" />
+																																																																						<Scale x="0.999999881" y="0.999999881" z="0.999999881" />
+																																																																					</Component>
+																																																																				</Components>
+																																																																				<Childs>
+																																																																					<GameObject Name="mixamorig:RightHandThumb2_$AssimpFbx$_Rotation" UID="4088937152" Enabled="true" Static="false">
+																																																																						<Components>
+																																																																							<Component type="1" enabled="true">
+																																																																								<Position x="0" y="0" z="0" />
+																																																																								<Rotation w="0.997550368" x="0.0208318792" y="-0.0033649914" z="0.0666945949" />
+																																																																								<Scale x="1" y="1" z="1" />
+																																																																							</Component>
+																																																																						</Components>
+																																																																						<Childs>
+																																																																							<GameObject Name="mixamorig:RightHandThumb2" UID="1079323275" Enabled="true" Static="false">
+																																																																								<Components>
+																																																																									<Component type="1" enabled="true">
+																																																																										<Position x="0" y="0" z="0" />
+																																																																										<Rotation w="1" x="0" y="0" z="0" />
+																																																																										<Scale x="1" y="1" z="1" />
+																																																																									</Component>
+																																																																								</Components>
+																																																																								<Childs>
+																																																																									<GameObject Name="mixamorig:RightHandThumb3_$AssimpFbx$_Translation" UID="2868283044" Enabled="true" Static="false">
+																																																																										<Components>
+																																																																											<Component type="1" enabled="true">
+																																																																												<Position x="8.52651264e-16" y="0.0849875659" z="3.97903934e-15" />
+																																																																												<Rotation w="1" x="0" y="0" z="0" />
+																																																																												<Scale x="1" y="1" z="1" />
+																																																																											</Component>
+																																																																										</Components>
+																																																																										<Childs>
+																																																																											<GameObject Name="mixamorig:RightHandThumb3_$AssimpFbx$_PreRotation" UID="198379052" Enabled="true" Static="false">
+																																																																												<Components>
+																																																																													<Component type="1" enabled="true">
+																																																																														<Position x="0" y="0" z="0" />
+																																																																														<Rotation w="0.996312857" x="-0.0472305045" y="-0.0104799941" z="0.0708531588" />
+																																																																														<Scale x="1" y="0.99999994" z="1" />
+																																																																													</Component>
+																																																																												</Components>
+																																																																												<Childs>
+																																																																													<GameObject Name="mixamorig:RightHandThumb3_$AssimpFbx$_Rotation" UID="1361421211" Enabled="true" Static="false">
+																																																																														<Components>
+																																																																															<Component type="1" enabled="true">
+																																																																																<Position x="0" y="0" z="0" />
+																																																																																<Rotation w="0.996367931" x="0.0464828312" y="-1.39039233e-08" z="-0.071346201" />
+																																																																																<Scale x="1" y="1" z="1" />
+																																																																															</Component>
+																																																																														</Components>
+																																																																														<Childs>
+																																																																															<GameObject Name="mixamorig:RightHandThumb3" UID="2631553838" Enabled="true" Static="false">
+																																																																																<Components>
+																																																																																	<Component type="1" enabled="true">
+																																																																																		<Position x="0" y="0" z="0" />
+																																																																																		<Rotation w="1" x="0" y="0" z="0" />
+																																																																																		<Scale x="1" y="1" z="1" />
+																																																																																	</Component>
+																																																																																</Components>
+																																																																																<Childs>
+																																																																																	<GameObject Name="mixamorig:RightHandThumb4" UID="4196348943" Enabled="true" Static="false">
+																																																																																		<Components>
+																																																																																			<Component type="1" enabled="true">
+																																																																																				<Position x="1.27897687e-15" y="0.0802527443" z="7.673861e-15" />
+																																																																																				<Rotation w="1" x="0" y="0" z="0" />
+																																																																																				<Scale x="1" y="1" z="1" />
+																																																																																			</Component>
+																																																																																		</Components>
+																																																																																	</GameObject>
+																																																																																</Childs>
+																																																																															</GameObject>
+																																																																														</Childs>
+																																																																													</GameObject>
+																																																																												</Childs>
+																																																																											</GameObject>
+																																																																										</Childs>
+																																																																									</GameObject>
+																																																																								</Childs>
+																																																																							</GameObject>
+																																																																						</Childs>
+																																																																					</GameObject>
+																																																																				</Childs>
+																																																																			</GameObject>
+																																																																		</Childs>
+																																																																	</GameObject>
+																																																																</Childs>
+																																																															</GameObject>
+																																																														</Childs>
+																																																													</GameObject>
+																																																												</Childs>
+																																																											</GameObject>
+																																																										</Childs>
+																																																									</GameObject>
+																																																								</Childs>
+																																																							</GameObject>
+																																																						</Childs>
+																																																					</GameObject>
+																																																				</Childs>
+																																																			</GameObject>
+																																																		</Childs>
+																																																	</GameObject>
+																																																</Childs>
+																																															</GameObject>
+																																														</Childs>
+																																													</GameObject>
+																																												</Childs>
+																																											</GameObject>
+																																										</Childs>
+																																									</GameObject>
+																																								</Childs>
+																																							</GameObject>
+																																						</Childs>
+																																					</GameObject>
+																																				</Childs>
+																																			</GameObject>
+																																		</Childs>
+																																	</GameObject>
+																																</Childs>
+																															</GameObject>
+																														</Childs>
+																													</GameObject>
+																												</Childs>
+																											</GameObject>
+																										</Childs>
+																									</GameObject>
+																								</Childs>
+																							</GameObject>
+																						</Childs>
+																					</GameObject>
+																				</Childs>
+																			</GameObject>
+																		</Childs>
+																	</GameObject>
+																</Childs>
+															</GameObject>
+														</Childs>
+													</GameObject>
+												</Childs>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+							<GameObject Name="mixamorig:LeftUpLeg_$AssimpFbx$_Translation" UID="837758509" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="0.13655962" y="-0.0713526085" z="0.00129694678" />
+										<Rotation w="1" x="0" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="mixamorig:LeftUpLeg_$AssimpFbx$_PreRotation" UID="2309771732" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="4.3303379e-07" x="8.92617713e-09" y="0.0206087437" z="0.999787629" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="mixamorig:LeftUpLeg_$AssimpFbx$_Rotation" UID="2759822565" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="0.963316739" x="0.230856344" y="-0.070718497" z="0.117154583" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+												</Components>
+												<Childs>
+													<GameObject Name="mixamorig:LeftUpLeg" UID="2870862293" Enabled="true" Static="false">
+														<Components>
+															<Component type="1" enabled="true">
+																<Position x="0" y="0" z="0" />
+																<Rotation w="1" x="0" y="0" z="0" />
+																<Scale x="1" y="1" z="1" />
+															</Component>
+														</Components>
+														<Childs>
+															<GameObject Name="mixamorig:LeftLeg_$AssimpFbx$_Translation" UID="2068797209" Enabled="true" Static="false">
+																<Components>
+																	<Component type="1" enabled="true">
+																		<Position x="5.3290704e-17" y="0.359496653" z="-5.3290704e-17" />
+																		<Rotation w="1" x="0" y="0" z="0" />
+																		<Scale x="1" y="1" z="1" />
+																	</Component>
+																</Components>
+																<Childs>
+																	<GameObject Name="mixamorig:LeftLeg_$AssimpFbx$_PreRotation" UID="3118395582" Enabled="true" Static="false">
+																		<Components>
+																			<Component type="1" enabled="true">
+																				<Position x="0" y="0" z="0" />
+																				<Rotation w="0.998253644" x="-0.0590734929" y="2.23713172e-08" z="-3.78041818e-07" />
+																				<Scale x="1" y="1" z="1" />
+																			</Component>
+																		</Components>
+																		<Childs>
+																			<GameObject Name="mixamorig:LeftLeg_$AssimpFbx$_Rotation" UID="3592933251" Enabled="true" Static="false">
+																				<Components>
+																					<Component type="1" enabled="true">
+																						<Position x="0" y="0" z="0" />
+																						<Rotation w="0.944896758" x="-0.301913798" y="0.122730121" z="-0.0309102777" />
+																						<Scale x="1" y="1" z="1" />
+																					</Component>
+																				</Components>
+																				<Childs>
+																					<GameObject Name="mixamorig:LeftLeg" UID="3898382097" Enabled="true" Static="false">
+																						<Components>
+																							<Component type="1" enabled="true">
+																								<Position x="0" y="0" z="0" />
+																								<Rotation w="1" x="0" y="0" z="0" />
+																								<Scale x="1" y="1" z="1" />
+																							</Component>
+																						</Components>
+																						<Childs>
+																							<GameObject Name="mixamorig:LeftFoot_$AssimpFbx$_Translation" UID="947848381" Enabled="true" Static="false">
+																								<Components>
+																									<Component type="1" enabled="true">
+																										<Position x="-7.1054272e-17" y="0.344093382" z="-2.75335312e-16" />
+																										<Rotation w="1" x="0" y="0" z="0" />
+																										<Scale x="1" y="1" z="1" />
+																									</Component>
+																								</Components>
+																								<Childs>
+																									<GameObject Name="mixamorig:LeftFoot_$AssimpFbx$_PreRotation" UID="233806790" Enabled="true" Static="false">
+																										<Components>
+																											<Component type="1" enabled="true">
+																												<Position x="0" y="0" z="0" />
+																												<Rotation w="0.910408795" x="0.413709849" y="6.44225224e-07" z="3.44037659e-07" />
+																												<Scale x="1" y="0.99999994" z="0.99999994" />
+																											</Component>
+																										</Components>
+																										<Childs>
+																											<GameObject Name="mixamorig:LeftFoot_$AssimpFbx$_Rotation" UID="683065656" Enabled="true" Static="false">
+																												<Components>
+																													<Component type="1" enabled="true">
+																														<Position x="0" y="0" z="0" />
+																														<Rotation w="0.995909452" x="0.0469200574" y="-0.0569805913" z="-0.0521164089" />
+																														<Scale x="1" y="1" z="1" />
+																													</Component>
+																												</Components>
+																												<Childs>
+																													<GameObject Name="mixamorig:LeftFoot" UID="2429522223" Enabled="true" Static="false">
+																														<Components>
+																															<Component type="1" enabled="true">
+																																<Position x="0" y="0" z="0" />
+																																<Rotation w="1" x="0" y="0" z="0" />
+																																<Scale x="1" y="1" z="1" />
+																															</Component>
+																														</Components>
+																														<Childs>
+																															<GameObject Name="mixamorig:LeftToeBase_$AssimpFbx$_Translation" UID="4199448579" Enabled="true" Static="false">
+																																<Components>
+																																	<Component type="1" enabled="true">
+																																		<Position x="3.19744217e-16" y="0.21288" z="-2.13162816e-16" />
+																																		<Rotation w="1" x="0" y="0" z="0" />
+																																		<Scale x="1" y="1" z="1" />
+																																	</Component>
+																																</Components>
+																																<Childs>
+																																	<GameObject Name="mixamorig:LeftToeBase_$AssimpFbx$_PreRotation" UID="1623361028" Enabled="true" Static="false">
+																																		<Components>
+																																			<Component type="1" enabled="true">
+																																				<Position x="0" y="0" z="0" />
+																																				<Rotation w="0.922081709" x="0.386995316" y="4.69437715e-08" z="6.15370539e-07" />
+																																				<Scale x="1" y="0.99999994" z="0.99999994" />
+																																			</Component>
+																																		</Components>
+																																		<Childs>
+																																			<GameObject Name="mixamorig:LeftToeBase_$AssimpFbx$_Rotation" UID="480853633" Enabled="true" Static="false">
+																																				<Components>
+																																					<Component type="1" enabled="true">
+																																						<Position x="0" y="0" z="0" />
+																																						<Rotation w="0.9993729" x="0.0204246379" y="0.00757095404" z="-0.027917726" />
+																																						<Scale x="1" y="1" z="1" />
+																																					</Component>
+																																				</Components>
+																																				<Childs>
+																																					<GameObject Name="mixamorig:LeftToeBase" UID="3298681178" Enabled="true" Static="false">
+																																						<Components>
+																																							<Component type="1" enabled="true">
+																																								<Position x="0" y="0" z="0" />
+																																								<Rotation w="1" x="0" y="0" z="0" />
+																																								<Scale x="1" y="1" z="1" />
+																																							</Component>
+																																						</Components>
+																																						<Childs>
+																																							<GameObject Name="mixamorig:LeftToe_End" UID="1971974719" Enabled="true" Static="false">
+																																								<Components>
+																																									<Component type="1" enabled="true">
+																																										<Position x="-1.7763568e-17" y="0.168838218" z="5.00348979e-16" />
+																																										<Rotation w="1" x="0" y="0" z="0" />
+																																										<Scale x="1" y="1" z="1" />
+																																									</Component>
+																																								</Components>
+																																							</GameObject>
+																																						</Childs>
+																																					</GameObject>
+																																				</Childs>
+																																			</GameObject>
+																																		</Childs>
+																																	</GameObject>
+																																</Childs>
+																															</GameObject>
+																														</Childs>
+																													</GameObject>
+																												</Childs>
+																											</GameObject>
+																										</Childs>
+																									</GameObject>
+																								</Childs>
+																							</GameObject>
+																						</Childs>
+																					</GameObject>
+																				</Childs>
+																			</GameObject>
+																		</Childs>
+																	</GameObject>
+																</Childs>
+															</GameObject>
+														</Childs>
+													</GameObject>
+												</Childs>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+							<GameObject Name="mixamorig:RightUpLeg_$AssimpFbx$_Translation" UID="277908814" Enabled="true" Static="false">
+								<Components>
+									<Component type="1" enabled="true">
+										<Position x="-0.136559844" y="-0.0713521615" z="0.00129698054" />
+										<Rotation w="1" x="0" y="0" z="0" />
+										<Scale x="1" y="1" z="1" />
+									</Component>
+								</Components>
+								<Childs>
+									<GameObject Name="mixamorig:RightUpLeg_$AssimpFbx$_PreRotation" UID="1476202931" Enabled="true" Static="false">
+										<Components>
+											<Component type="1" enabled="true">
+												<Position x="0" y="0" z="0" />
+												<Rotation w="1.26732164e-06" x="2.61234536e-08" y="0.0206087437" z="0.999787629" />
+												<Scale x="1" y="1" z="1" />
+											</Component>
+										</Components>
+										<Childs>
+											<GameObject Name="mixamorig:RightUpLeg_$AssimpFbx$_Rotation" UID="4101484032" Enabled="true" Static="false">
+												<Components>
+													<Component type="1" enabled="true">
+														<Position x="0" y="0" z="0" />
+														<Rotation w="0.982311368" x="-0.0176651832" y="0.117914736" z="-0.144389436" />
+														<Scale x="1" y="1" z="1" />
+													</Component>
+												</Components>
+												<Childs>
+													<GameObject Name="mixamorig:RightUpLeg" UID="2496070764" Enabled="true" Static="false">
+														<Components>
+															<Component type="1" enabled="true">
+																<Position x="0" y="0" z="0" />
+																<Rotation w="1" x="0" y="0" z="0" />
+																<Scale x="1" y="1" z="1" />
+															</Component>
+														</Components>
+														<Childs>
+															<GameObject Name="mixamorig:RightLeg_$AssimpFbx$_Translation" UID="2493633551" Enabled="true" Static="false">
+																<Components>
+																	<Component type="1" enabled="true">
+																		<Position x="5.3290704e-17" y="0.359496653" z="-1.7763568e-17" />
+																		<Rotation w="1" x="0" y="0" z="0" />
+																		<Scale x="1" y="1" z="1" />
+																	</Component>
+																</Components>
+																<Childs>
+																	<GameObject Name="mixamorig:RightLeg_$AssimpFbx$_PreRotation" UID="1218637700" Enabled="true" Static="false">
+																		<Components>
+																			<Component type="1" enabled="true">
+																				<Position x="0" y="0" z="0" />
+																				<Rotation w="0.998253644" x="-0.0590734929" y="-2.21036878e-08" z="3.73519271e-07" />
+																				<Scale x="1" y="1" z="1" />
+																			</Component>
+																		</Components>
+																		<Childs>
+																			<GameObject Name="mixamorig:RightLeg_$AssimpFbx$_Rotation" UID="2370764579" Enabled="true" Static="false">
+																				<Components>
+																					<Component type="1" enabled="true">
+																						<Position x="0" y="0" z="0" />
+																						<Rotation w="0.956265569" x="-0.283410132" y="0.0700222328" z="-0.0182142444" />
+																						<Scale x="1" y="1" z="1" />
+																					</Component>
+																				</Components>
+																				<Childs>
+																					<GameObject Name="mixamorig:RightLeg" UID="508063146" Enabled="true" Static="false">
+																						<Components>
+																							<Component type="1" enabled="true">
+																								<Position x="0" y="0" z="0" />
+																								<Rotation w="1" x="0" y="0" z="0" />
+																								<Scale x="1" y="1" z="1" />
+																							</Component>
+																						</Components>
+																						<Childs>
+																							<GameObject Name="mixamorig:RightFoot_$AssimpFbx$_Translation" UID="4128065281" Enabled="true" Static="false">
+																								<Components>
+																									<Component type="1" enabled="true">
+																										<Position x="-3.55271347e-16" y="0.344093382" z="-7.99360543e-17" />
+																										<Rotation w="1" x="0" y="0" z="0" />
+																										<Scale x="1" y="1" z="1" />
+																									</Component>
+																								</Components>
+																								<Childs>
+																									<GameObject Name="mixamorig:RightFoot_$AssimpFbx$_PreRotation" UID="2664153659" Enabled="true" Static="false">
+																										<Components>
+																											<Component type="1" enabled="true">
+																												<Position x="0" y="0" z="0" />
+																												<Rotation w="0.910408795" x="0.413709849" y="6.35959452e-07" z="3.40283577e-07" />
+																												<Scale x="1" y="0.99999994" z="0.99999994" />
+																											</Component>
+																										</Components>
+																										<Childs>
+																											<GameObject Name="mixamorig:RightFoot_$AssimpFbx$_Rotation" UID="3408501848" Enabled="true" Static="false">
+																												<Components>
+																													<Component type="1" enabled="true">
+																														<Position x="0" y="0" z="0" />
+																														<Rotation w="0.961006165" x="0.217724845" y="0.125922918" z="0.114919066" />
+																														<Scale x="1" y="1" z="1" />
+																													</Component>
+																												</Components>
+																												<Childs>
+																													<GameObject Name="mixamorig:RightFoot" UID="977983918" Enabled="true" Static="false">
+																														<Components>
+																															<Component type="1" enabled="true">
+																																<Position x="0" y="0" z="0" />
+																																<Rotation w="1" x="0" y="0" z="0" />
+																																<Scale x="1" y="1" z="1" />
+																															</Component>
+																														</Components>
+																														<Childs>
+																															<GameObject Name="mixamorig:RightToeBase_$AssimpFbx$_Translation" UID="1187813839" Enabled="true" Static="false">
+																																<Components>
+																																	<Component type="1" enabled="true">
+																																		<Position x="8.88178367e-17" y="0.21288" z="5.3290704e-17" />
+																																		<Rotation w="1" x="0" y="0" z="0" />
+																																		<Scale x="1" y="1" z="1" />
+																																	</Component>
+																																</Components>
+																																<Childs>
+																																	<GameObject Name="mixamorig:RightToeBase_$AssimpFbx$_PreRotation" UID="1819183511" Enabled="true" Static="false">
+																																		<Components>
+																																			<Component type="1" enabled="true">
+																																				<Position x="0" y="0" z="0" />
+																																				<Rotation w="0.922081709" x="0.386995256" y="4.60016842e-08" z="6.07947129e-07" />
+																																				<Scale x="1" y="1" z="1" />
+																																			</Component>
+																																		</Components>
+																																		<Childs>
+																																			<GameObject Name="mixamorig:RightToeBase_$AssimpFbx$_Rotation" UID="1592345710" Enabled="true" Static="false">
+																																				<Components>
+																																					<Component type="1" enabled="true">
+																																						<Position x="0" y="0" z="0" />
+																																						<Rotation w="0.999868989" x="0.0156124122" y="0.00292877457" z="-0.00312961219" />
+																																						<Scale x="1" y="1" z="1" />
+																																					</Component>
+																																				</Components>
+																																				<Childs>
+																																					<GameObject Name="mixamorig:RightToeBase" UID="1231395834" Enabled="true" Static="false">
+																																						<Components>
+																																							<Component type="1" enabled="true">
+																																								<Position x="0" y="0" z="0" />
+																																								<Rotation w="1" x="0" y="0" z="0" />
+																																								<Scale x="1" y="1" z="1" />
+																																							</Component>
+																																						</Components>
+																																						<Childs>
+																																							<GameObject Name="mixamorig:RightToe_End" UID="2535721199" Enabled="true" Static="false">
+																																								<Components>
+																																									<Component type="1" enabled="true">
+																																										<Position x="-1.95399251e-16" y="0.168838218" z="-2.41254492e-16" />
+																																										<Rotation w="1" x="0" y="0" z="0" />
+																																										<Scale x="1" y="1" z="1" />
+																																									</Component>
+																																								</Components>
+																																							</GameObject>
+																																						</Childs>
+																																					</GameObject>
+																																				</Childs>
+																																			</GameObject>
+																																		</Childs>
+																																	</GameObject>
+																																</Childs>
+																															</GameObject>
+																														</Childs>
+																													</GameObject>
+																												</Childs>
+																											</GameObject>
+																										</Childs>
+																									</GameObject>
+																								</Childs>
+																							</GameObject>
+																						</Childs>
+																					</GameObject>
+																				</Childs>
+																			</GameObject>
+																		</Childs>
+																	</GameObject>
+																</Childs>
+															</GameObject>
+														</Childs>
+													</GameObject>
+												</Childs>
+											</GameObject>
+										</Childs>
+									</GameObject>
+								</Childs>
+							</GameObject>
+						</Childs>
+					</GameObject>
+				</Childs>
+			</GameObject>
+		</GameObjects>
+	</Scene>
+</Data>

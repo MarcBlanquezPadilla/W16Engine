@@ -10,7 +10,6 @@
 #include "../GameObject.h"
 #include "../components/Transform.h"
 #include "../components/MeshRenderer.h"
-#include "../components/Texture.h"
 
 #include "../resources/Resource.h"
 

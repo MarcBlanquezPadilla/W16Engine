@@ -4,6 +4,7 @@
 #include "ModuleEvents.h"
 
 #include "utils/Log.h"
+#include "glm/glm.hpp"
 
 ModuleInput::ModuleInput(bool startEnabled) : Module(startEnabled)
 {
@@ -216,14 +217,14 @@ bool ModuleInput::GetWindowEvent(EventWindow ev)
 	return windowEvents[ev];
 }
 
-Vector2D ModuleInput::GetMousePosition()
+glm::vec2 ModuleInput::GetMousePosition()
 {
-	return Vector2D(mouseX, mouseY);
+	return glm::vec2(mouseX, mouseY);
 }
 
-Vector2D ModuleInput::GetMouseMotion()
+glm::vec2 ModuleInput::GetMouseMotion()
 {
-	return Vector2D(mouseMotionX, mouseMotionY);
+	return glm::vec2(mouseMotionX, mouseMotionY);
 }
 
 KeyState ModuleInput::GetGamepadButton(SDL_GamepadButton button) const
