@@ -1,12 +1,14 @@
 #pragma once
 #include "Component.h"
+#include "PhysicsEventsListener.h"
+#include "../ModulePhysics.h"
 #include "../EventListener.h"
 #include <PxPhysicsAPI.h>
 
 class GameObject;
 class Collider;
 
-class Rigidbody : public Component, EventListener
+class Rigidbody : public Component
 {
 public:
 
@@ -47,11 +49,12 @@ public:
     void Load(Config& componentNode) override;
 
     void OnEditor() override;
-    void OnEvent(const Event& event) override;
 
     void SetType(Type bodyType);
     
     void CreateBody();
+    void UnattachCollider(Collider* collider);
+    void AttachCollider(Collider* collider);
 
     void EnableSimulation(bool enable);
     void SyncPropertiesToPhysics();
@@ -86,10 +89,17 @@ public:
     void SetUseGravity(bool useGravity);
     void SetUseCCD(bool useCCD);
 
+    //COLLISIONS
+    void CastPhysicsEvent(PhysicsEventType type, Rigidbody* other);
+
 private:    
     
     physx::PxRigidDynamic* GetDynamic() { return actor ? actor->is<physx::PxRigidDynamic>() : nullptr; }
-    
+    void CollectListeners();
+    void OnComponentAdded(Component* component) override;
+    void OnComponentRemoved(Component* component) override;
+
+private: 
     physx::PxRigidActor* actor = nullptr;
     
     Type type = STATIC;
@@ -101,4 +111,7 @@ private:
 
     bool freezePosX = false, freezePosY = false, freezePosZ = false;
     bool freezeRotX = false, freezeRotY = false, freezeRotZ = false;
+
+    std::vector <PhysicsEventsListener*> listeners;
+    std::vector <Collider*> attachedColliders;
 };

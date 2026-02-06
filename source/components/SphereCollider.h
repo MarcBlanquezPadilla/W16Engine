@@ -20,4 +20,6 @@ public:
 
     const float GetRadius() { return radius; }
     void SetRadius(float radius);
+
+    void DebugCollider();
 };

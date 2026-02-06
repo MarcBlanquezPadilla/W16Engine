@@ -49,7 +49,7 @@ bool ModuleTime::PreUpdate()
 	{
 		if (oneFrameStep)
 		{
-			Time::deltaTime = Time::realDeltaTime;
+			Time::deltaTime = 0.16f;
 			oneFrameStep = false;
 		}
 		else

@@ -66,6 +66,7 @@ set(W16_ENGINE_SOURCES
 	source/components/Animation.h
 	source/components/Rigidbody.h
 	source/components/Rigidbody.cpp
+	source/components/PhysicsEventsListener.h
 	source/components/Collider.h
 	source/components/Collider.cpp
 	source/components/BoxCollider.h

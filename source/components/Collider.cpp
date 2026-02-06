@@ -26,15 +26,25 @@ void Collider::Start()
 
 void Collider::OnEnable() 
 {
-    Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
-    if (rb) rb->CreateBody();
+    if (attachedRigidbody) {
+        attachedRigidbody->CreateBody();
+    }
+    else {
+        Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
+        if (rb) rb->CreateBody();
+    }
 }
 
 void Collider::OnDisable() 
 {
-    Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
-    if (rb) rb->CreateBody();
+    if (attachedRigidbody) attachedRigidbody->UnattachCollider(this);
 }
+
+void Collider::CleanUp()
+{
+    if (attachedRigidbody) attachedRigidbody->UnattachCollider(this);
+}
+
 
 void Collider::SaveBase(Config& config)
 {
@@ -96,33 +106,28 @@ void Collider::OnEditorBase()
 void Collider::SetCenter(glm::vec3 center)
 {
     this->center = center;
-    Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
-    if (rb) rb->CreateBody();
+    if (attachedRigidbody) attachedRigidbody->CreateBody();
 }
 
 void Collider::SetTrigger(bool trigger)
 {
     isTrigger = trigger;
-    Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
-    if (rb) rb->CreateBody();
+    if (attachedRigidbody) attachedRigidbody->CreateBody();
 }
 
 void Collider::SetStaticFriction(float staticFriction)
 {
     this->staticFriction = glm::clamp(staticFriction, 0.0f, INFINITY);
-    Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
-    if (rb) rb->CreateBody();
+    if (attachedRigidbody) attachedRigidbody->CreateBody();
 }
 
 void Collider::SetDynamicFriction(float dynamicFriction)
 {
     this->dynamicFriction = glm::clamp(dynamicFriction, 0.0f, INFINITY);
-    Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
-    if (rb) rb->CreateBody();
+    if (attachedRigidbody) attachedRigidbody->CreateBody();
 }
 void Collider::SetRestitution(float restitution)
 {
     this->restitution = glm::clamp(restitution, 0.0f, INFINITY);
-    Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
-    if (rb) rb->CreateBody();
+    if (attachedRigidbody) attachedRigidbody->CreateBody();
 }

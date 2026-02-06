@@ -22,8 +22,10 @@ public:
     virtual ~Collider() override;
 
     void Start() override;
+    virtual void Update() override {};
     void OnEnable() override;
     void OnDisable() override;
+    void CleanUp() override;
 
 
     virtual physx::PxGeometry* GetGeometry() = 0;
@@ -64,9 +66,11 @@ public:
     const float GetDynamicFriction() { return dynamicFriction; };
     const float GetRestitution() { return restitution; };
 
-protected:
+    virtual void DebugShape() {}
 
     Rigidbody* attachedRigidbody = nullptr;
+
+protected:
 
     glm::vec3 center = { 0, 0, 0 };
    

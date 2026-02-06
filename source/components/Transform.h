@@ -2,10 +2,12 @@
 #include "Component.h"
 #include <glm/glm.hpp>
 #include "glm/gtc/quaternion.hpp"
+#include "../utils/Log.h"
+#include "PhysicsEventsListener.h"
 
 class GameObject;
 
-class Transform : public Component
+class Transform : public Component, public PhysicsEventsListener
 {
 public:
 
@@ -48,6 +50,14 @@ public:
     void InvalidateGlobalMatrix();
 
     void OnEditor() override;
+
+    void OnCollisionEnter(Rigidbody* other) { LOG(LogType::LOG_INFO, "COLLISION ENTER"); }
+    void OnCollisionStay(Rigidbody* other) { LOG(LogType::LOG_INFO, "COLLISION STAY"); }
+    void OnCollisionExit(Rigidbody* other) { LOG(LogType::LOG_INFO, "COLLISION EXIT"); }
+
+    void OnTriggerEnter(Rigidbody* other) { LOG(LogType::LOG_INFO, "TRIGGER ENTER"); }
+    void OnTriggerStay(Rigidbody* other) { LOG(LogType::LOG_INFO, "TRIGGER STAY"); }
+    void OnTriggerExit(Rigidbody* other) { LOG(LogType::LOG_INFO, "TRIGGER EXIT"); }
 
 public:
     

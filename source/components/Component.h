@@ -58,6 +58,7 @@ public:
     const bool& GetEnabled() { return enabled; }
 
     virtual void OnComponentAdded(Component* component) {}
+    virtual void OnComponentRemoved(Component* component) {}
 
 
 public:

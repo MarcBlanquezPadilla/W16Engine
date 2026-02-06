@@ -15,9 +15,6 @@ Rigidbody::Rigidbody(GameObject* owner) : Component(owner)
 {
     name = "Rigidbody";
     CreateBody();
-    Engine::GetInstance().moduleEvents->Subscribe(Event::Type::Play, this);
-    Engine::GetInstance().moduleEvents->Subscribe(Event::Type::Pause, this);
-    Engine::GetInstance().moduleEvents->Subscribe(Event::Type::Stop, this);
 }
 
 Rigidbody::~Rigidbody()
@@ -27,7 +24,6 @@ Rigidbody::~Rigidbody()
 
 void Rigidbody::FixedUpdate() 
 {
-
     if (Engine::GetInstance().moduleTime->GetIsRunning())
     {
         if (!actor) return;
@@ -79,17 +75,24 @@ void Rigidbody::OnEnable()
 
 void Rigidbody::OnDisable() 
 {
-    EnableSimulation(false);
+
 }
 
 void Rigidbody::CleanUp()
 {
+    for (Collider* col : attachedColliders) {
+        if (col) {
+            col->attachedRigidbody = nullptr;
+        }
+    }
+    attachedColliders.clear();
+
     if (actor) {
+        actor->userData = nullptr;
         Engine::GetInstance().modulePhysics->GetScene()->removeActor(*actor);
         actor->release();
         actor = nullptr;
     }
-    Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
     OnDisable();
 }
 
@@ -235,7 +238,7 @@ void Rigidbody::OnEditor()
 void Rigidbody::CollectColliders(GameObject* obj, std::vector<Collider*>& list) {
 
     Collider* col = (Collider*)obj->GetComponent(ComponentType::Collider);
-    if (col) list.push_back(col);
+    if (col || col->GetEnabled()) list.push_back(col);
 
     for (GameObject* child : obj->childs) {
 
@@ -257,6 +260,13 @@ void Rigidbody::CreateBody()
         actor = nullptr;
     }
 
+    for (Collider* col : attachedColliders) {
+        if (col) col->attachedRigidbody = nullptr;
+    }
+    attachedColliders.clear();
+
+    physx::PxRigidActor* tempActor = nullptr;
+
     glm::vec3 pos = trans->GetGlobalPosition();
     glm::quat rot = trans->GetGlobalQuaterionRotation();
     physx::PxTransform pxTransform(
@@ -265,22 +275,23 @@ void Rigidbody::CreateBody()
     );
 
     if (type == Type::STATIC) {
-        actor = physics->createRigidStatic(pxTransform);
+        tempActor = physics->createRigidStatic(pxTransform);
     }
     else {
-        actor = physics->createRigidDynamic(pxTransform);
+        tempActor = physics->createRigidDynamic(pxTransform);
         if (type == Type::KINEMATIC)
-            actor->is<physx::PxRigidDynamic>()->setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, true);
+            tempActor->is<physx::PxRigidDynamic>()->setRigidBodyFlag(physx::PxRigidBodyFlag::eKINEMATIC, true);
     }
-
-    physicsModule->GetScene()->addActor(*actor);
-    SyncPropertiesToPhysics();
-    EnableSimulation(Engine::GetInstance().moduleTime->GetIsRunning() && !Engine::GetInstance().moduleTime->GetIsPaused());
+    tempActor->userData = (void*)this;
+    CollectListeners();
+    physicsModule->GetScene()->addActor(*tempActor);
 
     std::vector<Collider*> colliders;
     CollectColliders(owner, colliders);
 
     for (Collider* col : colliders) {
+        
+        AttachCollider(col);
         physx::PxGeometry* geo = col->GetGeometry();
 
         float sF, dF, rest;
@@ -306,7 +317,7 @@ void Rigidbody::CreateBody()
             localPose.q *= rotateToY;
         }
 
-        physx::PxShape* shape = physx::PxRigidActorExt::createExclusiveShape(*actor, *geo, *mat);
+        physx::PxShape* shape = physx::PxRigidActorExt::createExclusiveShape(*tempActor, *geo, *mat);
         shape->setLocalPose(localPose);
 
         shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, !col->IsTrigger());
@@ -314,6 +325,33 @@ void Rigidbody::CreateBody()
 
         mat->release();
         delete geo;
+    }
+
+    actor = tempActor;
+    SyncPropertiesToPhysics();
+}
+
+void Rigidbody::AttachCollider(Collider* collider)
+{
+    attachedColliders.push_back(collider);
+    collider->attachedRigidbody = this;
+    if (actor) {
+        CreateBody();
+    }
+}
+
+
+void Rigidbody::UnattachCollider(Collider* collider)
+{
+    if (!collider) return;
+
+    auto& list = attachedColliders;
+    list.erase(std::remove(list.begin(), list.end(), collider), list.end());
+
+    collider->attachedRigidbody = nullptr;
+
+    if (actor) {
+        CreateBody();
     }
 }
 
@@ -390,31 +428,6 @@ void Rigidbody::Load(Config& config)
     freezeRotY = config.GetBool("FreezeRotY");
     freezeRotZ = config.GetBool("FreezeRotZ");
     CreateBody();
-}
-
-void Rigidbody::OnEvent(const Event& event)
-{
-    switch (event.type)
-    {
-    case Event::Type::Play:
-    {
-        EnableSimulation(true);
-        break;
-    }
-    case Event::Type::Pause:
-    {
-        EnableSimulation(!event.data.boolean.boolean);
-        break;
-    }
-    case Event::Type::Stop:
-    {
-        EnableSimulation(false);
-        break;
-    }
-
-    default:
-        break;
-    }
 }
 
 
@@ -632,4 +645,54 @@ void Rigidbody::SetUseCCD(bool enable)
 {
     useContiniusCollisionDetection = enable;
     SyncPropertiesToPhysics();
+}
+
+void Rigidbody::CastPhysicsEvent(PhysicsEventType type, Rigidbody* other)
+{
+    for (PhysicsEventsListener* listener : listeners)
+    {
+        switch (type)
+        {
+            case PhysicsEventType::ON_COLLISION_ENTER: listener->OnCollisionEnter(other); break;
+            case PhysicsEventType::ON_COLLISION_STAY:  listener->OnCollisionStay(other);  break;
+            case PhysicsEventType::ON_COLLISION_EXIT:  listener->OnCollisionExit(other);  break;
+
+            case PhysicsEventType::ON_TRIGGER_ENTER:   listener->OnTriggerEnter(other);   break;
+            case PhysicsEventType::ON_TRIGGER_STAY:    listener->OnTriggerStay(other);    break;
+            case PhysicsEventType::ON_TRIGGER_EXIT:    listener->OnTriggerExit(other);    break;
+        }
+    }
+}
+
+void Rigidbody::CollectListeners()
+{
+    listeners.clear();
+
+    for (auto const& pair : owner->components)
+    {
+        Component* comp = pair.second;
+
+        PhysicsEventsListener* listener = dynamic_cast<PhysicsEventsListener*>(comp);
+
+        if (listener)
+        {
+            listeners.push_back(listener);
+        }
+    }
+}
+
+void Rigidbody::OnComponentAdded(Component* component)
+{
+    if (dynamic_cast<PhysicsEventsListener*>(component))
+    {
+        CollectListeners();
+    }
+}
+
+void Rigidbody::OnComponentRemoved(Component* component)
+{
+    if (dynamic_cast<PhysicsEventsListener*>(component))
+    {
+        CollectListeners();
+    }
 }

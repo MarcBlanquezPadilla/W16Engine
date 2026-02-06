@@ -2,15 +2,25 @@
 #include "Module.h"
 #include <PxPhysicsAPI.h>
 
-class ModulePhysics : public Module
+enum class PhysicsEventType {
+    ON_COLLISION_ENTER,
+    ON_COLLISION_STAY,
+    ON_COLLISION_EXIT,
+    ON_TRIGGER_ENTER,
+    ON_TRIGGER_STAY,
+    ON_TRIGGER_EXIT
+};
+
+class ModulePhysics : public Module, public physx::PxSimulationEventCallback
 {
 public:
+
+
     ModulePhysics(bool startEnabled = true);
     ~ModulePhysics();
 
     bool Awake() override;
     bool PreUpdate() override;
-    bool Update() override;
     bool CleanUp() override;
 
     void DrawDebug();
@@ -18,6 +28,14 @@ public:
     physx::PxPhysics* GetPhysics() { return gPhysics; }
     physx::PxScene* GetScene() { return gScene; }
     physx::PxMaterial* GetDefaultMaterial() { return gMaterial; }
+
+    //PHYSX CALLBACKS
+    void onConstraintBreak(physx::PxConstraintInfo*, physx::PxU32) override {}
+    void onWake(physx::PxActor**, physx::PxU32) override {}
+    void onSleep(physx::PxActor**, physx::PxU32) override {}
+    void onAdvance(const physx::PxRigidBody* const*, const physx::PxTransform*, const physx::PxU32) override {}
+    void onContact(const physx::PxContactPairHeader& pairHeader, const physx::PxContactPair* pairs, physx::PxU32 nbPairs) override;
+    void onTrigger(physx::PxTriggerPair* pairs, physx::PxU32 count) override;
 
 private:
     

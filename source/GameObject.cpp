@@ -185,6 +185,7 @@ void GameObject::RemoveComponent(ComponentType type)
 	
 	Component* componentToRemove = components[type];
 	componentsToDestroy.push_back(componentToRemove);
+	OnComponentRemoved(componentToRemove);
 }
 
 Component* GameObject::GetComponent(ComponentType type)
@@ -284,6 +285,14 @@ void GameObject::OnComponentAdded(Component* component)
 	for (auto& pair : components)
 	{
 		pair.second->OnComponentAdded(component);
+	}
+}
+
+void GameObject::OnComponentRemoved(Component* component)
+{
+	for (auto& pair : components)
+	{
+		pair.second->OnComponentRemoved(component);
 	}
 }
 
@@ -654,7 +663,7 @@ void GameObject::OnEditor()
 
 		ImGui::PushID(comp);
 
-		if (ImGui::CollapsingHeader(comp->name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::CollapsingHeader(comp->name.c_str()))
 		{
 			ImGui::BeginGroup();
 

@@ -5,8 +5,30 @@
 #include "Engine.h"
 #include "ModuleRender.h"
 #include "ModuleTime.h"
+#include "components/Rigidbody.h"
 
 using namespace physx;
+
+PxFilterFlags CustomFilterShader(
+    PxFilterObjectAttributes attributes0, PxFilterData filterData0,
+    PxFilterObjectAttributes attributes1, PxFilterData filterData1,
+    PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize)
+{
+    if (PxFilterObjectIsTrigger(attributes0) || PxFilterObjectIsTrigger(attributes1))
+    {
+        pairFlags = PxPairFlag::eTRIGGER_DEFAULT | PxPairFlag::eNOTIFY_TOUCH_PERSISTS;
+        return PxFilterFlag::eDEFAULT;
+    }
+
+    pairFlags = PxPairFlag::eCONTACT_DEFAULT;
+    pairFlags |= PxPairFlag::eDETECT_CCD_CONTACT;
+
+    pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
+    pairFlags |= PxPairFlag::eNOTIFY_TOUCH_PERSISTS;
+    pairFlags |= PxPairFlag::eNOTIFY_TOUCH_LOST;
+
+    return PxFilterFlag::eDEFAULT;
+}
 
 ModulePhysics::ModulePhysics(bool startEnabled) : Module(startEnabled) {
     name = "Physics";
@@ -37,7 +59,8 @@ bool ModulePhysics::Awake() {
     PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
     sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
     sceneDesc.cpuDispatcher = gDispatcher;
-    sceneDesc.filterShader = PxDefaultSimulationFilterShader;
+    sceneDesc.filterShader = CustomFilterShader;
+    sceneDesc.simulationEventCallback = this;
     sceneDesc.flags |= PxSceneFlag::eENABLE_CCD;
 
     gScene = gPhysics->createScene(sceneDesc);
@@ -52,7 +75,7 @@ bool ModulePhysics::Awake() {
 
 bool ModulePhysics::PreUpdate() {
     
-    float dt = Time::realDeltaTime;
+    float dt = Time::deltaTime;
     accumulator += dt;
 
     while (accumulator >= stepSize)
@@ -69,22 +92,6 @@ bool ModulePhysics::PreUpdate() {
     return true;
 }
 
-bool ModulePhysics::Update()
-{
-    if (debugPhysics) {
-        gScene->setVisualizationParameter(physx::PxVisualizationParameter::eSCALE, 1.0f);
-        gScene->setVisualizationParameter(physx::PxVisualizationParameter::eCOLLISION_SHAPES, 1.0f);
-    }
-    else {
-        gScene->setVisualizationParameter(physx::PxVisualizationParameter::eSCALE, 0.0f);
-    }
-
-    if (debugPhysics) {
-        DrawDebug();
-    }
-    return true;
-}
-
 bool ModulePhysics::CleanUp() {
     
     LOG(LogType::LOG_INFO, "Cleaning PhysX...");
@@ -97,19 +104,50 @@ bool ModulePhysics::CleanUp() {
     return true;
 }
 
-void ModulePhysics::DrawDebug()
+
+void ModulePhysics::onContact(const PxContactPairHeader& pairHeader, const PxContactPair* pairs, PxU32 nbPairs)
 {
-    const PxRenderBuffer& rb = gScene->getRenderBuffer();
-
-    for (PxU32 i = 0; i < rb.getNbLines(); i++)
+    for (PxU32 i = 0; i < nbPairs; i++)
     {
-        const PxDebugLine& line = rb.getLines()[i];
+        const PxContactPair& cp = pairs[i];
 
-        glm::vec3 start(line.pos0.x, line.pos0.y, line.pos0.z);
-        glm::vec3 end(line.pos1.x, line.pos1.y, line.pos1.z);
+        if (cp.flags & (PxContactPairFlag::eREMOVED_SHAPE_0 | PxContactPairFlag::eREMOVED_SHAPE_1))
+            continue;
 
-        glm::vec4 color(1.0f, 1.0f, 0.0f, 1.0f);
+        Rigidbody* rb0 = (Rigidbody*)pairHeader.actors[0]->userData;
+        Rigidbody* rb1 = (Rigidbody*)pairHeader.actors[1]->userData;
 
-        Engine::GetInstance().moduleRender->DrawLine(start, end, color);
+        if (!rb0 || !rb1) continue;
+
+        PhysicsEventType eventType;
+        if (cp.events & PxPairFlag::eNOTIFY_TOUCH_FOUND)         eventType = PhysicsEventType::ON_COLLISION_ENTER;
+        else if (cp.events & PxPairFlag::eNOTIFY_TOUCH_PERSISTS) eventType = PhysicsEventType::ON_COLLISION_STAY;
+        else if (cp.events & PxPairFlag::eNOTIFY_TOUCH_LOST)     eventType = PhysicsEventType::ON_COLLISION_EXIT;
+        else continue;
+        rb0->CastPhysicsEvent(eventType, rb1);
+        rb1->CastPhysicsEvent(eventType, rb0);
+    }
+}
+
+void ModulePhysics::onTrigger(PxTriggerPair* pairs, PxU32 count)
+{
+    for (PxU32 i = 0; i < count; i++)
+    {
+        if (pairs[i].flags & (PxTriggerPairFlag::eREMOVED_SHAPE_TRIGGER | PxTriggerPairFlag::eREMOVED_SHAPE_OTHER))
+            continue;
+
+        Rigidbody* rbTrigger = (Rigidbody*)pairs[i].triggerActor->userData;
+        Rigidbody* rbOther = (Rigidbody*)pairs[i].otherActor->userData;
+
+        if (!rbTrigger || !rbOther) continue;
+
+        PhysicsEventType eventType;
+        if (pairs[i].status & PxPairFlag::eNOTIFY_TOUCH_FOUND)         eventType = PhysicsEventType::ON_TRIGGER_ENTER;
+        else if (pairs[i].status & PxPairFlag::eNOTIFY_TOUCH_PERSISTS) eventType = PhysicsEventType::ON_TRIGGER_STAY;
+        else if (pairs[i].status & PxPairFlag::eNOTIFY_TOUCH_LOST)     eventType = PhysicsEventType::ON_TRIGGER_EXIT;
+        else continue;
+
+        rbTrigger->CastPhysicsEvent(eventType, rbOther);
+        rbOther->CastPhysicsEvent(eventType, rbTrigger);
     }
 }

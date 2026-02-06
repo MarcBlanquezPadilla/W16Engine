@@ -15,9 +15,12 @@ public:
     ComponentType GetType() override { return ComponentType::BoxCollider; };
     bool IsType(ComponentType type) override { return type == ComponentType::Collider || type == ComponentType::BoxCollider; };
     void OnEditor() override;
+    void Update() override;
     void Save(Config& config) override;
     void Load(Config& config) override;
 
     const glm::vec3& GetSize() { return size; }
     void SetSize(glm::vec3 size);
+
+    void DebugShape() override;
 };

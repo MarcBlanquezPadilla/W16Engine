@@ -60,6 +60,7 @@ public:
 	void RemoveComponent(ComponentType type);
 	void DeletePendingComponents();
 	void OnComponentAdded(Component* component);
+	void OnComponentRemoved(Component* component);
 
 	bool GetGlobalMatrix(glm::mat4& globalMatrix);
 	bool TryGetGlobalAABB(AABB& globalAABB);
