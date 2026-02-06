@@ -39,7 +39,7 @@ void BoxCollider::Save(Config& config)
 void BoxCollider::Load(Config& config)
 {
     LoadBase(config);
-    size = config.GetVector3("Size");
+    size = config.GetVector3("Size", glm::vec3(1.0f, 1.0f, 1.0f));
     Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
     if (rb) rb->CreateBody();
 }

@@ -50,8 +50,8 @@ void CapsuleCollider::Save(Config& config)
 void CapsuleCollider::Load(Config& config)
 {
     LoadBase(config);
-    SetRadius(config.GetFloat("Radius"));
-    SetRadius(config.GetFloat("Height"));
+    SetRadius(config.GetFloat("Radius", 0.5f));
+    SetHeight(config.GetFloat("Height", 1.0f));
 }
 
 void CapsuleCollider::SetRadius(float radius)

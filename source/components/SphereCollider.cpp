@@ -41,7 +41,7 @@ void SphereCollider::Save(Config& config)
 void SphereCollider::Load(Config& config)
 {
     LoadBase(config);
-    SetRadius(config.GetFloat("Radius"));
+    SetRadius(config.GetFloat("Radius", 1.0f));
     
 }
 

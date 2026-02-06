@@ -421,8 +421,8 @@ void GameObject::Load(Config& gameObjectNode)
 
 			if (childObject)
 			{
-				childObject->Load(childNode);
 				AddChild(childObject);
+				childObject->Load(childNode);
 			}
 			else
 			{
