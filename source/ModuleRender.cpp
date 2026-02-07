@@ -1343,6 +1343,47 @@ bool ModuleRender::CreateDefaultTexture()
 }
 #pragma endregion
 
+#pragma region DrawForms
+
+void ModuleRender::DrawCircle(glm::vec3 center, glm::quat rotation, float r, int segments, glm::vec4 col, glm::vec3 axisA, glm::vec3 axisB)
+{
+	auto* render = Engine::GetInstance().moduleRender;
+	float angleStep = (2.0f * 3.14159f) / segments;
+
+	for (int i = 0; i < segments; ++i)
+	{
+		float angle1 = i * angleStep;
+		float angle2 = (i + 1) * angleStep;
+
+		glm::vec3 p1_local = (axisA * cos(angle1) + axisB * sin(angle1)) * r;
+		glm::vec3 p2_local = (axisA * cos(angle2) + axisB * sin(angle2)) * r;
+
+		glm::vec3 p1_world = center + (rotation * p1_local);
+		glm::vec3 p2_world = center + (rotation * p2_local);
+
+		render->DrawLine(p1_world, p2_world, col);
+	}
+}
+
+void ModuleRender::DrawArc(glm::vec3 center, glm::quat rotation, float r, int segments, glm::vec4 col, glm::vec3 axisA, glm::vec3 axisB)
+{
+	auto* render = Engine::GetInstance().moduleRender;
+	float angleStep = 3.14159f / segments;
+
+	for (int i = 0; i < segments; ++i)
+	{
+		float a1 = i * angleStep;
+		float a2 = (i + 1) * angleStep;
+
+		glm::vec3 p1 = center + (rotation * ((axisA * cos(a1) + axisB * sin(a1)) * r));
+		glm::vec3 p2 = center + (rotation * ((axisA * cos(a2) + axisB * sin(a2)) * r));
+
+		render->DrawLine(p1, p2, col);
+	}
+}
+
+#pragma endregion
+
 UID ModuleRender::GetObjectInPixel(const CameraLens* camera, int x, int y)
 {
 	if (!camera) return 0;
@@ -1442,3 +1483,4 @@ void ModuleRender::OnEvent(const Event& event)
 		break;
 	}
 }
+

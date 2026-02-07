@@ -120,6 +120,7 @@ const glm::vec3& Transform::GetLocalScale()
 
 void Transform::SetLocalPosition(const glm::vec3& _position)
 {
+    if (glm::all(glm::epsilonEqual(this->position, _position, 0.0001f))) return;
     dirtyLocalMatrix = true;
     position = _position;
     OnTransformChanged();
@@ -127,6 +128,7 @@ void Transform::SetLocalPosition(const glm::vec3& _position)
 
 void Transform::SetLocalEulerRotation(const glm::vec3& _rotation)
 {
+    if (glm::all(glm::epsilonEqual(this->eulerRotation, _rotation, 0.0001f))) return;
     dirtyLocalMatrix = true;
     eulerRotation = _rotation;
 
@@ -137,6 +139,10 @@ void Transform::SetLocalEulerRotation(const glm::vec3& _rotation)
 
 void Transform::SetLocalQuaternionRotation(const glm::quat& _rotationQuat)
 {
+    if (glm::all(glm::epsilonEqual(
+        glm::vec4(rotation.x, rotation.y, rotation.z, rotation.w),
+        glm::vec4(_rotationQuat.x, _rotationQuat.y, _rotationQuat.z, _rotationQuat.w),
+        0.0001f))) return;
     dirtyLocalMatrix = true;
     rotation = _rotationQuat;
     eulerRotation = glm::degrees(glm::eulerAngles(rotation));
@@ -145,8 +151,10 @@ void Transform::SetLocalQuaternionRotation(const glm::quat& _rotationQuat)
 
 void Transform::SetLocalScale(const glm::vec3& _scale)
 {
+    if (glm::all(glm::epsilonEqual(this->scale, _scale, 0.0001f))) return;
     dirtyLocalMatrix = true;
     scale = _scale;
+    owner->PublishGameObjectEvent(GameObjectEvent::TRANSFORM_SCALED);
     OnTransformChanged();
 }
 
@@ -154,6 +162,7 @@ void Transform::OnTransformChanged()
 {
     InvalidateGlobalMatrix();
     if (owner->GetStatic()) Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::StaticTransformChanged, owner));
+    owner->PublishGameObjectEvent(GameObjectEvent::TRANSFORM_CHANGED);
 }
 
 void Transform::OnEditor()
@@ -183,21 +192,35 @@ void Transform::OnEditor()
 
 void Transform::SetLocalMatrix(const glm::mat4& newLocalMatrix)
 {
-    localMatrix = newLocalMatrix;
-    dirtyLocalMatrix = false;
+    glm::vec3 newPos, newScale, newSkew;
+    glm::vec4 newPersp;
+    glm::quat newRot;
 
-    glm::vec3 skew;
-    glm::vec4 perspective;
-    glm::quat rotationQuat;
-
-    if (glm::decompose(newLocalMatrix, scale, rotationQuat, position, skew, perspective))
+    if (glm::decompose(newLocalMatrix, newScale, newRot, newPos, newSkew, newPersp))
     {
-        rotation = rotationQuat;
+        bool posChanged = !glm::all(glm::epsilonEqual(this->position, newPos, 0.0001f));
+        bool scaleChanged = !glm::all(glm::epsilonEqual(this->scale, newScale, 0.0001f));
+        bool rotChanged = !glm::all(glm::epsilonEqual(
+            glm::vec4(rotation.x, rotation.y, rotation.z, rotation.w),
+            glm::vec4(newRot.x, newRot.y, newRot.z, newRot.w),
+            0.0001f));
 
-        eulerRotation = glm::degrees(glm::eulerAngles(rotationQuat));
+        if (!posChanged && !scaleChanged && !rotChanged) return;
+
+        this->position = newPos;
+        this->scale = newScale;
+        this->rotation = newRot;
+        this->eulerRotation = glm::degrees(glm::eulerAngles(newRot));
+
+        this->localMatrix = newLocalMatrix;
+        this->dirtyLocalMatrix = false;
+
+        if (scaleChanged) {
+            owner->PublishGameObjectEvent(GameObjectEvent::TRANSFORM_SCALED);
+        }
+
+        OnTransformChanged();
     }
-
-    InvalidateGlobalMatrix();
 }
 
 const glm::vec3 Transform::GetGlobalPosition()

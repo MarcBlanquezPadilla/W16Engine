@@ -1,7 +1,10 @@
+#include "../Engine.h"
+#include "../ModuleRender.h"
+#include "../GameObject.h"
+
 #include "SphereCollider.h"
 #include "Transform.h"
 #include "Rigidbody.h"
-#include "../GameObject.h"
 #include "imgui.h"
 
 SphereCollider::SphereCollider(GameObject* owner) : Collider(owner)
@@ -16,6 +19,11 @@ physx::PxGeometry* SphereCollider::GetGeometry()
     float maxScale = glm::max(scale.x, glm::max(scale.y, scale.z));
 
     return new physx::PxSphereGeometry(radius * maxScale);
+}
+
+void SphereCollider::Update()
+{
+    DebugShape();
 }
 
 void SphereCollider::OnEditor()
@@ -50,4 +58,45 @@ void SphereCollider::SetRadius(float radius)
     this->radius = glm::clamp(radius, 0.0001f, INFINITY);
     Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
     if (rb) rb->CreateBody();
+}
+
+void SphereCollider::DebugShape()
+{
+    physx::PxRigidActor* actor = (attachedRigidbody) ? attachedRigidbody->GetActor() : nullptr;
+
+    glm::vec3 pos;
+    glm::quat rot;
+    glm::vec4 color;
+    glm::vec3 scale = owner->transform->GetGlobalScale();
+
+    if (actor)
+    {
+        physx::PxShape* shape = nullptr;
+        actor->getShapes(&shape, 1);
+
+        physx::PxTransform worldPose = actor->getGlobalPose();
+        if (shape) worldPose = worldPose * shape->getLocalPose();
+
+        pos = glm::vec3(worldPose.p.x, worldPose.p.y, worldPose.p.z);
+        rot = glm::quat(worldPose.q.w, worldPose.q.x, worldPose.q.y, worldPose.q.z);
+        color = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
+    }
+    else
+    {
+        glm::quat globalRot = owner->transform->GetGlobalQuaterionRotation();
+
+        pos = owner->transform->GetGlobalPosition() + (globalRot * (center * scale));
+        rot = globalRot;
+        color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); // Rojo
+    }
+
+    float maxScale = glm::max(scale.x, glm::max(scale.y, scale.z));
+    float finalRadius = radius * maxScale;
+
+    auto* render = Engine::GetInstance().moduleRender;
+    int segments = 16;
+
+    render->DrawCircle(pos, rot, finalRadius, segments, color, glm::vec3(1, 0, 0), glm::vec3(0, 0, 1));
+    render->DrawCircle(pos, rot, finalRadius, segments, color, glm::vec3(1, 0, 0), glm::vec3(0, 1, 0));
+    render->DrawCircle(pos, rot, finalRadius, segments, color, glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
 }

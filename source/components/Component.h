@@ -1,20 +1,7 @@
 #pragma once
 #include "../utils/Config.h"
-class GameObject;
+#include "../GameObject.h"
 
-enum class ComponentType {
-    None,
-    Transform,
-    MeshRenderer,
-    SkinnedMeshRenderer,
-    Camera,
-    Animation,
-    Rigidbody,
-    Collider,
-    BoxCollider,
-    SphereCollider,
-    CapsuleCollider
-};
 
 enum class ComponentRole
 {
@@ -55,10 +42,9 @@ public:
 
     void SetEnabled(bool enabled) { this->enabled = enabled; }
     
-    const bool& GetEnabled() { return enabled; }
+    const bool GetEnabled() { return enabled; }
 
-    virtual void OnComponentAdded(Component* component) {}
-    virtual void OnComponentRemoved(Component* component) {}
+    virtual void OnGameObjectEvent(GameObjectEvent event, Component* component) {};
 
 
 public:

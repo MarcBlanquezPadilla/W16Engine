@@ -32,8 +32,8 @@ public:
     virtual ~Rigidbody() override;
 
     void OnEnable() override;
-    void FixedUpdate() override;
     void Update() override;
+    void FixedUpdate() override;
     void OnDisable() override;
 
     void CleanUp() override;
@@ -57,7 +57,6 @@ public:
     void AttachCollider(Collider* collider);
 
     void EnableSimulation(bool enable);
-    void SyncPropertiesToPhysics();
 
     //FISICS
     void WakeUp();
@@ -65,7 +64,6 @@ public:
     bool IsSleeping();
 
     //CONSTRAINTS
-
     void FreezePosition(bool x, bool y, bool z);
     void FreezeRotation(bool x, bool y, bool z);
     void SetConstraints(bool moveX, bool moveY, bool moveZ, bool rotateX, bool rotateY, bool rotateZ);
@@ -76,6 +74,8 @@ public:
     void AddTorque(const glm::vec3& torque, ForceMode mode = FORCE);
     void SetLinearVelocity(const glm::vec3& velocity);
     glm::vec3 GetLinearVelocity() const;
+    void MovePosition(const glm::vec3& position);
+    void MoveRotation(const glm::quat& rotation);
 
     const float GetMass() { return mass; }
     const float GetLinearDamping() { return linearDamping; }
@@ -93,15 +93,22 @@ public:
     void CastPhysicsEvent(PhysicsEventType type, Rigidbody* other);
 
 private:    
-    
+
+    void SyncToTransform();
+    void SyncPropertiesToPhysics();
+
+    void UpdateShapesGeometry();
+    void UpdateShapeLocalPose(physx::PxShape* shape, Collider* col);
+
     physx::PxRigidDynamic* GetDynamic() { return actor ? actor->is<physx::PxRigidDynamic>() : nullptr; }
     void CollectListeners();
-    void OnComponentAdded(Component* component) override;
-    void OnComponentRemoved(Component* component) override;
+
+    //EVENTS
+    void OnGameObjectEvent(GameObjectEvent event, Component* component);
 
 private: 
-    physx::PxRigidActor* actor = nullptr;
-    
+
+    //PROPERTIES
     Type type = STATIC;
     float mass = 1.0f;
     float linearDamping = 0.0f;
@@ -112,6 +119,19 @@ private:
     bool freezePosX = false, freezePosY = false, freezePosZ = false;
     bool freezeRotX = false, freezeRotY = false, freezeRotZ = false;
 
+    //KINEMATIC
+    glm::vec3 kinematicTargetPos;
+    glm::quat kinematicTargetRot;
+    bool hasKinematicTarget = false;
+    bool isSyncingFromPhysics = false;
+
+    //INTERPOLATION
+    physx::PxTransform lastPose;
+    physx::PxTransform currentPose;
+    float accumulator = 0.0f;
+
+    //POINTERS
+    physx::PxRigidActor* actor = nullptr;
     std::vector <PhysicsEventsListener*> listeners;
     std::vector <Collider*> attachedColliders;
 };

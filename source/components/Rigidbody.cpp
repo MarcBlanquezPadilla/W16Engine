@@ -24,48 +24,36 @@ Rigidbody::~Rigidbody()
 
 void Rigidbody::FixedUpdate() 
 {
-    if (Engine::GetInstance().moduleTime->GetIsRunning())
+    if (Engine::GetInstance().moduleTime->GetIsRunning() && actor)
     {
-        if (!actor) return;
+        lastPose = currentPose;
 
         if (type == Type::DYNAMIC) {
-            physx::PxTransform pose = actor->getGlobalPose();
-            owner->transform->SetGlobalPosition(glm::vec3(pose.p.x, pose.p.y, pose.p.z));
-            physx::PxQuat q = pose.q;
-            owner->transform->SetGlobalQuaternionRotation(glm::quat(q.w, q.x, q.y, q.z));
+            physx::PxTransform p = actor->getGlobalPose();
+            currentPose = p;
         }
-        else if (type == Type::KINEMATIC) {
-
-            glm::vec3 p = owner->transform->GetGlobalPosition();
-            glm::quat q = owner->transform->GetGlobalQuaterionRotation();
-
-            physx::PxTransform targetPose(
-                physx::PxVec3(p.x, p.y, p.z),
-                physx::PxQuat(q.x, q.y, q.z, q.w)
+        else if (type == Type::KINEMATIC && hasKinematicTarget) {
+            physx::PxTransform target(
+                physx::PxVec3(kinematicTargetPos.x, kinematicTargetPos.y, kinematicTargetPos.z),
+                physx::PxQuat(kinematicTargetRot.x, kinematicTargetRot.y, kinematicTargetRot.z, kinematicTargetRot.w)
             );
-
-            physx::PxRigidDynamic* dyn = actor->is<physx::PxRigidDynamic>();
-            if (dyn) dyn->setKinematicTarget(targetPose);
+            actor->is<physx::PxRigidDynamic>()->setKinematicTarget(target);
+            currentPose = target;
+            hasKinematicTarget = false;
         }
     }
 }
 
 void Rigidbody::Update() {
-
-    if (!actor || !owner->transform) return;
     
-    if (!Engine::GetInstance().moduleTime->GetIsRunning())
-    {
-        glm::vec3 pos = owner->transform->GetGlobalPosition();
-        glm::quat rot = owner->transform->GetGlobalQuaterionRotation();
+    if (!Engine::GetInstance().moduleTime->GetIsRunning() || type == Type::STATIC || !actor) return;
 
-        physx::PxTransform pose(
-            physx::PxVec3(pos.x, pos.y, pos.z),
-            physx::PxQuat(rot.x, rot.y, rot.z, rot.w)
-        );
+    physx::PxTransform pose = actor->getGlobalPose();
 
-        actor->setGlobalPose(pose);
-    }
+    isSyncingFromPhysics = true;
+    owner->transform->SetGlobalPosition(glm::vec3(pose.p.x, pose.p.y, pose.p.z));
+    owner->transform->SetGlobalQuaternionRotation(glm::quat(pose.q.w, pose.q.x, pose.q.y, pose.q.z));
+    isSyncingFromPhysics = false;
 }
 
 void Rigidbody::OnEnable() 
@@ -238,7 +226,7 @@ void Rigidbody::OnEditor()
 void Rigidbody::CollectColliders(GameObject* obj, std::vector<Collider*>& list) {
 
     Collider* col = (Collider*)obj->GetComponent(ComponentType::Collider);
-    if (col || col->GetEnabled()) list.push_back(col);
+    if (col && col->GetEnabled()) list.push_back(col);
 
     for (GameObject* child : obj->childs) {
 
@@ -253,6 +241,20 @@ void Rigidbody::CreateBody()
     auto* physicsModule = Engine::GetInstance().modulePhysics;
     auto* physics = physicsModule->GetPhysics();
     auto* trans = owner->transform;
+
+    glm::vec3 savedLinearVel(0.0f);
+    glm::vec3 savedAngularVel(0.0f);
+    bool needsRestoration = (actor != nullptr && type != Type::STATIC);
+
+    if (needsRestoration) {
+        physx::PxRigidDynamic* dyn = actor->is<physx::PxRigidDynamic>();
+        if (dyn) {
+            physx::PxVec3 lv = dyn->getLinearVelocity();
+            physx::PxVec3 av = dyn->getAngularVelocity();
+            savedLinearVel = glm::vec3(lv.x, lv.y, lv.z);
+            savedAngularVel = glm::vec3(av.x, av.y, av.z);
+        }
+    }
 
     if (actor) {
         physicsModule->GetScene()->removeActor(*actor);
@@ -290,7 +292,6 @@ void Rigidbody::CreateBody()
     CollectColliders(owner, colliders);
 
     for (Collider* col : colliders) {
-        
         AttachCollider(col);
         physx::PxGeometry* geo = col->GetGeometry();
 
@@ -298,27 +299,9 @@ void Rigidbody::CreateBody()
         col->GetMaterialValues(sF, dF, rest);
         physx::PxMaterial* mat = physics->createMaterial(sF, dF, rest);
 
-        glm::quat relRot = glm::inverse(trans->GetGlobalQuaterionRotation()) * col->owner->transform->GetGlobalQuaterionRotation();
-
-        glm::vec3 pivotRelPos = col->owner->transform->GetGlobalPosition() - trans->GetGlobalPosition();
-
-        glm::vec3 scaledCenter = col->GetCenter() * col->owner->transform->GetGlobalScale();
-        glm::vec3 rotatedOffset = relRot * scaledCenter;
-
-        glm::vec3 finalPos = pivotRelPos + rotatedOffset;
-
-        physx::PxTransform localPose(
-            physx::PxVec3(finalPos.x, finalPos.y, finalPos.z),
-            physx::PxQuat(relRot.x, relRot.y, relRot.z, relRot.w)
-        );
-
-        if (col->IsType(ComponentType::CapsuleCollider)) {
-            physx::PxQuat rotateToY = physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0, 0, 1));
-            localPose.q *= rotateToY;
-        }
-
         physx::PxShape* shape = physx::PxRigidActorExt::createExclusiveShape(*tempActor, *geo, *mat);
-        shape->setLocalPose(localPose);
+
+        UpdateShapeLocalPose(shape, col);
 
         shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, !col->IsTrigger());
         shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, col->IsTrigger());
@@ -329,6 +312,65 @@ void Rigidbody::CreateBody()
 
     actor = tempActor;
     SyncPropertiesToPhysics();
+
+    if (needsRestoration) {
+        physx::PxRigidDynamic* dyn = actor->is<physx::PxRigidDynamic>();
+        if (dyn) {
+            dyn->setLinearVelocity(physx::PxVec3(savedLinearVel.x, savedLinearVel.y, savedLinearVel.z));
+            dyn->setAngularVelocity(physx::PxVec3(savedAngularVel.x, savedAngularVel.y, savedAngularVel.z));
+        }
+    }
+}
+
+void Rigidbody::UpdateShapesGeometry() {
+    if (!actor) return;
+
+    std::vector<physx::PxShape*> shapes(actor->getNbShapes());
+    actor->getShapes(shapes.data(), shapes.size());
+
+    for (size_t i = 0; i < attachedColliders.size() && i < shapes.size(); ++i) {
+        Collider* col = attachedColliders[i];
+        physx::PxShape* shape = shapes[i];
+
+        physx::PxGeometry* newGeo = col->GetGeometry();
+
+        shape->setGeometry(*newGeo);
+
+        UpdateShapeLocalPose(shape, col);
+
+        delete newGeo;
+    }
+
+    if (type == Type::DYNAMIC) {
+        physx::PxRigidBodyExt::updateMassAndInertia(*actor->is<physx::PxRigidDynamic>(), mass);
+    }
+}
+
+void Rigidbody::UpdateShapeLocalPose(physx::PxShape* shape, Collider* col) {
+    
+    auto* trans = owner->transform;
+
+    glm::quat relRot = glm::inverse(trans->GetGlobalQuaterionRotation()) * col->owner->transform->GetGlobalQuaterionRotation();
+
+    glm::vec3 pivotRelPos = col->owner->transform->GetGlobalPosition() - trans->GetGlobalPosition();
+
+    glm::vec3 scaledCenter = col->GetCenter() * col->owner->transform->GetGlobalScale();
+
+    glm::vec3 rotatedOffset = relRot * scaledCenter;
+
+    glm::vec3 finalPos = pivotRelPos + rotatedOffset;
+
+    physx::PxTransform localPose(
+        physx::PxVec3(finalPos.x, finalPos.y, finalPos.z),
+        physx::PxQuat(relRot.x, relRot.y, relRot.z, relRot.w)
+    );
+
+    if (col->IsType(ComponentType::CapsuleCollider)) {
+        physx::PxQuat rotateToY = physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0, 0, 1));
+        localPose.q *= rotateToY;
+    }
+
+    shape->setLocalPose(localPose);
 }
 
 void Rigidbody::AttachCollider(Collider* collider)
@@ -488,6 +530,18 @@ void Rigidbody::AddTorque(const glm::vec3& force, ForceMode mode) {
     }
 }
 
+void Rigidbody::MovePosition(const glm::vec3& position) {
+    if (type != Type::KINEMATIC) return;
+    kinematicTargetPos = position;
+    hasKinematicTarget = true;
+}
+
+void Rigidbody::MoveRotation(const glm::quat& rotation) {
+    if (type != Type::KINEMATIC) return;
+    kinematicTargetRot = rotation;
+    hasKinematicTarget = true;
+}
+
 void Rigidbody::SetLinearVelocity(const glm::vec3& velocity) {
     
     if (auto* dyn = GetDynamic()) dyn->setLinearVelocity(physx::PxVec3(velocity.x, velocity.y, velocity.z));
@@ -575,6 +629,30 @@ void Rigidbody::SyncPropertiesToPhysics() {
         dyn->setRigidDynamicLockFlag(physx::PxRigidDynamicLockFlag::eLOCK_ANGULAR_Z, freezeRotZ);
 
         WakeUp();
+    }
+}
+
+void Rigidbody::SyncToTransform() {
+    if (!actor || !owner->transform) return;
+
+    glm::vec3 pos = owner->transform->GetGlobalPosition();
+    glm::quat rot = owner->transform->GetGlobalQuaterionRotation();
+
+    physx::PxTransform targetPose(
+        physx::PxVec3(pos.x, pos.y, pos.z),
+        physx::PxQuat(rot.x, rot.y, rot.z, rot.w)
+    );
+
+    actor->setGlobalPose(targetPose);
+
+    if (type == Type::DYNAMIC) {
+        physx::PxRigidDynamic* dyn = actor->is<physx::PxRigidDynamic>();
+        if (dyn) {
+            dyn->wakeUp();
+
+            dyn->setLinearVelocity(physx::PxVec3(0.0f));
+            dyn->setAngularVelocity(physx::PxVec3(0.0f));
+        }
     }
 }
 
@@ -681,18 +759,27 @@ void Rigidbody::CollectListeners()
     }
 }
 
-void Rigidbody::OnComponentAdded(Component* component)
+void Rigidbody::OnGameObjectEvent(GameObjectEvent event, Component* component)
 {
-    if (dynamic_cast<PhysicsEventsListener*>(component))
+    switch (event)
     {
-        CollectListeners();
-    }
-}
-
-void Rigidbody::OnComponentRemoved(Component* component)
-{
-    if (dynamic_cast<PhysicsEventsListener*>(component))
-    {
-        CollectListeners();
+    case GameObjectEvent::COMPONENT_ADDED:
+        if (dynamic_cast<PhysicsEventsListener*>(component))
+        {
+            CollectListeners();
+        }
+        break;
+    case GameObjectEvent::COMPONENT_REMOVED:
+        if (dynamic_cast<PhysicsEventsListener*>(component))
+        {
+            CollectListeners();
+        }
+        break;
+    case GameObjectEvent::TRANSFORM_SCALED:
+        UpdateShapesGeometry();
+        break;
+    case GameObjectEvent::TRANSFORM_CHANGED:
+        if (!isSyncingFromPhysics) SyncToTransform();
+        break;
     }
 }

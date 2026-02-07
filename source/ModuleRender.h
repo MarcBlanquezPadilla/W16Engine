@@ -68,7 +68,10 @@ public:
 	void UploadGlobalMatricesToGPU(unsigned int ssbo, const std::vector<glm::mat4>& globalMatrices);
 	void DeleteSSBO(unsigned int& ssbo);
 
+	//DRAW FORMS
 	void DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color);
+	void DrawArc(glm::vec3 center, glm::quat rotation, float r, int segments, glm::vec4 col, glm::vec3 axisA, glm::vec3 axisB);
+	void DrawCircle(glm::vec3 center, glm::quat rotation, float r, int segments, glm::vec4 col, glm::vec3 axisA, glm::vec3 axisB);
 
 	//WINDOW
 	void ChangeWindowSize(int x, int y);
@@ -115,6 +118,7 @@ private:
 	void DrawNormalsList(const CameraLens* camera);
 	void DrawMeshLinesList(const CameraLens* camera);
 	void BuildRenderLists(const CameraLens* camera);
+
 
 private:
 

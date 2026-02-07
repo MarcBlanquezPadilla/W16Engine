@@ -1,15 +1,37 @@
 #pragma once
 #include "Module.h"
-#include "components/Component.h"
 #include <map>
 #include <list>
 #include <vector>
 #include <string>
 #include "glm/glm.hpp"
 
+class Component;
 class Transform;
 class AABB;
 class Config;
+
+enum class GameObjectEvent {
+	TRANSFORM_CHANGED,
+	TRANSFORM_SCALED,
+	COMPONENT_ADDED,
+	COMPONENT_REMOVED,
+	OBJECT_DESTROYED
+};
+
+enum class ComponentType {
+	None,
+	Transform,
+	MeshRenderer,
+	SkinnedMeshRenderer,
+	Camera,
+	Animation,
+	Rigidbody,
+	Collider,
+	BoxCollider,
+	SphereCollider,
+	CapsuleCollider
+};
 
 class GameObject
 {
@@ -29,14 +51,13 @@ public:
 	bool CleanUp();
 	bool CleanUpRecursive();
 
-
-
 	void AddChild(GameObject* gameObject);
 	void RemoveChild(GameObject* childToRemove);
 	std::vector<GameObject*> GetChilds() { return childs;}
 	void SetParent(GameObject* newParent);
 	bool IsDescendant(GameObject* potentialParent);
 	GameObject* FindChild(const std::string& findName);
+	void Destroy();
 
 	//SAVE & LOAD
 	void Save(Config& gameObjectNode);
@@ -59,14 +80,15 @@ public:
 	bool TryGetComponent(ComponentType type, Component*& component);
 	void RemoveComponent(ComponentType type);
 	void DeletePendingComponents();
-	void OnComponentAdded(Component* component);
-	void OnComponentRemoved(Component* component);
 
+	//GETTERS
 	bool GetGlobalMatrix(glm::mat4& globalMatrix);
 	bool TryGetGlobalAABB(AABB& globalAABB);
 
-	void Destroy();
+	//INTERNAL EVENTS
+	void PublishGameObjectEvent(GameObjectEvent event, Component* component = nullptr);
 
+	//EDITOR
 	void OnEditor();
 
 public:

@@ -7,6 +7,7 @@ class SphereCollider : public Collider {
 public:
     
     SphereCollider(GameObject* owner);
+    void Update() override;
 
     float radius = 1.0f;
 
@@ -21,5 +22,5 @@ public:
     const float GetRadius() { return radius; }
     void SetRadius(float radius);
 
-    void DebugCollider();
+    void DebugShape();
 };

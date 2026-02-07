@@ -64,37 +64,35 @@ void BoxCollider::SetSize(glm::vec3 size)
 }
 
 
-void BoxCollider::DebugShape() 
+void BoxCollider::DebugShape()
 {
     physx::PxRigidActor* actor = (attachedRigidbody) ? attachedRigidbody->GetActor() : nullptr;
-    
-    glm::vec3 scale;
-    glm::vec3 halfSize;
 
     glm::vec3 pos;
     glm::quat rot;
-    
     glm::vec4 color;
+    glm::vec3 scale = owner->transform->GetGlobalScale();
+    glm::vec3 halfSize = (size * scale) * 0.5f;
 
     if (actor)
     {
-        physx::PxTransform pose = actor->getGlobalPose();
+        physx::PxShape* shape = nullptr;
+        actor->getShapes(&shape, 1);
 
-        scale = owner->transform->GetGlobalScale();
-        halfSize = (size * scale) * 0.5f;
+        physx::PxTransform worldPose = actor->getGlobalPose();
+        if (shape) worldPose = worldPose * shape->getLocalPose();
 
-        pos = glm::vec3(pose.p.x, pose.p.y, pose.p.z);
-        rot = glm::quat(pose.q.w, pose.q.x, pose.q.y, pose.q.z);
+        pos = glm::vec3(worldPose.p.x, worldPose.p.y, worldPose.p.z);
+        rot = glm::quat(worldPose.q.w, worldPose.q.x, worldPose.q.y, worldPose.q.z);
         color = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
     }
     else
     {
-        scale = owner->transform->GetGlobalScale();
-        halfSize = (size * scale) * 0.5f;
+        glm::quat globalRot = owner->transform->GetGlobalQuaterionRotation();
 
-        pos = owner->transform->GetGlobalPosition();
-        rot = owner->transform->GetGlobalQuaterionRotation();
-        color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+        pos = owner->transform->GetGlobalPosition() + (globalRot * (center * scale));
+        rot = globalRot;
+        color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); // Rojo
     }
 
     glm::vec3 v[8] = {
@@ -107,7 +105,6 @@ void BoxCollider::DebugShape()
     }
 
     auto* render = Engine::GetInstance().moduleRender;
-
     for (int i = 0; i < 4; ++i) {
         render->DrawLine(v[i], v[(i + 1) % 4], color);
         render->DrawLine(v[i + 4], v[((i + 1) % 4) + 4], color);

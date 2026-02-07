@@ -8,7 +8,7 @@ public:
     
     CapsuleCollider(GameObject* owner);
 
-    
+    void Update() override;
 
     physx::PxGeometry* GetGeometry() override;
     ColliderType GetColliderType() override { return ColliderType::CAPSULE_COLLIDER; }
@@ -22,8 +22,8 @@ public:
     const float GetRadius() { return radius; }
     void SetHeight(float height);
     const float GetHeight() { return height; }
-
-
+   
+    void DebugShape();
 
 private:
     float radius = 0.5f;

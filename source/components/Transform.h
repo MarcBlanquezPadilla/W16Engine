@@ -7,7 +7,7 @@
 
 class GameObject;
 
-class Transform : public Component, public PhysicsEventsListener
+class Transform : public Component
 {
 public:
 
@@ -29,7 +29,7 @@ public:
     void SetLocalEulerRotation(const glm::vec3& _rotation);
     void SetLocalQuaternionRotation(const glm::quat& _rotation);
     void SetGlobalQuaternionRotation(const glm::quat& rot);
-    void SetLocalScale(const glm::vec3& _position);
+    void SetLocalScale(const glm::vec3& scale);
     void SetGlobalScale(const glm::vec3& scale);
     
     void SetLocalTransform(const glm::vec3& pos, const glm::quat& rot, const glm::vec3& scl);
@@ -50,14 +50,6 @@ public:
     void InvalidateGlobalMatrix();
 
     void OnEditor() override;
-
-    void OnCollisionEnter(Rigidbody* other) { LOG(LogType::LOG_INFO, "COLLISION ENTER"); }
-    void OnCollisionStay(Rigidbody* other) { LOG(LogType::LOG_INFO, "COLLISION STAY"); }
-    void OnCollisionExit(Rigidbody* other) { LOG(LogType::LOG_INFO, "COLLISION EXIT"); }
-
-    void OnTriggerEnter(Rigidbody* other) { LOG(LogType::LOG_INFO, "TRIGGER ENTER"); }
-    void OnTriggerStay(Rigidbody* other) { LOG(LogType::LOG_INFO, "TRIGGER STAY"); }
-    void OnTriggerExit(Rigidbody* other) { LOG(LogType::LOG_INFO, "TRIGGER EXIT"); }
 
 public:
     

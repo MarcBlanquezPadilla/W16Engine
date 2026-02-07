@@ -174,7 +174,7 @@ Component* GameObject::AddComponent(ComponentType type)
 		component->owner = this;
 		component->Start();
 		component->OnEnable();
-		OnComponentAdded(component);
+		PublishGameObjectEvent(GameObjectEvent::COMPONENT_ADDED, component);
 	}
 	return component;
 }
@@ -185,7 +185,7 @@ void GameObject::RemoveComponent(ComponentType type)
 	
 	Component* componentToRemove = components[type];
 	componentsToDestroy.push_back(componentToRemove);
-	OnComponentRemoved(componentToRemove);
+	PublishGameObjectEvent(GameObjectEvent::COMPONENT_REMOVED, componentToRemove);
 }
 
 Component* GameObject::GetComponent(ComponentType type)
@@ -278,22 +278,6 @@ void GameObject::DeletePendingComponents()
 	}
 
 	componentsToDestroy.clear();
-}
-
-void GameObject::OnComponentAdded(Component* component)
-{
-	for (auto& pair : components)
-	{
-		pair.second->OnComponentAdded(component);
-	}
-}
-
-void GameObject::OnComponentRemoved(Component* component)
-{
-	for (auto& pair : components)
-	{
-		pair.second->OnComponentRemoved(component);
-	}
 }
 
 void GameObject::AddChild(GameObject* gameObject)
@@ -735,5 +719,20 @@ void GameObject::OnEditor()
 		}
 
 		ImGui::EndPopup();
+	}
+}
+
+void GameObject::PublishGameObjectEvent(GameObjectEvent event, Component* component)
+{
+	auto it = components.begin();
+	while (it != components.end())
+	{
+		Component* component = it->second;
+
+		if (component->GetEnabled())
+		{
+			component->OnGameObjectEvent(event, component);
+		}
+		++it;
 	}
 }
