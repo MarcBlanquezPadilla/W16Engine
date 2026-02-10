@@ -30,7 +30,9 @@ enum class ComponentType {
 	Collider,
 	BoxCollider,
 	SphereCollider,
-	CapsuleCollider
+	CapsuleCollider,
+	Joint,
+	DistanceJoint
 };
 
 class GameObject
@@ -62,6 +64,7 @@ public:
 	//SAVE & LOAD
 	void Save(Config& gameObjectNode);
 	void Load(Config& gameObjectNode);
+	void SolveReferences();
 
 	//GETTERS & SETTERS
 	void SetStatic(bool s);

@@ -12,6 +12,7 @@
 #include "components/BoxCollider.h"
 #include "components/SphereCollider.h"
 #include "components/CapsuleCollider.h"
+#include "components/DistanceJoint.h"
 #include "utils/Log.h"
 #include "utils/AABB.h"
 #include "utils/Config.h"
@@ -82,8 +83,6 @@ bool GameObject::FixedUpdate()
 
 	return ret;
 }
-
-
 
 bool GameObject::CleanUp()
 {
@@ -166,16 +165,19 @@ Component* GameObject::AddComponent(ComponentType type)
 	case ComponentType::CapsuleCollider:
 		component = new CapsuleCollider(this);
 		break;
+	case ComponentType::DistanceJoint:
+		component = new DistanceJoint(this);
+		break;
 	}
-	
-	if (component != nullptr)
-	{
-		components[type] = component;
-		component->owner = this;
-		component->Start();
-		component->OnEnable();
-		PublishGameObjectEvent(GameObjectEvent::COMPONENT_ADDED, component);
-	}
+
+	if (component == nullptr) return nullptr;
+
+	PublishGameObjectEvent(GameObjectEvent::COMPONENT_ADDED, component);
+	components[type] = component;
+	component->owner = this;
+	component->Start();
+	component->OnEnable();
+
 	return component;
 }
 
@@ -423,6 +425,18 @@ void GameObject::Load(Config& gameObjectNode)
 			}
 
 			childNode = childNode.GetNextSibling("GameObject");
+		}
+	}
+}
+
+void GameObject::SolveReferences()
+{
+	for (auto const& pair : components)
+	{
+		Component* component = pair.second;
+		if (component)
+		{
+			component->ResolveReferences();
 		}
 	}
 }
@@ -717,12 +731,15 @@ void GameObject::OnEditor()
 		{
 			if (ImGui::MenuItem("Camera")) { AddComponent(ComponentType::Camera); ImGui::CloseCurrentPopup(); }
 		}
+		
+		if (ImGui::MenuItem("Distance Joint")) { AddComponent(ComponentType::DistanceJoint); ImGui::CloseCurrentPopup(); }
+		
 
 		ImGui::EndPopup();
 	}
 }
 
-void GameObject::PublishGameObjectEvent(GameObjectEvent event, Component* component)
+void GameObject::PublishGameObjectEvent(GameObjectEvent event, Component* newComponent)
 {
 	auto it = components.begin();
 	while (it != components.end())
@@ -731,7 +748,7 @@ void GameObject::PublishGameObjectEvent(GameObjectEvent event, Component* compon
 
 		if (component->GetEnabled())
 		{
-			component->OnGameObjectEvent(event, component);
+			component->OnGameObjectEvent(event, newComponent);
 		}
 		++it;
 	}

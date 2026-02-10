@@ -170,34 +170,6 @@ void Animation::UnloadAnimation(AnimationInstance& animation)
 
 void Animation::Update()
 {
-    auto attackIt = animationsLibrary.find("Attack");
-    auto walkIt = animationsLibrary.find("Walk");
-    auto idleIt = animationsLibrary.find("Idle");
-
-    UID attackUID = (attackIt != animationsLibrary.end()) ? attackIt->second.uid : 0;
-    UID walkUID = (walkIt != animationsLibrary.end()) ? walkIt->second.uid : 0;
-    UID idleUID = (idleIt != animationsLibrary.end()) ? idleIt->second.uid : 0;
-
-    bool isAttacking = (currentAnimation.uid == attackUID);
-    bool isWalking = (currentAnimation.uid == walkUID);
-    bool isIdle = (currentAnimation.uid == idleUID);
-
-    if (!isAttacking || ended)
-    {
-        if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_2) == KEY_DOWN)
-        {
-            Play("Attack", 0.2f);
-        }
-        else if (Engine::GetInstance().moduleInput->GetKey(SDL_SCANCODE_1) == KEY_REPEAT)
-        {
-            if (!isWalking) Play("Walk", 0.5f);
-        }
-        else
-        {
-            if (!isIdle) Play("Idle", 0.5f);
-        }
-    }
-
     if (!playing || !currentAnimation.resource) return;
 
     float dt = Time::deltaTime;

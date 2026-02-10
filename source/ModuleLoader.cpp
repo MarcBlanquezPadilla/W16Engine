@@ -375,6 +375,12 @@ bool ModuleLoader::LoadSceneFromMemory(Config& sceneConfig)
 		}
 		gameObjectNode = gameObjectNode.GetNextSibling("GameObject");
 	}
+
+	for (auto pair : Engine::GetInstance().moduleScene->GetAllGameObjects())
+	{
+		pair.second->SolveReferences();
+	}
+
 	return true;
 }
 

@@ -7,6 +7,7 @@
 
 class GameObject;
 class Collider;
+class Joint;
 
 class Rigidbody : public Component
 {
@@ -39,10 +40,11 @@ public:
     void CleanUp() override;
     
     ComponentType GetType() override { return ComponentType::Rigidbody; };
+    Type GetBodyType() const { return type; };
     bool IsType(ComponentType type) override { return type == ComponentType::Rigidbody; };
     bool IsIncompatible(ComponentType type) override { return type == ComponentType::Rigidbody; };
 
-    physx::PxRigidActor* GetActor() { return actor; }
+    physx::PxRigidActor* GetActor() const { return actor; }
     void CollectColliders(GameObject* obj, std::vector<Collider*>& list);
 
     void Save(Config& componentNode) override;
@@ -92,6 +94,10 @@ public:
     //COLLISIONS
     void CastPhysicsEvent(PhysicsEventType type, Rigidbody* other);
 
+    //JOINTS
+    void RegisterJoint(Joint* joint);
+    void UnregisterJoint(Joint* joint);
+
 private:    
 
     void SyncToTransform();
@@ -134,4 +140,5 @@ private:
     physx::PxRigidActor* actor = nullptr;
     std::vector <PhysicsEventsListener*> listeners;
     std::vector <Collider*> attachedColliders;
+    std::vector<Joint*> connectedJoints;
 };

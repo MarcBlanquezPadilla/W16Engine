@@ -1,6 +1,7 @@
 #include "InspectorWindow.h"
 #include "../Engine.h"
 #include "../ModuleScene.h"
+#include "../ModuleEvents.h"
 #include "../GameObject.h"
 #include "../components/Component.h"
 #include "../components/Transform.h"
@@ -14,12 +15,17 @@
 
 InspectorWindow::InspectorWindow(bool active) : UIWindow("Inspector", active)
 {
-
+    Engine::GetInstance().moduleEvents->Subscribe(Event::Type::GameObjectDestroyed, this);
 }
 
 InspectorWindow::~InspectorWindow()
 {
-    
+
+}
+
+void InspectorWindow::CleanUp()
+{
+    Engine::GetInstance().moduleEvents->UnsubscribeAll(this);
 }
 
 void InspectorWindow::Draw()
@@ -32,7 +38,28 @@ void InspectorWindow::Draw()
         return;
     }
 
-    const std::vector<GameObject*>& selectedObjects = Engine::GetInstance().moduleEditor->GetSelectedGameObjects();
+    std::string lockText = "Lock";
+
+
+    int size = ImGui::CalcTextSize(lockText.c_str()).x + ImGui::GetFrameHeight();
+    int startWidth = ImGui::GetContentRegionAvail().x - size;
+
+    ImGui::SetCursorPosX(startWidth);
+    ImGui::Text(lockText.c_str());
+    ImGui::SameLine();
+    
+    if (ImGui::Checkbox("##LockInspector", &inspectorLocked))
+    {
+        if (inspectorLocked)
+        {
+            lockedObjects = Engine::GetInstance().moduleEditor->GetSelectedGameObjects();
+        }
+    }
+
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    const std::vector<GameObject*>& selectedObjects = inspectorLocked ? lockedObjects : Engine::GetInstance().moduleEditor->GetSelectedGameObjects();
 
     if (selectedObjects.empty())
     {
@@ -61,4 +88,25 @@ void InspectorWindow::Draw()
     }
 
     ImGui::End();
+}
+
+void InspectorWindow::OnEvent(const Event& event)
+{
+    switch (event.type)
+    {
+    case Event::Type::GameObjectDestroyed:
+    {
+        GameObject* destroyedGO = event.data.gameObject.gameObject;
+
+        auto it = std::remove(lockedObjects.begin(), lockedObjects.end(), destroyedGO);
+
+        if (it != lockedObjects.end())
+        {
+            lockedObjects.erase(it, lockedObjects.end());
+        }
+        break;
+    }
+    default:
+        break;
+    }
 }

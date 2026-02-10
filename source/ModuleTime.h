@@ -26,6 +26,8 @@ private:
 	PerfTimer realTimeTimer;
 	double lastTime;
 
+	float accumulator;
+
 	bool isRunning;
 	bool isPaused;
 	bool oneFrameStep;

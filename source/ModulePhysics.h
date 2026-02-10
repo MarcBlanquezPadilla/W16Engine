@@ -20,7 +20,7 @@ public:
     ~ModulePhysics();
 
     bool Awake() override;
-    bool PreUpdate() override;
+    bool FixedUpdate() override;
     bool CleanUp() override;
 
     void DrawDebug();
@@ -46,9 +46,6 @@ private:
     physx::PxDefaultCpuDispatcher* gDispatcher = nullptr;
     physx::PxScene* gScene = nullptr;
     physx::PxMaterial* gMaterial = nullptr;
-
-    float accumulator = 0.0f;
-    float stepSize = 1.0f / 60.0f;
 
     bool debugPhysics = true;
 };

@@ -7,6 +7,8 @@
 float Time::time = 0.0f;
 float Time::realTime = 0.0f;
 float Time::deltaTime = 0.0f;
+float Time::fixedDeltaTime = 0.02f;
+float Time::fixedAlpha = 0.0f;
 float Time::realDeltaTime = 0.0f;
 float Time::timeScale = 0.0f;
 int Time::frameCount = 0;
@@ -27,6 +29,7 @@ bool ModuleTime::Awake()
 
 	realTimeTimer.Start();
 	lastTime = 0;
+	accumulator = 0;
 	
 	isRunning = false;
 	isPaused = false;
@@ -45,22 +48,39 @@ bool ModuleTime::PreUpdate()
 	lastTime = Time::realTime;
 
 	//GAME TIMERS
-	if (isRunning)
+	if (isRunning && (!isPaused || oneFrameStep))
 	{
+		//DELTA TIME
 		if (oneFrameStep)
 		{
-			Time::deltaTime = 0.16f;
+			Time::deltaTime = Time::fixedDeltaTime;
 			oneFrameStep = false;
 		}
 		else
 		{
 			Time::deltaTime = Time::realDeltaTime * Time::timeScale;
 		}
+
+		//FIXED DELTA TIME
+		accumulator += Time::deltaTime;
+
+		while (accumulator >= Time::fixedDeltaTime)
+		{
+			Engine::GetInstance().FixedUpdate();
+
+			accumulator -= Time::fixedDeltaTime;
+		}
+
+		Time::fixedAlpha = accumulator / Time::fixedDeltaTime;
+
+		//TIME
 		Time::time += Time::deltaTime;
+
 	}
 	else
 	{
 		Time::deltaTime = 0.0f;
+		Time::fixedAlpha = 1.0f;
 	}
 
 	//FRAME COUNT

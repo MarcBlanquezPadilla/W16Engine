@@ -75,6 +75,10 @@ set(W16_ENGINE_SOURCES
 	source/components/SphereCollider.cpp
 	source/components/CapsuleCollider.h
 	source/components/CapsuleCollider.cpp
+	source/components/Joint.h
+	source/components/Joint.cpp
+	source/components/DistanceJoint.h
+	source/components/DistanceJoint.cpp
 	source/windows/UIWindow.h
 	source/windows/ConfigWindow.cpp
 	source/windows/ConfigWindow.h

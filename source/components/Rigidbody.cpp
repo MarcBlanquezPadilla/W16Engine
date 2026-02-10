@@ -1,19 +1,25 @@
 #include "Rigidbody.h"
 #include "Collider.h"
+#include "Joint.h"
 #include "../Engine.h"
 #include "../ModulePhysics.h"
-#include "../ModuleEvents.h"
 #include "../ModuleTime.h"
+#include "../ModuleEvents.h"
 #include "../GameObject.h"
 #include "Transform.h"
 #include "imgui.h"
 
 #include "../utils/Log.h"
+#include "../utils/Time.h"
 
 
 Rigidbody::Rigidbody(GameObject* owner) : Component(owner)
 {
     name = "Rigidbody";
+    lastPose = physx::PxTransform(physx::PxIdentity);
+    currentPose = physx::PxTransform(physx::PxIdentity);
+    kinematicTargetPos = glm::vec3(0.0f);
+    kinematicTargetRot = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
     CreateBody();
 }
 
@@ -46,13 +52,36 @@ void Rigidbody::FixedUpdate()
 
 void Rigidbody::Update() {
     
-    if (!Engine::GetInstance().moduleTime->GetIsRunning() || type == Type::STATIC || !actor) return;
+    if (!actor) return;
 
-    physx::PxTransform pose = actor->getGlobalPose();
+    if (!Engine::GetInstance().moduleTime->GetIsRunning() || Engine::GetInstance().moduleTime->GetIsPaused())
+    {
+        physx::PxTransform pose = actor->getGlobalPose();
+
+        lastPose = pose;
+        currentPose = pose;
+
+        isSyncingFromPhysics = true;
+        owner->transform->SetGlobalPosition(glm::vec3(pose.p.x, pose.p.y, pose.p.z));
+        owner->transform->SetGlobalQuaternionRotation(glm::quat(pose.q.w, pose.q.x, pose.q.y, pose.q.z));
+        isSyncingFromPhysics = false;
+
+        return;
+    }
+
+    float alpha = Time::fixedAlpha;
+
+    glm::vec3 p0(lastPose.p.x, lastPose.p.y, lastPose.p.z);
+    glm::vec3 p1(currentPose.p.x, currentPose.p.y, currentPose.p.z);
+    glm::vec3 visualPos = glm::mix(p0, p1, alpha);
+
+    glm::quat q0(lastPose.q.w, lastPose.q.x, lastPose.q.y, lastPose.q.z);
+    glm::quat q1(currentPose.q.w, currentPose.q.x, currentPose.q.y, currentPose.q.z);
+    glm::quat visualRot = glm::slerp(q0, q1, alpha);
 
     isSyncingFromPhysics = true;
-    owner->transform->SetGlobalPosition(glm::vec3(pose.p.x, pose.p.y, pose.p.z));
-    owner->transform->SetGlobalQuaternionRotation(glm::quat(pose.q.w, pose.q.x, pose.q.y, pose.q.z));
+    owner->transform->SetGlobalPosition(visualPos);
+    owner->transform->SetGlobalQuaternionRotation(visualRot);
     isSyncingFromPhysics = false;
 }
 
@@ -75,6 +104,14 @@ void Rigidbody::CleanUp()
     }
     attachedColliders.clear();
 
+    for (Joint* joint : connectedJoints) {
+        if (joint) {
+
+            joint->OnRigidbodyDeleted(this);
+        }
+    }
+    connectedJoints.clear();
+
     if (actor) {
         actor->userData = nullptr;
         Engine::GetInstance().modulePhysics->GetScene()->removeActor(*actor);
@@ -85,143 +122,7 @@ void Rigidbody::CleanUp()
 }
 
 
-void Rigidbody::OnEditor()
-{
-    const char* bodyTypes[] = { "Static", "Dynamic", "Kinematic" };
-    int currentType = (int)this->type;
-    ImGui::Text("Body Type:");
-    ImGui::PushItemWidth(-FLT_MIN);
-    if (ImGui::Combo("##Type", &currentType, bodyTypes, IM_ARRAYSIZE(bodyTypes))) {
 
-        SetType((Type)currentType);
-    }
-    ImGui::PopItemWidth();
-
-    ImGui::Separator();
-
-    if (actor && type != Type::STATIC) {
-        physx::PxRigidDynamic* dynamicActor = actor->is<physx::PxRigidDynamic>();
-        bool isKinematic = (type == Type::KINEMATIC);
-
-        if (ImGui::BeginTable("RigidbodyTable", 2, ImGuiTableFlags_Resizable)) {
-            ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed);
-            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
-
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            ImGui::Text("Mass");
-            ImGui::TableNextColumn();
-            ImGui::PushItemWidth(-FLT_MIN);
-            float mass = dynamicActor->getMass();
-            if (ImGui::InputFloat("##Mass", &mass)) {
-                SetMass(mass);
-            }
-            ImGui::PopItemWidth();
-
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            ImGui::Text("Use CCD");
-            ImGui::TableNextColumn();
-            bool ccd = IsUsingCCD();
-            if (ImGui::Checkbox("##CCD", &ccd)) {
-                SetUseCCD(ccd);
-            }
-
-            ImGui::EndTable();
-            ImGui::Separator();
-
-            if (ImGui::BeginTable("ConstraintsTable", 4)) {
-
-                bool freezePX = false;
-                bool freezePY = false;
-                bool freezePZ = false;
-                bool freezeRX = false;
-                bool freezeRY = false;
-                bool freezeRZ = false;
-
-                bool changed = false;
-
-                GetConstraints(freezePX, freezePY, freezePZ, freezeRX, freezeRY, freezeRZ);
-
-                ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthStretch);
-                ImGui::TableSetupColumn("X", ImGuiTableColumnFlags_WidthFixed, 15.0f);
-                ImGui::TableSetupColumn("Y", ImGuiTableColumnFlags_WidthFixed, 15.0f);
-                ImGui::TableSetupColumn("Z", ImGuiTableColumnFlags_WidthFixed, 15.0f);
-
-                ImGui::TableNextColumn();
-                ImGui::Text("Constraints");
-                ImGui::TableNextColumn();
-                ImGui::Text("X");
-                ImGui::TableNextColumn();
-                ImGui::Text("Y");
-                ImGui::TableNextColumn();
-                ImGui::Text("Z");
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn(); ImGui::Text("Position");
-                ImGui::TableNextColumn(); if (ImGui::Checkbox("##FPX", &freezePX)) changed = true;
-                ImGui::TableNextColumn(); if (ImGui::Checkbox("##FPY", &freezePY)) changed = true;
-                ImGui::TableNextColumn(); if (ImGui::Checkbox("##FPZ", &freezePZ)) changed = true;
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn(); ImGui::Text("Rotation");
-                ImGui::TableNextColumn(); if (ImGui::Checkbox("##FRX", &freezeRX)) changed = true;
-                ImGui::TableNextColumn(); if (ImGui::Checkbox("##FRY", &freezeRY)) changed = true;
-                ImGui::TableNextColumn(); if (ImGui::Checkbox("##FRZ", &freezeRZ)) changed = true;
-
-                if (changed)
-                {
-                    SetConstraints(freezePX, freezePY, freezePZ, freezeRX, freezeRY, freezeRZ);
-                }
-            }
-
-            ImGui::Separator();
-
-            if (!isKinematic) {
-
-                // GRAVEDAD
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("Use Gravity");
-                ImGui::TableNextColumn();
-                bool useGravity = !(actor->getActorFlags() & physx::PxActorFlag::eDISABLE_GRAVITY);
-                if (ImGui::Checkbox("##Gravity", &useGravity)) {
-                    SetUseGravity(useGravity);
-                }
-
-                // LINEAR DRAG
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("Linear Damping");
-                ImGui::TableNextColumn();
-                ImGui::PushItemWidth(-FLT_MIN);
-                float linDrag = dynamicActor->getLinearDamping();
-                if (ImGui::InputFloat("##Linear Damping", &linDrag)) {
-                    SetLinearDamping(linDrag);
-                }
-                ImGui::PopItemWidth();
-
-                // ANGULAR DRAG
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("Angular Damping");
-                ImGui::TableNextColumn();
-                ImGui::PushItemWidth(-FLT_MIN);
-                float angDrag = dynamicActor->getAngularDamping();
-                if (ImGui::InputFloat("##Angular Damping", &angDrag)) {
-                    SetAngularDamping(angDrag);
-                }
-                ImGui::PopItemWidth();
-            }
-
-            ImGui::EndTable();
-            ImGui::Separator();
-        }
-        physx::PxVec3 vel = dynamicActor->getLinearVelocity();
-        ImGui::Text("Velocity:");
-        ImGui::Text("X:%.2f | Y:%.2f | Z:%.2f", vel.x, vel.y, vel.z);
-    }
-}
 
 void Rigidbody::CollectColliders(GameObject* obj, std::vector<Collider*>& list) {
 
@@ -256,6 +157,7 @@ void Rigidbody::CreateBody()
         }
     }
 
+
     if (actor) {
         physicsModule->GetScene()->removeActor(*actor);
         actor->release();
@@ -275,6 +177,9 @@ void Rigidbody::CreateBody()
         physx::PxVec3(pos.x, pos.y, pos.z),
         physx::PxQuat(rot.x, rot.y, rot.z, rot.w)
     );
+
+    lastPose = pxTransform;
+    currentPose = pxTransform;
 
     if (type == Type::STATIC) {
         tempActor = physics->createRigidStatic(pxTransform);
@@ -318,6 +223,14 @@ void Rigidbody::CreateBody()
         if (dyn) {
             dyn->setLinearVelocity(physx::PxVec3(savedLinearVel.x, savedLinearVel.y, savedLinearVel.z));
             dyn->setAngularVelocity(physx::PxVec3(savedAngularVel.x, savedAngularVel.y, savedAngularVel.z));
+        }
+    }
+
+    for (Joint* joint : connectedJoints)
+    {
+        if (joint)
+        {
+            joint->OnRigidbodyReset(this);
         }
     }
 }
@@ -471,8 +384,6 @@ void Rigidbody::Load(Config& config)
     freezeRotZ = config.GetBool("FreezeRotZ");
     CreateBody();
 }
-
-
 
 void Rigidbody::AddForce(const glm::vec3& force, ForceMode mode) {
     if (type == Type::DYNAMIC && actor) {
@@ -633,6 +544,7 @@ void Rigidbody::SyncPropertiesToPhysics() {
 }
 
 void Rigidbody::SyncToTransform() {
+        
     if (!actor || !owner->transform) return;
 
     glm::vec3 pos = owner->transform->GetGlobalPosition();
@@ -644,6 +556,9 @@ void Rigidbody::SyncToTransform() {
     );
 
     actor->setGlobalPose(targetPose);
+
+    lastPose = targetPose;
+    currentPose = targetPose;
 
     if (type == Type::DYNAMIC) {
         physx::PxRigidDynamic* dyn = actor->is<physx::PxRigidDynamic>();
@@ -725,23 +640,6 @@ void Rigidbody::SetUseCCD(bool enable)
     SyncPropertiesToPhysics();
 }
 
-void Rigidbody::CastPhysicsEvent(PhysicsEventType type, Rigidbody* other)
-{
-    for (PhysicsEventsListener* listener : listeners)
-    {
-        switch (type)
-        {
-            case PhysicsEventType::ON_COLLISION_ENTER: listener->OnCollisionEnter(other); break;
-            case PhysicsEventType::ON_COLLISION_STAY:  listener->OnCollisionStay(other);  break;
-            case PhysicsEventType::ON_COLLISION_EXIT:  listener->OnCollisionExit(other);  break;
-
-            case PhysicsEventType::ON_TRIGGER_ENTER:   listener->OnTriggerEnter(other);   break;
-            case PhysicsEventType::ON_TRIGGER_STAY:    listener->OnTriggerStay(other);    break;
-            case PhysicsEventType::ON_TRIGGER_EXIT:    listener->OnTriggerExit(other);    break;
-        }
-    }
-}
-
 void Rigidbody::CollectListeners()
 {
     listeners.clear();
@@ -755,6 +653,40 @@ void Rigidbody::CollectListeners()
         if (listener)
         {
             listeners.push_back(listener);
+        }
+    }
+}
+
+void Rigidbody::RegisterJoint(Joint* joint) {
+    if (joint == nullptr) return;
+
+    auto it = std::find(connectedJoints.begin(), connectedJoints.end(), joint);
+    if (it == connectedJoints.end()) {
+        connectedJoints.push_back(joint);
+    }
+}
+
+void Rigidbody::UnregisterJoint(Joint* joint) {
+    auto it = std::find(connectedJoints.begin(), connectedJoints.end(), joint);
+    if (it != connectedJoints.end()) {
+        connectedJoints.erase(it);
+    }
+}
+
+
+void Rigidbody::CastPhysicsEvent(PhysicsEventType type, Rigidbody* other)
+{
+    for (PhysicsEventsListener* listener : listeners)
+    {
+        switch (type)
+        {
+        case PhysicsEventType::ON_COLLISION_ENTER: listener->OnCollisionEnter(other); break;
+        case PhysicsEventType::ON_COLLISION_STAY:  listener->OnCollisionStay(other);  break;
+        case PhysicsEventType::ON_COLLISION_EXIT:  listener->OnCollisionExit(other);  break;
+
+        case PhysicsEventType::ON_TRIGGER_ENTER:   listener->OnTriggerEnter(other);   break;
+        case PhysicsEventType::ON_TRIGGER_STAY:    listener->OnTriggerStay(other);    break;
+        case PhysicsEventType::ON_TRIGGER_EXIT:    listener->OnTriggerExit(other);    break;
         }
     }
 }
@@ -781,5 +713,143 @@ void Rigidbody::OnGameObjectEvent(GameObjectEvent event, Component* component)
     case GameObjectEvent::TRANSFORM_CHANGED:
         if (!isSyncingFromPhysics) SyncToTransform();
         break;
+    }
+}
+
+void Rigidbody::OnEditor()
+{
+    const char* bodyTypes[] = { "Static", "Dynamic", "Kinematic" };
+    int currentType = (int)this->type;
+    ImGui::Text("Body Type:");
+    ImGui::PushItemWidth(-FLT_MIN);
+    if (ImGui::Combo("##Type", &currentType, bodyTypes, IM_ARRAYSIZE(bodyTypes))) {
+
+        SetType((Type)currentType);
+    }
+    ImGui::PopItemWidth();
+
+    ImGui::Separator();
+
+    if (actor && type != Type::STATIC) {
+        physx::PxRigidDynamic* dynamicActor = actor->is<physx::PxRigidDynamic>();
+        bool isKinematic = (type == Type::KINEMATIC);
+
+        if (ImGui::BeginTable("RigidbodyTable", 2, ImGuiTableFlags_Resizable)) {
+            ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::Text("Mass");
+            ImGui::TableNextColumn();
+            ImGui::PushItemWidth(-FLT_MIN);
+            float mass = dynamicActor->getMass();
+            if (ImGui::InputFloat("##Mass", &mass)) {
+                SetMass(mass);
+            }
+            ImGui::PopItemWidth();
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::Text("Use CCD");
+            ImGui::TableNextColumn();
+            bool ccd = IsUsingCCD();
+            if (ImGui::Checkbox("##CCD", &ccd)) {
+                SetUseCCD(ccd);
+            }
+
+            ImGui::EndTable();
+            ImGui::Separator();
+
+            if (ImGui::BeginTable("ConstraintsTable", 4)) {
+
+                bool freezePX = false;
+                bool freezePY = false;
+                bool freezePZ = false;
+                bool freezeRX = false;
+                bool freezeRY = false;
+                bool freezeRZ = false;
+
+                bool changed = false;
+
+                GetConstraints(freezePX, freezePY, freezePZ, freezeRX, freezeRY, freezeRZ);
+
+                ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthStretch);
+                ImGui::TableSetupColumn("X", ImGuiTableColumnFlags_WidthFixed, 15.0f);
+                ImGui::TableSetupColumn("Y", ImGuiTableColumnFlags_WidthFixed, 15.0f);
+                ImGui::TableSetupColumn("Z", ImGuiTableColumnFlags_WidthFixed, 15.0f);
+
+                ImGui::TableNextColumn();
+                ImGui::Text("Constraints");
+                ImGui::TableNextColumn();
+                ImGui::Text("X");
+                ImGui::TableNextColumn();
+                ImGui::Text("Y");
+                ImGui::TableNextColumn();
+                ImGui::Text("Z");
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn(); ImGui::Text("Position");
+                ImGui::TableNextColumn(); if (ImGui::Checkbox("##FPX", &freezePX)) changed = true;
+                ImGui::TableNextColumn(); if (ImGui::Checkbox("##FPY", &freezePY)) changed = true;
+                ImGui::TableNextColumn(); if (ImGui::Checkbox("##FPZ", &freezePZ)) changed = true;
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn(); ImGui::Text("Rotation");
+                ImGui::TableNextColumn(); if (ImGui::Checkbox("##FRX", &freezeRX)) changed = true;
+                ImGui::TableNextColumn(); if (ImGui::Checkbox("##FRY", &freezeRY)) changed = true;
+                ImGui::TableNextColumn(); if (ImGui::Checkbox("##FRZ", &freezeRZ)) changed = true;
+
+                if (changed)
+                {
+                    SetConstraints(freezePX, freezePY, freezePZ, freezeRX, freezeRY, freezeRZ);
+                }
+            }
+
+            ImGui::Separator();
+
+            if (!isKinematic) {
+
+                // GRAVEDAD
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("Use Gravity");
+                ImGui::TableNextColumn();
+                bool useGravity = !(actor->getActorFlags() & physx::PxActorFlag::eDISABLE_GRAVITY);
+                if (ImGui::Checkbox("##Gravity", &useGravity)) {
+                    SetUseGravity(useGravity);
+                }
+
+                // LINEAR DRAG
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("Linear Damping");
+                ImGui::TableNextColumn();
+                ImGui::PushItemWidth(-FLT_MIN);
+                float linDrag = dynamicActor->getLinearDamping();
+                if (ImGui::InputFloat("##Linear Damping", &linDrag)) {
+                    SetLinearDamping(linDrag);
+                }
+                ImGui::PopItemWidth();
+
+                // ANGULAR DRAG
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("Angular Damping");
+                ImGui::TableNextColumn();
+                ImGui::PushItemWidth(-FLT_MIN);
+                float angDrag = dynamicActor->getAngularDamping();
+                if (ImGui::InputFloat("##Angular Damping", &angDrag)) {
+                    SetAngularDamping(angDrag);
+                }
+                ImGui::PopItemWidth();
+            }
+
+            ImGui::EndTable();
+            ImGui::Separator();
+        }
+        physx::PxVec3 vel = dynamicActor->getLinearVelocity();
+        ImGui::Text("Velocity:");
+        ImGui::Text("X:%.2f | Y:%.2f | Z:%.2f", vel.x, vel.y, vel.z);
     }
 }

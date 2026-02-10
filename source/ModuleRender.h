@@ -72,6 +72,7 @@ public:
 	void DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color);
 	void DrawArc(glm::vec3 center, glm::quat rotation, float r, int segments, glm::vec4 col, glm::vec3 axisA, glm::vec3 axisB);
 	void DrawCircle(glm::vec3 center, glm::quat rotation, float r, int segments, glm::vec4 col, glm::vec3 axisA, glm::vec3 axisB);
+	void DrawSphere(const glm::vec3& center, float radius, const glm::vec4& color, int segments = 16);
 
 	//WINDOW
 	void ChangeWindowSize(int x, int y);

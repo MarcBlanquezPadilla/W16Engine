@@ -73,21 +73,11 @@ bool ModulePhysics::Awake() {
     return true;
 }
 
-bool ModulePhysics::PreUpdate() {
-    
-    float dt = Time::deltaTime;
-    accumulator += dt;
+bool ModulePhysics::FixedUpdate() {
 
-    while (accumulator >= stepSize)
-    {
-        gScene->simulate(stepSize);
+    gScene->simulate(Time::fixedDeltaTime);
 
-        gScene->fetchResults(true);
-
-        Engine::GetInstance().FixedUpdate();
-
-        accumulator -= stepSize;
-    }
+    gScene->fetchResults(true);
 
     return true;
 }

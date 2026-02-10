@@ -1382,6 +1382,29 @@ void ModuleRender::DrawArc(glm::vec3 center, glm::quat rotation, float r, int se
 	}
 }
 
+void ModuleRender::DrawSphere(const glm::vec3& center, float radius, const glm::vec4& color, int segments)
+{
+	float step = 2.0f * glm::pi<float>() / (float)segments;
+
+	for (int i = 0; i < segments; ++i)
+	{
+		float a1 = i * step;
+		float a2 = (i + 1) * step;
+
+		// Anillo XY (Vertical Frontal)
+		DrawLine(center + glm::vec3(radius * cos(a1), radius * sin(a1), 0),
+			center + glm::vec3(radius * cos(a2), radius * sin(a2), 0), color);
+
+		// Anillo XZ (Horizontal)
+		DrawLine(center + glm::vec3(radius * cos(a1), 0, radius * sin(a1)),
+			center + glm::vec3(radius * cos(a2), 0, radius * sin(a2)), color);
+
+		// Anillo YZ (Vertical Lateral)
+		DrawLine(center + glm::vec3(0, radius * cos(a1), radius * sin(a1)),
+			center + glm::vec3(0, radius * cos(a2), radius * sin(a2)), color);
+	}
+}
+
 #pragma endregion
 
 UID ModuleRender::GetObjectInPixel(const CameraLens* camera, int x, int y)

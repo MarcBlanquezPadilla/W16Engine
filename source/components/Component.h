@@ -38,6 +38,8 @@ public:
 
     virtual void Load(Config& componentNode) {}
 
+    virtual void ResolveReferences() {};
+
     virtual void OnEditor() {}
 
     void SetEnabled(bool enabled) { this->enabled = enabled; }
