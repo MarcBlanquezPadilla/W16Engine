@@ -15,7 +15,7 @@
 						<Animation name="Walk" UID="3099632582" loop="true" speed="1" />
 					</Component>
 					<Component type="6" enabled="true" Type="1" Mass="1" LinearDamping="0" AngularDamping="0" UseGravity="true" UseCCD="false" FreezePosX="false" FreezePosY="false" FreezePosZ="false" FreezeRotX="false" FreezeRotY="false" FreezeRotZ="false" />
-					<Component type="17" enabled="true" BodyBUID="0" BreakForce="3.40282347e+38" BreakTorque="3.40282347e+38" Motion0="0" Motion1="0" Motion2="0" Motion3="2" Motion4="2" Motion5="2" LinearLimit="1" TwistMin="-45" TwistMax="45" SwingY="45" SwingZ="45">
+					<Component type="14" enabled="true" BodyBUID="0" BreakForce="3.40282347e+38" BreakTorque="3.40282347e+38" EnableLimits="false" MinAngle="-45" MaxAngle="45" EnableMotor="true" DriveVelocity="5">
 						<LocalPositionA x="0" y="0" z="0" />
 						<LocalPositionB x="0" y="0" z="0" />
 						<LocalRotationA x="0" y="-0" z="0" />
@@ -1186,6 +1186,34 @@
 						</Childs>
 					</GameObject>
 				</Childs>
+			</GameObject>
+			<GameObject Name="Basic" UID="691735688" Enabled="true" Static="false">
+				<Components>
+					<Component type="1" enabled="true">
+						<Position x="0" y="-2.49720001" z="0" />
+						<Rotation w="1" x="0" y="0" z="0" />
+						<Scale x="1" y="1" z="1" />
+					</Component>
+					<Component type="2" enabled="true" MeshUID="1" TextureUID="0" DrawNormals="false" DrawMesh="false" DrawStencil="false" DrawChecker="false" Transparent="false" />
+					<Component type="8" enabled="true" Trigger="false" DynamicFriction="0.5" StaticFriction="0.5" Restitution="0.600000024">
+						<Center x="0" y="0" z="0" />
+						<Size x="1" y="1" z="1" />
+					</Component>
+				</Components>
+			</GameObject>
+			<GameObject Name="Basic" UID="1686288414" Enabled="true" Static="false">
+				<Components>
+					<Component type="1" enabled="true">
+						<Position x="0" y="-5.70670128" z="0" />
+						<Rotation w="1" x="0" y="0" z="0" />
+						<Scale x="1" y="1" z="1" />
+					</Component>
+					<Component type="2" enabled="true" MeshUID="1" TextureUID="0" DrawNormals="false" DrawMesh="false" DrawStencil="true" DrawChecker="false" Transparent="false" />
+					<Component type="8" enabled="true" Trigger="false" DynamicFriction="0.5" StaticFriction="0.5" Restitution="0.600000024">
+						<Center x="0" y="0" z="0" />
+						<Size x="1" y="1" z="1" />
+					</Component>
+				</Components>
 			</GameObject>
 		</GameObjects>
 	</Scene>

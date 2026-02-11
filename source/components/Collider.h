@@ -27,7 +27,6 @@ public:
     void OnDisable() override;
     void CleanUp() override;
 
-
     virtual physx::PxGeometry* GetGeometry() = 0;
     virtual ColliderType GetColliderType() = 0;
     
@@ -44,8 +43,6 @@ public:
             type == ComponentType::BoxCollider ||
             type == ComponentType::SphereCollider;
     };
-    
-
 
     virtual void Save(Config& componentNode) override {};
     void SaveBase(Config& componentNode);
@@ -66,11 +63,16 @@ public:
     const float GetDynamicFriction() { return dynamicFriction; };
     const float GetRestitution() { return restitution; };
 
+    void SetShape(physx::PxShape* s) { shape = s; };
     virtual void DebugShape() {}
+
+    void OnGameObjectEvent(GameObjectEvent event, Component* component) override;
 
     Rigidbody* attachedRigidbody = nullptr;
 
 protected:
+    
+    physx::PxShape* shape = nullptr;
 
     glm::vec3 center = { 0, 0, 0 };
    

@@ -88,10 +88,8 @@ void CapsuleCollider::DebugShape()
 
     glm::vec3 localUp, localRight, localForward;
 
-    if (actor)
+    if (actor && shape)
     {
-        physx::PxShape* shape = nullptr;
-        actor->getShapes(&shape, 1);
         physx::PxTransform worldPose = actor->getGlobalPose();
         if (shape) worldPose = worldPose * shape->getLocalPose();
 

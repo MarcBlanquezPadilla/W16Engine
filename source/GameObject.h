@@ -16,7 +16,8 @@ enum class GameObjectEvent {
 	TRANSFORM_SCALED,
 	COMPONENT_ADDED,
 	COMPONENT_REMOVED,
-	OBJECT_DESTROYED
+	OBJECT_DESTROYED,
+	HIERARCHY_CHANGED
 };
 
 enum class ComponentType {
@@ -58,12 +59,15 @@ public:
 	bool CleanUp();
 	bool CleanUpRecursive();
 
+
+	//HIERARCHY
 	void AddChild(GameObject* gameObject);
 	void RemoveChild(GameObject* childToRemove);
 	std::vector<GameObject*> GetChilds() { return childs;}
 	void SetParent(GameObject* newParent);
 	bool IsDescendant(GameObject* potentialParent);
 	GameObject* FindChild(const std::string& findName);
+	void NotifyHierarchyChanged();
 	void Destroy();
 
 	//SAVE & LOAD

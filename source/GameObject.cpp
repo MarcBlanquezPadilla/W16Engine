@@ -356,6 +356,18 @@ GameObject* GameObject::FindChild(const std::string& nameToFind)
 	return nullptr;
 }
 
+void GameObject::NotifyHierarchyChanged() {
+
+	PublishGameObjectEvent(GameObjectEvent::HIERARCHY_CHANGED, nullptr);
+
+	for (GameObject* child : childs) {
+		if (child) {
+			child->NotifyHierarchyChanged();
+		}
+	}
+}
+
+
 void GameObject::Save(Config& gameObjectNode)
 {
 	gameObjectNode.SetString("Name", name.c_str());
@@ -643,6 +655,8 @@ void GameObject::SetParent(GameObject* newParent)
 	{
 		UpdateEnabledRecursive(nowActive);
 	}
+
+	NotifyHierarchyChanged();
 }
 
 void GameObject::Destroy()
@@ -763,6 +777,7 @@ void GameObject::OnEditor()
 		ImGui::EndPopup();
 	}
 }
+
 
 void GameObject::PublishGameObjectEvent(GameObjectEvent event, Component* newComponent)
 {

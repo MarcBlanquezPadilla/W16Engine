@@ -131,3 +131,34 @@ void Collider::SetRestitution(float restitution)
     this->restitution = glm::clamp(restitution, 0.0f, INFINITY);
     if (attachedRigidbody) attachedRigidbody->CreateBody();
 }
+
+void Collider::OnGameObjectEvent(GameObjectEvent event, Component* component) 
+{
+    switch (event)
+    {
+    case GameObjectEvent::HIERARCHY_CHANGED:
+        
+        Rigidbody* newRB = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
+
+        if (newRB != attachedRigidbody)
+        {
+            if (attachedRigidbody) {
+                attachedRigidbody->CreateBody();
+            }
+
+            attachedRigidbody = newRB;
+
+            if (attachedRigidbody) {
+                attachedRigidbody->CreateBody();
+            }
+            else {
+               
+            }
+        }
+        else if (attachedRigidbody)
+        {
+            attachedRigidbody->CreateBody();
+        }
+        break;
+    }
+}

@@ -104,13 +104,13 @@ private:
     void SyncPropertiesToPhysics();
 
     void UpdateShapesGeometry();
-    void UpdateShapeLocalPose(physx::PxShape* shape, Collider* col);
+    void UpdateShapeLocalPose(physx::PxRigidActor* actor, physx::PxShape* shape, Collider* col);
 
     physx::PxRigidDynamic* GetDynamic() { return actor ? actor->is<physx::PxRigidDynamic>() : nullptr; }
     void CollectListeners();
 
     //EVENTS
-    void OnGameObjectEvent(GameObjectEvent event, Component* component);
+    void OnGameObjectEvent(GameObjectEvent event, Component* component) override;
 
 private: 
 

@@ -74,13 +74,10 @@ void BoxCollider::DebugShape()
     glm::vec3 scale = owner->transform->GetGlobalScale();
     glm::vec3 halfSize = (size * scale) * 0.5f;
 
-    if (actor)
+    if (actor && shape)
     {
-        physx::PxShape* shape = nullptr;
-        actor->getShapes(&shape, 1);
-
         physx::PxTransform worldPose = actor->getGlobalPose();
-        if (shape) worldPose = worldPose * shape->getLocalPose();
+        worldPose = worldPose * shape->getLocalPose();
 
         pos = glm::vec3(worldPose.p.x, worldPose.p.y, worldPose.p.z);
         rot = glm::quat(worldPose.q.w, worldPose.q.x, worldPose.q.y, worldPose.q.z);

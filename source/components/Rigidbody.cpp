@@ -206,7 +206,9 @@ void Rigidbody::CreateBody()
 
         physx::PxShape* shape = physx::PxRigidActorExt::createExclusiveShape(*tempActor, *geo, *mat);
 
-        UpdateShapeLocalPose(shape, col);
+        col->SetShape(shape);
+
+        UpdateShapeLocalPose(tempActor,shape, col);
 
         shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, !col->IsTrigger());
         shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, col->IsTrigger());
@@ -249,7 +251,7 @@ void Rigidbody::UpdateShapesGeometry() {
 
         shape->setGeometry(*newGeo);
 
-        UpdateShapeLocalPose(shape, col);
+        UpdateShapeLocalPose(actor,shape, col);
 
         delete newGeo;
     }
@@ -259,31 +261,28 @@ void Rigidbody::UpdateShapesGeometry() {
     }
 }
 
-void Rigidbody::UpdateShapeLocalPose(physx::PxShape* shape, Collider* col) {
-    
-    auto* trans = owner->transform;
+void Rigidbody::UpdateShapeLocalPose(physx::PxRigidActor* actor ,physx::PxShape* shape, Collider* col)
+{
+    if (!shape || !col) return;
 
-    glm::quat relRot = glm::inverse(trans->GetGlobalQuaterionRotation()) * col->owner->transform->GetGlobalQuaterionRotation();
+    physx::PxTransform rbGlobalPose = actor->getGlobalPose();
 
-    glm::vec3 pivotRelPos = col->owner->transform->GetGlobalPosition() - trans->GetGlobalPosition();
+    Transform* colTrans = col->owner->transform;
+    glm::vec3 colGlobalPos = colTrans->GetGlobalPosition();
+    glm::quat colGlobalRot = colTrans->GetGlobalQuaterionRotation();
+    glm::vec3 colGlobalScale = colTrans->GetGlobalScale();
 
-    glm::vec3 scaledCenter = col->GetCenter() * col->owner->transform->GetGlobalScale();
+    glm::vec3 offset = colGlobalRot * (col->GetCenter() * colGlobalScale);
+    glm::vec3 finalGlobalColPos = colGlobalPos + offset;
 
-    glm::vec3 rotatedOffset = relRot * scaledCenter;
-
-    glm::vec3 finalPos = pivotRelPos + rotatedOffset;
-
-    physx::PxTransform localPose(
-        physx::PxVec3(finalPos.x, finalPos.y, finalPos.z),
-        physx::PxQuat(relRot.x, relRot.y, relRot.z, relRot.w)
+    physx::PxTransform colGlobalPose(
+        physx::PxVec3(finalGlobalColPos.x, finalGlobalColPos.y, finalGlobalColPos.z),
+        physx::PxQuat(colGlobalRot.x, colGlobalRot.y, colGlobalRot.z, colGlobalRot.w)
     );
 
-    if (col->IsType(ComponentType::CapsuleCollider)) {
-        physx::PxQuat rotateToY = physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0, 0, 1));
-        localPose.q *= rotateToY;
-    }
+    physx::PxTransform relativePose = rbGlobalPose.getInverse().transform(colGlobalPose);
 
-    shape->setLocalPose(localPose);
+    shape->setLocalPose(relativePose);
 }
 
 void Rigidbody::AttachCollider(Collider* collider)
@@ -304,6 +303,7 @@ void Rigidbody::UnattachCollider(Collider* collider)
     list.erase(std::remove(list.begin(), list.end(), collider), list.end());
 
     collider->attachedRigidbody = nullptr;
+    collider->SetShape(nullptr);
 
     if (actor) {
         CreateBody();
