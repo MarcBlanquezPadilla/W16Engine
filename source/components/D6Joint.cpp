@@ -21,6 +21,16 @@ void D6Joint::CreateJoint() {
     auto* physics = Engine::GetInstance().modulePhysics->GetPhysics();
     if (!physics || !bodyA || !bodyA->GetActor()) return;
 
+
+    bool isADynamic = (bodyA->GetBodyType() == Rigidbody::Type::DYNAMIC);
+
+    bool isBDynamic = (bodyB != nullptr) && (bodyB->GetBodyType() == Rigidbody::Type::DYNAMIC);
+
+    if (!isADynamic && !isBDynamic) {
+        LOG(LogType::LOG_WARNING, "D6 Joint ignored: At least one body must be DYNAMIC.");
+        return;
+    }
+
     physx::PxRigidActor* actorA = bodyA->GetActor();
     physx::PxRigidActor* actorB = (bodyB) ? bodyB->GetActor() : nullptr;
 
@@ -35,7 +45,11 @@ void D6Joint::CreateJoint() {
     );
 
     pxJoint = physx::PxD6JointCreate(*physics, actorA, localA, actorB, localB);
-    if (!pxJoint) return;
+
+    if (pxJoint == nullptr) {
+        LOG(LogType::LOG_ERROR, "Joint Error: PhysX failed to create PxD6Joint");
+        return;
+    }
 
     pxJoint->setBreakForce(breakForce, breakTorque);
     auto* d6 = static_cast<physx::PxD6Joint*>(pxJoint);
