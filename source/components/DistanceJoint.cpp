@@ -34,6 +34,15 @@ void DistanceJoint::CreateJoint() {
         return;
     }
 
+    bool isADynamic = (bodyA->GetBodyType() == Rigidbody::Type::DYNAMIC);
+
+    bool isBDynamic = (bodyB != nullptr) && (bodyB->GetBodyType() == Rigidbody::Type::DYNAMIC);
+
+    if (!isADynamic && !isBDynamic) {
+        LOG(LogType::LOG_WARNING, "Distance Joint ignored: At least one body must be DYNAMIC.");
+        return;
+    }
+
     physx::PxRigidActor* actorA = bodyA->GetActor();
     physx::PxRigidActor* actorB = (bodyB) ? bodyB->GetActor() : nullptr;
 
@@ -49,19 +58,12 @@ void DistanceJoint::CreateJoint() {
 
     pxJoint = physx::PxDistanceJointCreate(*physics, actorA, localA, actorB, localB);
 
-    bool isADynamic = (bodyA->GetBodyType() == Rigidbody::Type::DYNAMIC);
-
-    bool isBDynamic = (bodyB != nullptr) && (bodyB->GetBodyType() == Rigidbody::Type::DYNAMIC);
-
-    if (!isADynamic && !isBDynamic) {
-        LOG(LogType::LOG_WARNING, "Distance Joint ignored: At least one body must be DYNAMIC.");
-        return;
-    }
-
     if (pxJoint == nullptr) {
         LOG(LogType::LOG_ERROR, "Joint Error: PhysX failed to create PxDistanceJoint");
         return;
     }
+
+    pxJoint->setBreakForce(breakForce, breakTorque);
 
     auto* dJoint = static_cast<physx::PxDistanceJoint*>(pxJoint);
 
@@ -165,6 +167,7 @@ void DistanceJoint::Save(Config& config)
 
 void DistanceJoint::Load(Config& config)
 {
+    LoadBase(config);
     EnableMaxDistance(config.GetBool("EnableMaxDistance"));
     SetMaxDistance(config.GetFloat("MaxDistance"));
     SetMinDistance(config.GetFloat("MinDistance"));

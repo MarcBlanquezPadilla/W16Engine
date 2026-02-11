@@ -57,3 +57,5 @@ static UID GenerateNewUID()
 #define MAX_BONE_INFLUENCE 4
 #define MAX_BONES 200
 #define AABB_PADDING 1
+
+#define INFINITY_PHYSIC 3.402823466e+38f

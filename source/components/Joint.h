@@ -38,6 +38,8 @@ public:
     void SetTarget(GameObject* targetGO);
     void SetAnchorPosition(JointBody jointBodyType, const glm::vec3& position);
     void SetAnchorRotation(JointBody jointBodyType, const glm::quat& rotation);
+    void SetBreakForce(float force = INFINITY_PHYSIC);
+    void SetBreakTorque(float torque= INFINITY_PHYSIC);
 
     virtual void Save(Config& componentNode) {}
     void SaveBase(Config& config);
@@ -63,6 +65,9 @@ protected:
 
     glm::vec3 localPosB;
     glm::quat localRotB;
+
+    float breakForce = INFINITY_PHYSIC;
+    float breakTorque = INFINITY_PHYSIC;
 
     void SyncFrames();
 };

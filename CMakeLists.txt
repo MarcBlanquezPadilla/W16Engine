@@ -79,6 +79,18 @@ set(W16_ENGINE_SOURCES
 	source/components/Joint.cpp
 	source/components/DistanceJoint.h
 	source/components/DistanceJoint.cpp
+	source/components/FixedJoint.h
+	source/components/FixedJoint.cpp
+	source/components/HingeJoint.h
+	source/components/HingeJoint.cpp
+	source/components/PrismaticJoint.h
+	source/components/PrismaticJoint.cpp
+	source/components/HingeJoint.h
+	source/components/HingeJoint.cpp
+	source/components/SphericalJoint.h
+	source/components/SphericalJoint.cpp
+	source/components/D6Joint.h
+	source/components/D6Joint.cpp
 	source/windows/UIWindow.h
 	source/windows/ConfigWindow.cpp
 	source/windows/ConfigWindow.h

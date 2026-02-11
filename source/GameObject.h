@@ -32,7 +32,12 @@ enum class ComponentType {
 	SphereCollider,
 	CapsuleCollider,
 	Joint,
-	DistanceJoint
+	DistanceJoint,
+	FixedJoint,
+	HingeJoint,
+	PrismaticJoint,
+	SphericalJoint,
+	D6Joint
 };
 
 class GameObject

@@ -13,6 +13,11 @@
 #include "components/SphereCollider.h"
 #include "components/CapsuleCollider.h"
 #include "components/DistanceJoint.h"
+#include "components/FixedJoint.h"
+#include "components/HingeJoint.h"
+#include "components/PrismaticJoint.h"
+#include "components/SphericalJoint.h"
+#include "components/D6Joint.h"
 #include "utils/Log.h"
 #include "utils/AABB.h"
 #include "utils/Config.h"
@@ -167,6 +172,21 @@ Component* GameObject::AddComponent(ComponentType type)
 		break;
 	case ComponentType::DistanceJoint:
 		component = new DistanceJoint(this);
+		break;
+	case ComponentType::FixedJoint:
+		component = new FixedJoint(this);
+		break;
+	case ComponentType::HingeJoint:
+		component = new HingeJoint(this);
+		break;
+	case ComponentType::PrismaticJoint:
+		component = new PrismaticJoint(this);
+		break;
+	case ComponentType::SphericalJoint:
+		component = new SphericalJoint(this);
+		break;
+	case ComponentType::D6Joint:
+		component = new D6Joint(this);
 		break;
 	}
 
@@ -733,6 +753,11 @@ void GameObject::OnEditor()
 		}
 		
 		if (ImGui::MenuItem("Distance Joint")) { AddComponent(ComponentType::DistanceJoint); ImGui::CloseCurrentPopup(); }
+		if (ImGui::MenuItem("Fixed Joint")) { AddComponent(ComponentType::FixedJoint); ImGui::CloseCurrentPopup(); }
+		if (ImGui::MenuItem("Hinge Joint")) { AddComponent(ComponentType::HingeJoint); ImGui::CloseCurrentPopup(); }
+		if (ImGui::MenuItem("Prismatic Joint")) { AddComponent(ComponentType::PrismaticJoint); ImGui::CloseCurrentPopup(); }
+		if (ImGui::MenuItem("Shperical Joint")) { AddComponent(ComponentType::SphericalJoint); ImGui::CloseCurrentPopup(); }
+		if (ImGui::MenuItem("D6 Joint")) { AddComponent(ComponentType::D6Joint); ImGui::CloseCurrentPopup(); }
 		
 
 		ImGui::EndPopup();

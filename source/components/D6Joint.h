@@ -1,0 +1,31 @@
+#pragma once
+#include "Joint.h"
+
+class D6Joint : public Joint {
+public:
+    D6Joint(GameObject* owner);
+    virtual ~D6Joint();
+
+    bool IsType(ComponentType type) override { return type == ComponentType::Joint || type == ComponentType::D6Joint; };
+    ComponentType GetType() override { return ComponentType::D6Joint; };
+
+    void CreateJoint() override;
+
+    void SetMotion(physx::PxD6Axis::Enum axis, physx::PxD6Motion::Enum motion);
+
+    void SetLinearLimit(float extent);
+    void SetTwistLimit(float minAngle, float maxAngle);
+    void SetSwingLimit(float yAngle, float zAngle);
+
+    void Save(Config& config) override;
+    void Load(Config& config) override;
+    void OnEditor() override;
+    void DrawDebug() override;
+
+private:
+    physx::PxD6Motion::Enum motions[6];
+
+    float linearLimit = 1.0f;
+    float twistMin = -45.0f, twistMax = 45.0f;
+    float swingY = 45.0f, swingZ = 45.0f;
+};

@@ -60,15 +60,19 @@ void Joint::SaveBase(Config& config)
     config.SetVector3("LocalPositionB", localPosB);
     config.SetVector3("LocalRotationA", QuatToEuler(localRotA));
     config.SetVector3("LocalRotationB", QuatToEuler(localRotB));
+    config.SetFloat("BreakForce", breakForce);
+    config.SetFloat("BreakTorque", breakTorque);
 }
 
 void Joint::LoadBase(Config& config)
 {
     bUID = config.GetUInt("BodyBUID");
-    localPosA = config.GetVector3("LocalPositionA");
-    localPosB = config.GetVector3("LocalPositionB");
-    localRotA = EulerToQuat(config.GetVector3("LocalRotationA"));
-    localRotB = EulerToQuat(config.GetVector3("LocalRotationB"));
+    SetAnchorPosition(JointBody::Self, config.GetVector3("LocalPositionA"));
+    SetAnchorPosition(JointBody::Target, config.GetVector3("LocalPositionB"));
+    SetAnchorRotation(JointBody::Self, EulerToQuat(config.GetVector3("LocalRotationA")));
+    SetAnchorRotation(JointBody::Target, EulerToQuat(config.GetVector3("LocalRotationB")));
+    SetBreakForce(config.GetFloat("BreakForce", INFINITY_PHYSIC));
+    SetBreakTorque(config.GetFloat("BreakTorque", INFINITY_PHYSIC));
 }
 
 void Joint::ResolveReferences()
@@ -149,6 +153,25 @@ void Joint::SetAnchorRotation(JointBody bodyToChange, const glm::quat& rotation)
     else localRotB = rotation;
 
     SyncFrames();
+}
+
+void Joint::SetBreakForce(float force) {
+    breakForce = glm::clamp(force, 0.0f, INFINITY_PHYSIC);
+    if (pxJoint) {
+        pxJoint->setBreakForce(breakForce, breakTorque);
+        if (bodyA) bodyA->WakeUp();
+        if (bodyB) bodyB->WakeUp();
+    }
+
+}
+
+void Joint::SetBreakTorque(float torque) {
+    breakTorque = glm::clamp(torque, 0.0f, INFINITY_PHYSIC);
+    if (pxJoint) {
+        pxJoint->setBreakForce(breakForce, breakTorque);
+        if (bodyA) bodyA->WakeUp();
+        if (bodyB) bodyB->WakeUp();
+    }
 }
 
 void Joint::SyncFrames()
@@ -260,6 +283,32 @@ void Joint::OnEditorBase()
         if (ImGui::InputFloat3("##RotationTarget", &eulerB.x)) {
             SetAnchorRotation(JointBody::Target, EulerToQuat(eulerB));
         }
+        ImGui::TreePop();
+    }
+
+    isNodeOpen = ImGui::TreeNodeEx("Break Settings", flags);
+    
+    if (isNodeOpen) {
+        const char* forceFormat = (breakForce >= INFINITY_PHYSIC) ? "INFINITY" : "%.3f";
+        const char* torqueFormat = (breakTorque >= INFINITY_PHYSIC) ? "INFINITY" : "%.3f";
+
+        ImGui::Text("Break Force");
+        if (ImGui::InputFloat("##BreakForce", &breakForce, 0.0f, 0.0f, forceFormat)) {
+            SetBreakForce(breakForce);
+        }
+
+        ImGui::Text("Break Torque");
+        if (ImGui::InputFloat("##BreakTorque", &breakTorque, 0.0f, 0.0f, torqueFormat)) {
+            SetBreakTorque(breakTorque);
+        }
+
+        if (breakForce < INFINITY_PHYSIC || breakTorque < INFINITY_PHYSIC) {
+            if (ImGui::Button("Reset")) {
+                SetBreakForce(INFINITY_PHYSIC);
+                SetBreakTorque(INFINITY_PHYSIC);
+            }
+        }
+
         ImGui::TreePop();
     }
 }
