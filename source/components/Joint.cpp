@@ -55,9 +55,9 @@ void Joint::CleanUp()
 
 void Joint::SaveBase(Config& config)
 {
-    config.SetUInt("BodyBUID", bodyB->owner->UUID);
+    config.SetUInt("BodyBUID", bodyB ? bodyB->owner->UUID : 0);
     config.SetVector3("LocalPositionA", localPosA);
-    config.SetVector3("LocalPositionB", localPosA);
+    config.SetVector3("LocalPositionB", localPosB);
     config.SetVector3("LocalRotationA", QuatToEuler(localRotA));
     config.SetVector3("LocalRotationB", QuatToEuler(localRotB));
 }
@@ -145,7 +145,7 @@ void Joint::SetAnchorPosition(JointBody bodyToChange, const glm::vec3& position)
 
 void Joint::SetAnchorRotation(JointBody bodyToChange, const glm::quat& rotation)
 {
-    if (bodyToChange == JointBody::Target) localRotA = rotation;
+    if (bodyToChange == JointBody::Self) localRotA = rotation;
     else localRotB = rotation;
 
     SyncFrames();

@@ -24,8 +24,8 @@ public:
     void SetDamping(float d);
     float GetDamping() const { return damping; }
 
-    void Save(Config& componentNode);
-    void Load(Config& componentNode);
+    void Save(Config& componentNode) override;
+    void Load(Config& componentNode) override;
 
     void DrawDebug() override;
     void OnEditor() override;
