@@ -78,6 +78,8 @@ void SkinnedMeshRenderer::SetMeshResource(UID uid)
     {
         meshResource = nullptr;
     }
+
+    owner->PublishGameObjectEvent(GameObjectEvent::MESH_CHANGED, this);
 }
 
 void SkinnedMeshRenderer::LinkBones() {

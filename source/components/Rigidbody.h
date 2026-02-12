@@ -91,6 +91,10 @@ public:
     void SetUseGravity(bool useGravity);
     void SetUseCCD(bool useCCD);
 
+    //SHAPES
+    void UpdateShapesGeometry();
+    void UpdateShapeProperties(Collider* col);
+
     //COLLISIONS
     void CastPhysicsEvent(PhysicsEventType type, Rigidbody* other);
 
@@ -103,7 +107,6 @@ private:
     void SyncToTransform();
     void SyncPropertiesToPhysics();
 
-    void UpdateShapesGeometry();
     void UpdateShapeLocalPose(physx::PxRigidActor* actor, physx::PxShape* shape, Collider* col);
 
     physx::PxRigidDynamic* GetDynamic() { return actor ? actor->is<physx::PxRigidDynamic>() : nullptr; }

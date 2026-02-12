@@ -56,8 +56,7 @@ void SphereCollider::Load(Config& config)
 void SphereCollider::SetRadius(float radius)
 {
     this->radius = glm::clamp(radius, 0.0001f, INFINITY);
-    Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
-    if (rb) rb->CreateBody();
+    if (attachedRigidbody) attachedRigidbody->UpdateShapesGeometry();
 }
 
 void SphereCollider::DebugShape()

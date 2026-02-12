@@ -66,15 +66,13 @@ void CapsuleCollider::Load(Config& config)
 void CapsuleCollider::SetRadius(float radius)
 {
     this->radius = glm::clamp(radius, 0.0001f, INFINITY);
-    Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
-    if (rb) rb->CreateBody();
+    if (attachedRigidbody) attachedRigidbody->UpdateShapesGeometry();
 }
 
 void CapsuleCollider::SetHeight(float height)
 {
     this->height = glm::clamp(height, 0.0001f, INFINITY);
-    Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
-    if (rb) rb->CreateBody();
+    if (attachedRigidbody) attachedRigidbody->UpdateShapesGeometry();
 }
 
 void CapsuleCollider::DebugShape()

@@ -75,6 +75,14 @@ set(W16_ENGINE_SOURCES
 	source/components/SphereCollider.cpp
 	source/components/CapsuleCollider.h
 	source/components/CapsuleCollider.cpp
+	source/components/ConvexCollider.h
+	source/components/ConvexCollider.cpp
+	source/components/PlaneCollider.h
+	source/components/PlaneCollider.cpp
+	source/components/InfinitePlaneCollider.h
+	source/components/InfinitePlaneCollider.cpp
+	source/components/MeshCollider.h
+	source/components/MeshCollider.cpp
 	source/components/Joint.h
 	source/components/Joint.cpp
 	source/components/DistanceJoint.h
@@ -126,6 +134,8 @@ set(W16_ENGINE_SOURCES
 	source/utils/Config.cpp
 	source/utils/Config.h
 	source/utils/Time.h
+	source/utils/PhysicsCooker.cpp
+	source/utils/PhysicsCooker.h
 	source/geometry/Plane.h
 	source/geometry/Plane.cpp
 	source/geometry/Vertex.h

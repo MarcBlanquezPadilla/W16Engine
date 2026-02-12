@@ -106,30 +106,30 @@ void Collider::OnEditorBase()
 void Collider::SetCenter(glm::vec3 center)
 {
     this->center = center;
-    if (attachedRigidbody) attachedRigidbody->CreateBody();
+    if (attachedRigidbody) attachedRigidbody->UpdateShapeProperties(this);
 }
 
 void Collider::SetTrigger(bool trigger)
 {
     isTrigger = trigger;
-    if (attachedRigidbody) attachedRigidbody->CreateBody();
+    if (attachedRigidbody) attachedRigidbody->UpdateShapeProperties(this);
 }
 
 void Collider::SetStaticFriction(float staticFriction)
 {
     this->staticFriction = glm::clamp(staticFriction, 0.0f, INFINITY);
-    if (attachedRigidbody) attachedRigidbody->CreateBody();
+    if (attachedRigidbody) attachedRigidbody->UpdateShapeProperties(this);
 }
 
 void Collider::SetDynamicFriction(float dynamicFriction)
 {
     this->dynamicFriction = glm::clamp(dynamicFriction, 0.0f, INFINITY);
-    if (attachedRigidbody) attachedRigidbody->CreateBody();
+    if (attachedRigidbody) attachedRigidbody->UpdateShapeProperties(this);
 }
 void Collider::SetRestitution(float restitution)
 {
     this->restitution = glm::clamp(restitution, 0.0f, INFINITY);
-    if (attachedRigidbody) attachedRigidbody->CreateBody();
+    if (attachedRigidbody) attachedRigidbody->UpdateShapeProperties(this);
 }
 
 void Collider::OnGameObjectEvent(GameObjectEvent event, Component* component) 

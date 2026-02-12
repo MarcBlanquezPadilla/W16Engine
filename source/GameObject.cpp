@@ -9,9 +9,13 @@
 #include "components/Camera.h"
 #include "components/Animation.h"
 #include "components/Rigidbody.h"
+#include "components/PlaneCollider.h"
 #include "components/BoxCollider.h"
 #include "components/SphereCollider.h"
 #include "components/CapsuleCollider.h"
+#include "components/ConvexCollider.h"
+#include "components/MeshCollider.h"
+#include "components/InfinitePlaneCollider.h"
 #include "components/DistanceJoint.h"
 #include "components/FixedJoint.h"
 #include "components/HingeJoint.h"
@@ -161,6 +165,9 @@ Component* GameObject::AddComponent(ComponentType type)
 	case ComponentType::Rigidbody:
 		component = new Rigidbody(this);
 		break;
+	case ComponentType::PlaneCollider:
+		component = new PlaneCollider(this);
+		break;
 	case ComponentType::BoxCollider:
 		component = new BoxCollider(this);
 		break;
@@ -169,6 +176,15 @@ Component* GameObject::AddComponent(ComponentType type)
 		break;
 	case ComponentType::CapsuleCollider:
 		component = new CapsuleCollider(this);
+		break;
+	case ComponentType::ConvexCollider:
+		component = new ConvexCollider(this);
+		break;
+	case ComponentType::MeshCollider:
+		component = new MeshCollider(this);
+		break;
+	case ComponentType::InfinitePlaneCollider:
+		component = new InfinitePlaneCollider(this);
 		break;
 	case ComponentType::DistanceJoint:
 		component = new DistanceJoint(this);
@@ -751,6 +767,10 @@ void GameObject::OnEditor()
 		}
 		if (GetComponent(ComponentType::Collider) == nullptr)
 		{
+			if (ImGui::MenuItem("Plane Collider")) { AddComponent(ComponentType::PlaneCollider); ImGui::CloseCurrentPopup(); }
+		}
+		if (GetComponent(ComponentType::Collider) == nullptr)
+		{
 			if (ImGui::MenuItem("Box Collider")) { AddComponent(ComponentType::BoxCollider); ImGui::CloseCurrentPopup(); }
 		}
 		if (GetComponent(ComponentType::Collider) == nullptr)
@@ -760,6 +780,18 @@ void GameObject::OnEditor()
 		if (GetComponent(ComponentType::Collider) == nullptr)
 		{
 			if (ImGui::MenuItem("Capsule Collider")) { AddComponent(ComponentType::CapsuleCollider); ImGui::CloseCurrentPopup(); }
+		}
+		if (GetComponent(ComponentType::Collider) == nullptr)
+		{
+			if (ImGui::MenuItem("Convex Collider")) { AddComponent(ComponentType::ConvexCollider); ImGui::CloseCurrentPopup(); }
+		}
+		if (GetComponent(ComponentType::Collider) == nullptr)
+		{
+			if (ImGui::MenuItem("Mesh Collider")) { AddComponent(ComponentType::MeshCollider); ImGui::CloseCurrentPopup(); }
+		}
+		if (GetComponent(ComponentType::Collider) == nullptr)
+		{
+			if (ImGui::MenuItem("Infinite Plane Collider")) { AddComponent(ComponentType::InfinitePlaneCollider); ImGui::CloseCurrentPopup(); }
 		}
 		if (GetComponent(ComponentType::Camera) == nullptr)
 		{

@@ -2,81 +2,87 @@
 #include "../ModuleRender.h"
 #include "../GameObject.h"
 
-#include "BoxCollider.h"
+#include "PlaneCollider.h"
 #include "Transform.h"
 #include "Rigidbody.h"
 
 #include "imgui.h"
 
 
-BoxCollider::BoxCollider(GameObject* owner) : Collider(owner)
+PlaneCollider::PlaneCollider(GameObject* owner) : Collider(owner)
 {
-    name = "Box Collider";
+    name = "Plane Collider";
 }
 
-physx::PxGeometry* BoxCollider::GetGeometry()
+physx::PxGeometry* PlaneCollider::GetGeometry()
 {
     glm::vec3 scale = owner->transform->GetGlobalScale();
     return new physx::PxBoxGeometry((size.x * scale.x) * 0.5f,
-        (size.y * scale.y) * 0.5f,
-        (size.z * scale.z) * 0.5f);
+        0.001f * 0.5f,
+        (size.y * scale.z) * 0.5f);
 }
 
-void BoxCollider::Update()
+void PlaneCollider::Update()
 {
     DebugShape();
 }
 
-void BoxCollider::OnEditor()
+void PlaneCollider::OnEditor()
 {
     OnEditorBase();
     ImGui::Separator();
 
     ImGui::Text("Size");
-    glm::vec3 s = size;
-    if (ImGui::InputFloat3("##Size", &s.x))
+    glm::vec2 s = size;
+    if (ImGui::InputFloat2("##Size", &s.x))
     {
         SetSize(s);
     }
 }
 
-void BoxCollider::Save(Config& config)
+void PlaneCollider::Save(Config& config)
 {
     SaveBase(config);
-    config.SetVector3("Size", size);
+    config.SetFloat("SizeX", size.x);
+    config.SetFloat("SizeY", size.y);
 }
 
-void BoxCollider::Load(Config& config)
+void PlaneCollider::Load(Config& config)
 {
     LoadBase(config);
-    size = config.GetVector3("Size", glm::vec3(1.0f, 1.0f, 1.0f));
+    size.x = config.GetFloat("SizeX", 1.0f);
+    size.y = config.GetFloat("SizeY", 1.0f);
     Rigidbody* rb = (Rigidbody*)owner->GetComponentInParent(ComponentType::Rigidbody);
     if (rb) rb->CreateBody();
 }
 
-void BoxCollider::SetSize(glm::vec3 size)
+void PlaneCollider::SetSize(glm::vec2 size)
 {
     this->size.x = glm::clamp(size.x, 0.001f, INFINITY);
     this->size.y = glm::clamp(size.y, 0.001f, INFINITY);
-    this->size.z = glm::clamp(size.z, 0.001f, INFINITY);
     if (attachedRigidbody) attachedRigidbody->UpdateShapesGeometry();
 }
 
 
-void BoxCollider::DebugShape()
+void PlaneCollider::DebugShape()
 {
     physx::PxRigidActor* actor = (attachedRigidbody) ? attachedRigidbody->GetActor() : nullptr;
 
     glm::vec3 pos;
     glm::quat rot;
     glm::vec4 color;
-    glm::vec3 scale = owner->transform->GetGlobalScale();
-    glm::vec3 halfSize = (size * scale) * 0.5f;
+
+    glm::vec3 globalScale = owner->transform->GetGlobalScale();
+
+    glm::vec3 actualHalfSize(
+        (size.x * globalScale.x) * 0.5f,
+        0.001f * 0.5f,
+        (size.y * globalScale.z) * 0.5f
+    );
 
     if (actor && shape)
     {
-        physx::PxTransform worldPose = actor->getGlobalPose();
-        worldPose = worldPose * shape->getLocalPose();
+        physx::PxTransform worldPose = actor->getGlobalPose() * shape->getLocalPose();
 
         pos = glm::vec3(worldPose.p.x, worldPose.p.y, worldPose.p.z);
         rot = glm::quat(worldPose.q.w, worldPose.q.x, worldPose.q.y, worldPose.q.z);
@@ -86,9 +92,9 @@ void BoxCollider::DebugShape()
     {
         glm::quat globalRot = owner->transform->GetGlobalQuaterionRotation();
 
-        pos = owner->transform->GetGlobalPosition() + (globalRot * (center * scale));
+        pos = owner->transform->GetGlobalPosition() + (globalRot * (center * globalScale));
         rot = globalRot;
-        color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f); // Rojo
+        color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
     }
 
     glm::vec3 v[8] = {
@@ -97,13 +103,13 @@ void BoxCollider::DebugShape()
     };
 
     for (int i = 0; i < 8; ++i) {
-        v[i] = pos + (rot * (v[i] * halfSize));
+        v[i] = pos + (rot * (v[i] * actualHalfSize));
     }
 
     auto* render = Engine::GetInstance().moduleRender;
     for (int i = 0; i < 4; ++i) {
         render->DrawLine(v[i], v[(i + 1) % 4], color);
-        render->DrawLine(v[i + 4], v[((i + 1) % 4) + 4], color);
+        render->DrawLine(v[i + 4], v[((i + 4 + 1) % 4) + 4], color);
         render->DrawLine(v[i], v[i + 4], color);
     }
 }

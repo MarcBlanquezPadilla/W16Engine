@@ -125,9 +125,20 @@ void Rigidbody::CleanUp()
 
 
 void Rigidbody::CollectColliders(GameObject* obj, std::vector<Collider*>& list) {
-
+    
     Collider* col = (Collider*)obj->GetComponent(ComponentType::Collider);
-    if (col && col->GetEnabled()) list.push_back(col);
+    
+    if (col && col->GetEnabled())
+    {
+        if (col->CanBeDynamic() || type == Type::STATIC)
+        {
+            list.push_back(col);
+        }
+        else
+        {
+            LOG(LogType::LOG_WARNING, "%s ignored on GameObject '%s': This collider type is only compatible with STATIC Rigidbodies.", col->name.c_str(), owner->name.c_str());
+        }
+    }
 
     for (GameObject* child : obj->childs) {
 
@@ -197,8 +208,11 @@ void Rigidbody::CreateBody()
     CollectColliders(owner, colliders);
 
     for (Collider* col : colliders) {
+        
         AttachCollider(col);
         physx::PxGeometry* geo = col->GetGeometry();
+
+        if (!geo) continue;
 
         float sF, dF, rest;
         col->GetMaterialValues(sF, dF, rest);
@@ -238,10 +252,13 @@ void Rigidbody::CreateBody()
 }
 
 void Rigidbody::UpdateShapesGeometry() {
+    
     if (!actor) return;
 
     std::vector<physx::PxShape*> shapes(actor->getNbShapes());
     actor->getShapes(shapes.data(), shapes.size());
+
+    auto* physics = Engine::GetInstance().modulePhysics->GetPhysics();
 
     for (size_t i = 0; i < attachedColliders.size() && i < shapes.size(); ++i) {
         Collider* col = attachedColliders[i];
@@ -249,16 +266,59 @@ void Rigidbody::UpdateShapesGeometry() {
 
         physx::PxGeometry* newGeo = col->GetGeometry();
 
-        shape->setGeometry(*newGeo);
+        if (newGeo) {
+            
+            shape->setGeometry(*newGeo);
 
-        UpdateShapeLocalPose(actor,shape, col);
+            shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, !col->IsTrigger());
+            shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, col->IsTrigger());
+            shape->setFlag(physx::PxShapeFlag::eSCENE_QUERY_SHAPE, true);
 
-        delete newGeo;
+            float sF, dF, rest;
+            col->GetMaterialValues(sF, dF, rest);
+            physx::PxMaterial* newMat = physics->createMaterial(sF, dF, rest);
+            shape->setMaterials(&newMat, 1);
+            newMat->release();
+
+            UpdateShapeLocalPose(actor, shape, col);
+
+            delete newGeo;
+        }
+        else {
+            shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, false);
+            shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, false);
+            shape->setFlag(physx::PxShapeFlag::eSCENE_QUERY_SHAPE, false);
+        }
     }
 
     if (type == Type::DYNAMIC) {
-        physx::PxRigidBodyExt::updateMassAndInertia(*actor->is<physx::PxRigidDynamic>(), mass);
+        physx::PxRigidDynamic* dyn = actor->is<physx::PxRigidDynamic>();
+        if (dyn) {
+            physx::PxRigidBodyExt::updateMassAndInertia(*dyn, mass);
+        }
     }
+    WakeUp();
+}
+
+void Rigidbody::UpdateShapeProperties(Collider* col) {
+    
+    if (!actor) return;
+
+    physx::PxShape* shape = col->GetShape();
+    
+    if (!shape) return;
+
+    float sF, dF, rest;
+    col->GetMaterialValues(sF, dF, rest);
+    physx::PxMaterial* newMat = Engine::GetInstance().modulePhysics->GetPhysics()->createMaterial(sF, dF, rest);
+    shape->setMaterials(&newMat, 1);
+    newMat->release();
+
+    shape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, !col->IsTrigger());
+    shape->setFlag(physx::PxShapeFlag::eTRIGGER_SHAPE, col->IsTrigger());
+
+    UpdateShapeLocalPose(actor, shape, col);
+    WakeUp();
 }
 
 void Rigidbody::UpdateShapeLocalPose(physx::PxRigidActor* actor ,physx::PxShape* shape, Collider* col)
@@ -283,6 +343,7 @@ void Rigidbody::UpdateShapeLocalPose(physx::PxRigidActor* actor ,physx::PxShape*
     physx::PxTransform relativePose = rbGlobalPose.getInverse().transform(colGlobalPose);
 
     shape->setLocalPose(relativePose);
+    WakeUp();
 }
 
 void Rigidbody::AttachCollider(Collider* collider)
@@ -699,12 +760,14 @@ void Rigidbody::OnGameObjectEvent(GameObjectEvent event, Component* component)
         if (dynamic_cast<PhysicsEventsListener*>(component))
         {
             CollectListeners();
+            WakeUp();
         }
         break;
     case GameObjectEvent::COMPONENT_REMOVED:
         if (dynamic_cast<PhysicsEventsListener*>(component))
         {
             CollectListeners();
+            WakeUp();
         }
         break;
     case GameObjectEvent::TRANSFORM_SCALED:

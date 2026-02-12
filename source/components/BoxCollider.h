@@ -8,7 +8,7 @@ public:
     
     BoxCollider(GameObject* owner);
 
-    glm::vec3 size = { 1.0f, 1.0f, 1.0f };
+
 
     physx::PxGeometry* GetGeometry() override;
     ColliderType GetColliderType() override { return ColliderType::BOX_COLLIDER; }
@@ -23,4 +23,7 @@ public:
     void SetSize(glm::vec3 size);
 
     void DebugShape() override;
+
+private:
+    glm::vec3 size = { 1.0f, 1.0f, 1.0f };
 };

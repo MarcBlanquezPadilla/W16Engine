@@ -15,12 +15,6 @@
 						<Animation name="Walk" UID="3099632582" loop="true" speed="1" />
 					</Component>
 					<Component type="6" enabled="true" Type="1" Mass="1" LinearDamping="0" AngularDamping="0" UseGravity="true" UseCCD="false" FreezePosX="false" FreezePosY="false" FreezePosZ="false" FreezeRotX="false" FreezeRotY="false" FreezeRotZ="false" />
-					<Component type="14" enabled="true" BodyBUID="0" BreakForce="3.40282347e+38" BreakTorque="3.40282347e+38" EnableLimits="false" MinAngle="-45" MaxAngle="45" EnableMotor="true" DriveVelocity="5">
-						<LocalPositionA x="0" y="0" z="0" />
-						<LocalPositionB x="0" y="0" z="0" />
-						<LocalRotationA x="0" y="-0" z="0" />
-						<LocalRotationB x="0" y="-0" z="0" />
-					</Component>
 				</Components>
 				<Childs>
 					<GameObject Name="MutantMesh" UID="3908986403" Enabled="true" Static="false">

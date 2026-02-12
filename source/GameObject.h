@@ -17,7 +17,8 @@ enum class GameObjectEvent {
 	COMPONENT_ADDED,
 	COMPONENT_REMOVED,
 	OBJECT_DESTROYED,
-	HIERARCHY_CHANGED
+	HIERARCHY_CHANGED,
+	MESH_CHANGED
 };
 
 enum class ComponentType {
@@ -32,6 +33,10 @@ enum class ComponentType {
 	BoxCollider,
 	SphereCollider,
 	CapsuleCollider,
+	ConvexCollider,
+	MeshCollider,
+	PlaneCollider,
+	InfinitePlaneCollider,
 	Joint,
 	DistanceJoint,
 	FixedJoint,
@@ -58,7 +63,6 @@ public:
 
 	bool CleanUp();
 	bool CleanUpRecursive();
-
 
 	//HIERARCHY
 	void AddChild(GameObject* gameObject);

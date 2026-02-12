@@ -14,7 +14,11 @@ public:
     {
         BOX_COLLIDER,
         SPHERE_COLLIDER,
-        CAPSULE_COLLIDER
+        CAPSULE_COLLIDER,
+        CONVEX_COLLIDER,
+        MESH_COLLIDER,
+        PLANE_COLLIDER,
+        INFINITE_PLANE_COLLIDER
     };
 
     Collider(GameObject* owner);
@@ -36,12 +40,14 @@ public:
         rest = restitution;
     }
 
+    virtual bool CanBeDynamic() const { return true; };
     virtual ComponentType GetType() override { return ComponentType::Collider; };
     virtual bool IsType(ComponentType type) override = 0;
     bool IsIncompatible(ComponentType type) override {
         return type == ComponentType::Collider ||
             type == ComponentType::BoxCollider ||
-            type == ComponentType::SphereCollider;
+            type == ComponentType::SphereCollider ||
+            type == ComponentType::CapsuleCollider || type == ComponentType::ConvexCollider;
     };
 
     virtual void Save(Config& componentNode) override {};
@@ -64,9 +70,10 @@ public:
     const float GetRestitution() { return restitution; };
 
     void SetShape(physx::PxShape* s) { shape = s; };
+    physx::PxShape* GetShape() { return shape; };
     virtual void DebugShape() {}
 
-    void OnGameObjectEvent(GameObjectEvent event, Component* component) override;
+    virtual void OnGameObjectEvent(GameObjectEvent event, Component* component) override;
 
     Rigidbody* attachedRigidbody = nullptr;
 

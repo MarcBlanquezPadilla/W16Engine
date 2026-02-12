@@ -26,7 +26,7 @@ public:
     void DrawDebug();
 
     physx::PxPhysics* GetPhysics() { return gPhysics; }
-    physx::PxScene* GetScene() { return gScene; }
+    physx::PxScene* GetScene() { return gScene; } 
     physx::PxMaterial* GetDefaultMaterial() { return gMaterial; }
 
     //PHYSX CALLBACKS
