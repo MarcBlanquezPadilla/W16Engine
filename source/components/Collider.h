@@ -43,12 +43,7 @@ public:
     virtual bool CanBeDynamic() const { return true; };
     virtual ComponentType GetType() override { return ComponentType::Collider; };
     virtual bool IsType(ComponentType type) override = 0;
-    bool IsIncompatible(ComponentType type) override {
-        return type == ComponentType::Collider ||
-            type == ComponentType::BoxCollider ||
-            type == ComponentType::SphereCollider ||
-            type == ComponentType::CapsuleCollider || type == ComponentType::ConvexCollider;
-    };
+    bool IsIncompatible(ComponentType type) override { return false; };
 
     virtual void Save(Config& componentNode) override {};
     void SaveBase(Config& componentNode);

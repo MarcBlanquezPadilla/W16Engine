@@ -42,7 +42,6 @@ GameObject::GameObject(bool _enabled, std::string _name) : enabled(_enabled), na
 	UUID = GenerateUUID();
 	parent = nullptr;
 	transform = nullptr;
-	isStatic = false;
 	childs.clear();
 	components.clear();
 	AddComponent(ComponentType::Transform);
@@ -57,16 +56,12 @@ bool GameObject::Update()
 {
 	bool ret = true;
 
-	auto it = components.begin();
-	while (it != components.end())
+	for (Component* component : components)
 	{
-		Component* component = it->second;
-
-		if (component->GetEnabled())
+		if (component && component->GetEnabled())
 		{
 			component->Update();
 		}
-		++it;
 	}
 
 	DeletePendingComponents();
@@ -78,16 +73,13 @@ bool GameObject::FixedUpdate()
 {
 	bool ret = true;
 
-	auto it = components.begin();
-	while (it != components.end())
-	{
-		Component* component = it->second;
 
-		if (component->GetEnabled())
+	for (Component* component : components)
+	{
+		if (component && component->GetEnabled())
 		{
 			component->FixedUpdate();
 		}
-		++it;
 	}
 
 	return ret;
@@ -95,14 +87,18 @@ bool GameObject::FixedUpdate()
 
 bool GameObject::CleanUp()
 {
+	isCleaning = true;
 	Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::GameObjectDestroyed, this));
 
-	for (auto const& pair : components)
+	for (Component* component : components)
 	{
-		pair.second->CleanUp();
-		delete pair.second;
+		if (component)
+		{
+			component->CleanUp();
+			delete component;
+			component = nullptr;
+		}
 	}
-	
 	components.clear();
 	childs.clear();
 
@@ -111,10 +107,17 @@ bool GameObject::CleanUp()
 
 bool GameObject::CleanUpRecursive()
 {
-	for (auto const& pair : components)
+	isCleaning = true;
+	Engine::GetInstance().moduleEvents->PublishImmediate(Event(Event::Type::GameObjectDestroyed, this));
+
+	for (Component* component : components)
 	{
-		pair.second->CleanUp();
-		delete pair.second;
+		if (component)
+		{
+			component->CleanUp();
+			delete component;
+			component = nullptr;
+		}
 	}
 	components.clear();
 
@@ -132,11 +135,11 @@ bool GameObject::CleanUpRecursive()
 
 Component* GameObject::AddComponent(ComponentType type)
 {
-	for (auto const& pair : components)
+	for (Component* component : components)
 	{
-		if (pair.second->IsIncompatible(type))
+		if (component->IsIncompatible(type))
 		{
-			LOG(LogType::LOG_ERROR, "Could not add component: Conflict with component %s", pair.second->name.c_str());
+			LOG(LogType::LOG_ERROR, "Could not add component: Conflict with component %s", component->name.c_str());
 			return nullptr;
 		}
 	}
@@ -209,7 +212,7 @@ Component* GameObject::AddComponent(ComponentType type)
 	if (component == nullptr) return nullptr;
 
 	PublishGameObjectEvent(GameObjectEvent::COMPONENT_ADDED, component);
-	components[type] = component;
+	components.push_back(component);
 	component->owner = this;
 	component->Start();
 	component->OnEnable();
@@ -219,23 +222,44 @@ Component* GameObject::AddComponent(ComponentType type)
 
 void GameObject::RemoveComponent(ComponentType type)
 {
-	if (components.count(type) == 0 || type == ComponentType::Transform) return;
-	
-	Component* componentToRemove = components[type];
-	componentsToDestroy.push_back(componentToRemove);
-	PublishGameObjectEvent(GameObjectEvent::COMPONENT_REMOVED, componentToRemove);
+    if (type == ComponentType::Transform) return;
+
+	for (Component* component : components)
+	{
+		if (component && component->IsType(type))
+		{
+			componentsToDestroy.push_back(component);
+			PublishGameObjectEvent(GameObjectEvent::COMPONENT_REMOVED, component);
+			return;
+		}
+	}
 }
 
 Component* GameObject::GetComponent(ComponentType type)
 {
-	for (auto& pair : components)
+	for (Component* component : components)
 	{
-		if (pair.second->IsType(type))
+		if (component && component->IsType(type))
 		{
-			return pair.second;
+			return component;
 		}
 	}
+
 	return nullptr;
+}
+
+std::vector<Component*> GameObject::GetComponents(ComponentType type)
+{
+	std::vector<Component*> comp;
+
+	for (Component* component : components)
+	{
+		if (component && component->IsType(type))
+		{
+			comp.push_back(component);
+		}
+	}
+	return comp;
 }
 
 Component* GameObject::GetComponentInChildren(ComponentType type)
@@ -258,8 +282,13 @@ Component* GameObject::GetComponentInChildren(ComponentType type)
 
 void GameObject::GetComponentsInChildren(ComponentType type, std::vector<Component*>& outList)
 {
-	Component* component = GetComponent(type);
-	if (component) outList.push_back(component);
+	for (Component* component : components)
+	{
+		if (component && component->IsType(type))
+		{
+			outList.push_back(component);
+		}
+	}
 
 	for (GameObject* child : childs)
 	{
@@ -282,8 +311,12 @@ Component* GameObject::GetComponentInParent(ComponentType type)
 
 void GameObject::GetComponentsInParent(ComponentType type, std::vector<Component*>& outList)
 {
-	Component* component = GetComponent(type);
-	if (component) outList.push_back(component);
+	std::vector<Component*> localComponents = GetComponents(type);
+
+	if (!localComponents.empty())
+	{
+		outList.insert(outList.end(), localComponents.begin(), localComponents.end());
+	}
 
 	if (parent != nullptr)
 	{
@@ -294,11 +327,16 @@ void GameObject::GetComponentsInParent(ComponentType type, std::vector<Component
 bool GameObject::TryGetComponent(ComponentType type, Component*& outComponent)
 {
 	outComponent = nullptr;
-	if (components.count(type) > 0)
+
+	for (Component* component : components)
 	{
-		outComponent = components[type];
-		return true;
+		if (component && component->IsType(type))
+		{
+			outComponent = component;
+			return true;
+		}
 	}
+
 	return false;
 }
 
@@ -308,11 +346,18 @@ void GameObject::DeletePendingComponents()
 
 	for (Component* component : componentsToDestroy)
 	{
-		components.erase(component->GetType());
-		component->OnDisable();
-		component->CleanUp();
-		delete component;
-		component = nullptr;
+		if (component == nullptr) continue;
+
+		auto it = std::find(components.begin(), components.end(), component);
+
+		if (it != components.end())
+		{
+			components.erase(it);
+			component->OnDisable();
+			component->CleanUp();
+			delete component;
+			component = nullptr;
+		}
 	}
 
 	componentsToDestroy.clear();
@@ -394,12 +439,11 @@ void GameObject::Save(Config& gameObjectNode)
 	if (components.size() > 0)
 	{
 		Config componentsNode = gameObjectNode.AddChild("Components");
-		for (auto const& pair : components)
+		for (Component* component : components)
 		{
-			Config compoenntNode = componentsNode.AddChild("Component");
-			Component* component = pair.second;
 			if (component)
 			{
+				Config compoenntNode = componentsNode.AddChild("Component");
 				compoenntNode.SetInt("type", (int)component->GetType());
 				compoenntNode.SetBool("enabled", component->GetEnabled());
 				component->Save(compoenntNode);
@@ -419,37 +463,51 @@ void GameObject::Save(Config& gameObjectNode)
 }
 
 
-
 void GameObject::Load(Config& gameObjectNode)
 {
 	name = gameObjectNode.GetString("Name");
-	UUID = gameObjectNode.GetUInt("UID");
-	if (UUID == 0) UUID = GenerateNewUID();
-	enabled = gameObjectNode.GetBool("Enabled");
-	isStatic = gameObjectNode.GetBool("Static");
+    UUID = gameObjectNode.GetUInt("UID");
+    if (UUID == 0) UUID = GenerateNewUID();
+    enabled = gameObjectNode.GetBool("Enabled");
+    isStatic = gameObjectNode.GetBool("Static");
 
-	//LOAD COMPONENTS
-	Config componentsNode = gameObjectNode.GetChild("Components");
+    // LOAD COMPONENTS
+    Config componentsNode = gameObjectNode.GetChild("Components");
 
-	if (componentsNode.IsValid())
-	{
-		Config componentNode = componentsNode.GetChild("Component");
-		while (componentNode.IsValid())
-		{
-			ComponentType type = (ComponentType)componentNode.GetInt("type");
-			Component* component = GetComponent(type);
-			if (!component)
-				component = AddComponent(type);
+    if (componentsNode.IsValid())
+    {
+        Config componentNode = componentsNode.GetChild("Component");
+        while (componentNode.IsValid())
+        {
+            ComponentType type = (ComponentType)componentNode.GetInt("type");
+            Component* component = nullptr;
 
-			if (component) component->Load(componentNode);
-			else
-			{
-				LOG(LogType::LOG_ERROR, "Failed to load component %d to %s game object", (int)type, name);
-			}
+            if (type == ComponentType::Transform)
+            {
+                component = (Component*)transform; 
+            }
+            else
+            {
+                component = AddComponent(type);
+                
+                if (!component)
+                {
+                    component = GetComponent(type);
+                }
+            }
 
-			componentNode = componentNode.GetNextSibling("Component");
-		}
-	}
+            if (component) 
+            {
+                component->Load(componentNode);
+            }
+            else
+            {
+                LOG(LogType::LOG_ERROR, "Failed to load/create component %d to %s", (int)type, name.c_str());
+            }
+
+            componentNode = componentNode.GetNextSibling("Component");
+        }
+    }
 
 	//LOAD CHILDS
 	Config childsNode = gameObjectNode.GetChild("Childs");
@@ -479,9 +537,8 @@ void GameObject::Load(Config& gameObjectNode)
 
 void GameObject::SolveReferences()
 {
-	for (auto const& pair : components)
+	for (Component* component : components)
 	{
-		Component* component = pair.second;
 		if (component)
 		{
 			component->ResolveReferences();
@@ -555,10 +612,9 @@ const bool& GameObject::GetEnabled()
 
 bool GameObject::OnEnable()
 {
-	for (auto const& pair : components)
+	for (Component* component : components)
 	{
-		Component* component = pair.second;
-		if (!component->GetEnabled())
+		if (component && !component->GetEnabled())
 		{
 			component->SetEnabled(true);
 			component->OnEnable();
@@ -570,10 +626,9 @@ bool GameObject::OnEnable()
 
 bool GameObject::OnDisable()
 {
-	for (auto const& pair : components)
+	for (Component* component : components)
 	{
-		Component* component = pair.second;
-		if (component->GetEnabled())
+		if (component && component->GetEnabled())
 		{
 			component->SetEnabled(false);
 			component->OnDisable();
@@ -704,21 +759,20 @@ void GameObject::OnEditor()
 		SetStatic(isStatic);
 	}
 
-	for (auto const& pair : components)
+	for (Component* component : components)
 	{
-		Component* comp = pair.second;
-		if (!comp) continue;
+		if (!component) continue;
 
-		ImGui::PushID(comp);
+		ImGui::PushID(component);
 
-		if (ImGui::CollapsingHeader(comp->name.c_str()))
+		if (ImGui::CollapsingHeader(component->name.c_str()))
 		{
 			ImGui::BeginGroup();
 
 			ImGui::Indent(10.0f);
 			ImGui::Spacing();
 
-			comp->OnEditor();
+			component->OnEditor();
 
 			ImGui::Spacing();
 			ImGui::Unindent(10.0f);
@@ -728,7 +782,7 @@ void GameObject::OnEditor()
 		if (ImGui::BeginPopupContextItem("ComponentOptions"))
 		{
 			if (ImGui::MenuItem("Remove Component")) {
-				RemoveComponent(pair.first);
+				RemoveComponent(component->GetType());
 			}
 			ImGui::EndPopup();
 		}
@@ -765,39 +819,21 @@ void GameObject::OnEditor()
 		{
 			if (ImGui::MenuItem("Rigidbody")) { AddComponent(ComponentType::Rigidbody); ImGui::CloseCurrentPopup(); }
 		}
-		if (GetComponent(ComponentType::Collider) == nullptr)
-		{
-			if (ImGui::MenuItem("Plane Collider")) { AddComponent(ComponentType::PlaneCollider); ImGui::CloseCurrentPopup(); }
-		}
-		if (GetComponent(ComponentType::Collider) == nullptr)
-		{
-			if (ImGui::MenuItem("Box Collider")) { AddComponent(ComponentType::BoxCollider); ImGui::CloseCurrentPopup(); }
-		}
-		if (GetComponent(ComponentType::Collider) == nullptr)
-		{
-			if (ImGui::MenuItem("Sphere Collider")) { AddComponent(ComponentType::SphereCollider); ImGui::CloseCurrentPopup(); }
-		}
-		if (GetComponent(ComponentType::Collider) == nullptr)
-		{
-			if (ImGui::MenuItem("Capsule Collider")) { AddComponent(ComponentType::CapsuleCollider); ImGui::CloseCurrentPopup(); }
-		}
-		if (GetComponent(ComponentType::Collider) == nullptr)
-		{
-			if (ImGui::MenuItem("Convex Collider")) { AddComponent(ComponentType::ConvexCollider); ImGui::CloseCurrentPopup(); }
-		}
-		if (GetComponent(ComponentType::Collider) == nullptr)
-		{
-			if (ImGui::MenuItem("Mesh Collider")) { AddComponent(ComponentType::MeshCollider); ImGui::CloseCurrentPopup(); }
-		}
-		if (GetComponent(ComponentType::Collider) == nullptr)
-		{
-			if (ImGui::MenuItem("Infinite Plane Collider")) { AddComponent(ComponentType::InfinitePlaneCollider); ImGui::CloseCurrentPopup(); }
-		}
 		if (GetComponent(ComponentType::Camera) == nullptr)
 		{
 			if (ImGui::MenuItem("Camera")) { AddComponent(ComponentType::Camera); ImGui::CloseCurrentPopup(); }
 		}
+
+		//COLLIDERS
+		if (ImGui::MenuItem("Plane Collider")) { AddComponent(ComponentType::PlaneCollider); ImGui::CloseCurrentPopup(); }
+		if (ImGui::MenuItem("Box Collider")) { AddComponent(ComponentType::BoxCollider); ImGui::CloseCurrentPopup(); }
+		if (ImGui::MenuItem("Sphere Collider")) { AddComponent(ComponentType::SphereCollider); ImGui::CloseCurrentPopup(); }
+		if (ImGui::MenuItem("Capsule Collider")) { AddComponent(ComponentType::CapsuleCollider); ImGui::CloseCurrentPopup(); }
+		if (ImGui::MenuItem("Convex Collider")) { AddComponent(ComponentType::ConvexCollider); ImGui::CloseCurrentPopup(); }
+		if (ImGui::MenuItem("Mesh Collider")) { AddComponent(ComponentType::MeshCollider); ImGui::CloseCurrentPopup(); }
+		if (ImGui::MenuItem("Infinite Plane Collider")) { AddComponent(ComponentType::InfinitePlaneCollider); ImGui::CloseCurrentPopup(); }
 		
+		//JOINTS
 		if (ImGui::MenuItem("Distance Joint")) { AddComponent(ComponentType::DistanceJoint); ImGui::CloseCurrentPopup(); }
 		if (ImGui::MenuItem("Fixed Joint")) { AddComponent(ComponentType::FixedJoint); ImGui::CloseCurrentPopup(); }
 		if (ImGui::MenuItem("Hinge Joint")) { AddComponent(ComponentType::HingeJoint); ImGui::CloseCurrentPopup(); }
@@ -813,15 +849,11 @@ void GameObject::OnEditor()
 
 void GameObject::PublishGameObjectEvent(GameObjectEvent event, Component* newComponent)
 {
-	auto it = components.begin();
-	while (it != components.end())
+	for (Component* component : components)
 	{
-		Component* component = it->second;
-
-		if (component->GetEnabled())
+		if (component)
 		{
 			component->OnGameObjectEvent(event, newComponent);
 		}
-		++it;
 	}
 }

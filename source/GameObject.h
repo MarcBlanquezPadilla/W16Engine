@@ -89,6 +89,7 @@ public:
 	//COMPONENTS
 	Component* AddComponent(ComponentType type);
 	Component* GetComponent(ComponentType type);
+	std::vector<Component*> GetComponents(ComponentType type);
 	Component* GetComponentInChildren(ComponentType type);
 	void GetComponentsInChildren(ComponentType type, std::vector<Component*>& outlist);
 	Component* GetComponentInParent(ComponentType type);
@@ -96,6 +97,7 @@ public:
 	bool TryGetComponent(ComponentType type, Component*& component);
 	void RemoveComponent(ComponentType type);
 	void DeletePendingComponents();
+
 
 	//GETTERS
 	bool GetGlobalMatrix(glm::mat4& globalMatrix);
@@ -115,14 +117,15 @@ public:
 	std::vector<GameObject*> childs;
 
 	Transform* transform;
-	std::map<ComponentType, Component*> components;
+	std::vector<Component*> components;
 	std::vector<Component*> componentsToDestroy;
 
 	uint32_t UUID;
+
+	bool isCleaning = false;
 	bool pendingToDelete = false;
 
 private:
-	bool enabled;
-	bool isStatic;
-
+	bool enabled = true;
+	bool isStatic = false;
 };

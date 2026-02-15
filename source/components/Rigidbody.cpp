@@ -126,17 +126,21 @@ void Rigidbody::CleanUp()
 
 void Rigidbody::CollectColliders(GameObject* obj, std::vector<Collider*>& list) {
     
-    Collider* col = (Collider*)obj->GetComponent(ComponentType::Collider);
+    std::vector<Component*> components = obj->GetComponents(ComponentType::Collider);
     
-    if (col && col->GetEnabled())
+    for (Component* component : components)
     {
-        if (col->CanBeDynamic() || type == Type::STATIC)
+        Collider* collider = (Collider*) component;
+        if (collider && collider->GetEnabled())
         {
-            list.push_back(col);
-        }
-        else
-        {
-            LOG(LogType::LOG_WARNING, "%s ignored on GameObject '%s': This collider type is only compatible with STATIC Rigidbodies.", col->name.c_str(), owner->name.c_str());
+            if (collider->CanBeDynamic() || type == Type::STATIC)
+            {
+                list.push_back(collider);
+            }
+            else
+            {
+                LOG(LogType::LOG_WARNING, "%s ignored on GameObject '%s': This collider type is only compatible with STATIC Rigidbodies.", collider->name.c_str(), owner->name.c_str());
+            }
         }
     }
 
@@ -366,7 +370,7 @@ void Rigidbody::UnattachCollider(Collider* collider)
     collider->attachedRigidbody = nullptr;
     collider->SetShape(nullptr);
 
-    if (actor) {
+    if (!owner->isCleaning && actor) {
         CreateBody();
     }
 }
@@ -705,15 +709,16 @@ void Rigidbody::CollectListeners()
 {
     listeners.clear();
 
-    for (auto const& pair : owner->components)
+    for (Component* component : owner->components)
     {
-        Component* comp = pair.second;
-
-        PhysicsEventsListener* listener = dynamic_cast<PhysicsEventsListener*>(comp);
-
-        if (listener)
+        if (component)
         {
-            listeners.push_back(listener);
+            PhysicsEventsListener* listener = dynamic_cast<PhysicsEventsListener*>(component);
+
+            if (listener)
+            {
+                listeners.push_back(listener);
+            }
         }
     }
 }
