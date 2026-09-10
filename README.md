@@ -4,23 +4,7 @@
 
 The engine focuses on modularity, performance optimization, and providing a user-friendly interface for scene composition and resource management.
 
-**Powered by:** Torrats Games
-
----
-
-## Development Team
-
-![foto torrats](https://github.com/user-attachments/assets/152b3955-b6a8-4cd1-baef-afb7fbf1cd3f)
-
-| Member | Role & Work Performed |
-| :--- | :--- |
-| **Marc Blánquez** | Developed the foundational bone logic, mesh-bone hierarchies, and infinite bone support. He implemented high-performance **GPU Skinning**, animation optimizations, and low-level shader/stencil management. |
-| **Martí Mira** | Architected the Resource Management system (Meta-files) and the Resource Explorer. He developed asset/texture importing pipelines, asset movement logic, and optimized spatial partitioning. |
-| **Arnau Balasch** |Designed the engine's interface (ImGui), including the GameObject hierarchy and Project Window search. He developed the scene serialization system (supporting animation save/load) and core camera systems. |
-
-**GitHub Links:** [Marc Blánquez](https://github.com/MarcBlanquezPadilla) | [Martí Mira](https://github.com/algars15) | [Arnau Balasch](https://github.com/Balar05)
-
----
+**Powered by:** Marc Blánquez
 
 ## Core Systems
 
